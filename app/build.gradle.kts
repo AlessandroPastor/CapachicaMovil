@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.org.jetbrains.kotlin.android)
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
@@ -45,10 +46,6 @@ android {
     }
     buildFeatures {
         compose = true
-    }
-
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.10"
     }
 
     packaging {
@@ -102,6 +99,7 @@ dependencies {
 
     // JSON
     implementation(libs.kotlinx.serialization.json)
+
 
     // Carga de imágenes
     implementation(libs.coil.compose)
