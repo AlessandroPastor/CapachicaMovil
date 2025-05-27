@@ -21,7 +21,7 @@ class AuthRepositoryImpl(
             val loginResponse = authApiService.login(loginDTO)
 
             if (loginResponse.data.token.isNotEmpty()) {
-                authApiService.setAuthToken(loginResponse.data.token)
+                authApiService.updateAuthToken(loginResponse.data.token)
 
                 val user = decodeToken(loginResponse.data.token)
                     ?: return Result.failure(Exception("No se pudo extraer el usuario del token"))
@@ -41,7 +41,7 @@ class AuthRepositoryImpl(
         return try {
             val user = sessionManager.getUser()
             if (user != null) {
-                authApiService.setAuthToken(user.token) // Reasignar token si necesario
+                authApiService.updateAuthToken(user.token) // Reasignar token si necesario
                 Result.success(user)
             } else {
                 Result.failure(Exception("Usuario no encontrado en sesión"))
@@ -58,4 +58,11 @@ class AuthRepositoryImpl(
             Result.failure(e)
         }
     }
+
+    override suspend fun loadAuthToken() {
+        authApiService.loadAuthTokenFromStorage()
+    }
+
+
+
 }

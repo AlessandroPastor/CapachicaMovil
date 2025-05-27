@@ -36,14 +36,15 @@ class HomeViewModel(
             _uiState.value = _uiState.value.copy(isLoading = true)
 
             try {
+                // Carga el token en memoria antes de hacer peticiones autenticadas
+                authRepository.loadAuthToken() // <-- llama a cargar token en memoria
+
                 // Recuperar usuario guardado
                 val savedUser = sessionManager.getUser()
                 if (savedUser != null) {
-
-                    // Establecer el usuario inmediatamente
                     _uiState.value = _uiState.value.copy(user = savedUser)
 
-                    // Cargar el menú inmediatamente al encontrar usuario guardado
+                    // Ahora sí podemos pedir menú con token cargado
                     authRepository.getMenuItems()
                         .onSuccess { menuItems ->
                             _uiState.value = _uiState.value.copy(
@@ -51,18 +52,17 @@ class HomeViewModel(
                                 isLoading = false
                             )
                         }
-                        .onFailure { error -> // Si falla la carga del menú, intentamos refrescar el token
+                        .onFailure {
                             refreshTokenAndLoadMenu()
                         }
 
-                    // Intentar refrescar los datos del usuario en segundo plano
+                    // Continúa con la actualización de usuario
                     authRepository.getUserDetails()
                         .onSuccess { updatedUser ->
                             _uiState.value = _uiState.value.copy(user = updatedUser)
                             sessionManager.saveUser(updatedUser)
                         }
-                        .onFailure { error ->
-                        }
+                        .onFailure { }
                 } else {
                     _uiState.value = _uiState.value.copy(isLoading = false)
                 }
@@ -74,6 +74,7 @@ class HomeViewModel(
             }
         }
     }
+
 
 
     private suspend fun loadMenuItems() {

@@ -1,5 +1,6 @@
 package com.example.turismomovile.data.remote.api.configuracion
 
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Role
@@ -14,7 +15,9 @@ import io.ktor.client.statement.HttpResponse
 import io.ktor.http.*
 
 
-class RoleApiService(client: HttpClient) : BaseApiService(client) {
+class RoleApiService(client: HttpClient, sessionManager: SessionManager) : BaseApiService(client,
+    sessionManager
+) {
 
     suspend fun getRoles(page: Int = 0, size: Int = 20, name: String? = null): RoleResponse {
         return client.get(ApiConstants.Configuration.ROLES) {

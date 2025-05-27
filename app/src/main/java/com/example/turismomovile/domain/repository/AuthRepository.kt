@@ -7,4 +7,5 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): Result<User>
     suspend fun getUserDetails(): Result<User>
     suspend fun getMenuItems(): Result<List<MenuItem>>
+    suspend fun loadAuthToken()
 }

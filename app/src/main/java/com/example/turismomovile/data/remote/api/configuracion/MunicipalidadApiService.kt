@@ -1,5 +1,6 @@
 package com.example.turismomovile.data.remote.api.configuracion
 
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
@@ -13,7 +14,9 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 
-class MunicipalidadApiService (client: HttpClient) : BaseApiService(client){
+class MunicipalidadApiService (client: HttpClient,
+                               sessionManager: SessionManager
+) : BaseApiService(client, sessionManager){
 
     suspend fun getMunicipalidad(page: Int = 0, size: Int = 20, name: String? = null): MunicipalidadResponse {
         val response = client.get(ApiConstants.Configuration.MUNICIPALIDAD_ENDPOINT) {

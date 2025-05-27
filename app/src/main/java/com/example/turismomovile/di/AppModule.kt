@@ -91,13 +91,13 @@ val appModule = module {
     // API Services
     // =====================================
     single { AuthApiService(get(), get()) }
-    single { MenuApiService(get()) }
-    single { RoleApiService(get()) }
-    single { ModuleApiService(get()) }
-    single { ParentModuleApiService(get()) }
-    single { MunicipalidadApiService(get()) }
-    single { AsociacionApiService(get()) }
-    single { ImgAsociacionesApiService(get()) }
+    single { MenuApiService(get(),get()) }
+    single { RoleApiService(get(),get()) }
+    single { ModuleApiService(get(),get()) }
+    single { ParentModuleApiService(get(),get()) }
+    single { MunicipalidadApiService(get(),get()) }
+    single { AsociacionApiService(get(),get()) }
+    single { ImgAsociacionesApiService(get(),get()) }
 
     // =====================================
     // Repositories

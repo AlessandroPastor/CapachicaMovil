@@ -1,5 +1,6 @@
     package com.example.turismomovile.data.remote.api.configuracion
 
+    import com.example.turismomovile.data.local.SessionManager
     import com.example.turismomovile.data.remote.api.ApiConstants
     import com.example.turismomovile.data.remote.api.base.BaseApiService
     import com.example.turismomovile.data.remote.dto.configuracion.Emprededor
@@ -16,7 +17,9 @@
     import io.ktor.http.ContentType
     import io.ktor.http.contentType
 
-    class EmprendedorApiService (client: HttpClient): BaseApiService(client) {
+    class EmprendedorApiService (client: HttpClient,
+                                 sessionManager: SessionManager
+    ): BaseApiService(client, sessionManager) {
 
         suspend fun getEmprendedor(page: Int = 0, size: Int = 10, name: String?): EmprendedorResponse {
             return client.get(ApiConstants.Configuration.EMPRENDEDORES_GET) {

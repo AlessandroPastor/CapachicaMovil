@@ -1,5 +1,6 @@
 package com.example.turismomovile.data.remote.api.configuracion
 
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
 import com.example.turismomovile.data.remote.dto.configuracion.ParentModule
@@ -12,7 +13,9 @@ import io.ktor.client.call.body
 import io.ktor.client.request.*
 import io.ktor.http.*
 
-class ParentModuleApiService(client: HttpClient) : BaseApiService(client) {
+class ParentModuleApiService(client: HttpClient,
+                             sessionManager: SessionManager
+) : BaseApiService(client, sessionManager) {
 
     suspend fun getParentModules(page: Int = 0, size: Int = 20, name: String? = null): ParentModuleListResponse {
         return client.get(ApiConstants.Configuration.GET_PARENT_MODULE) {

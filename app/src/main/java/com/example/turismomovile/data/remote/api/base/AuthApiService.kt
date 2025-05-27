@@ -16,43 +16,42 @@ import io.ktor.http.*
 
 class AuthApiService(
     client: HttpClient,
-    private val sessionManager: SessionManager
-) : BaseApiService(client) {
+    override val sessionManager: SessionManager
+) : BaseApiService(client, sessionManager) {  // <-- Aquí pasa sessionManager al padre
 
     suspend fun login(loginDTO: LoginDTO): LoginResponse {
-        return try {
-            val response = client.post(ApiConstants.Configuration.LOGIN_ENDPOINT) {
-                contentType(ContentType.Application.Json)
-                setBody(loginDTO)
-            }
+        val response = client.post(ApiConstants.Configuration.LOGIN_ENDPOINT) {
+            contentType(ContentType.Application.Json)
+            setBody(loginDTO)
+        }
 
-            val loginResponse = response.body<LoginResponse>()
+        val loginResponse = response.body<LoginResponse>()
 
-            // Guardamos el token del usuario
-            sessionManager.saveUser(
-                User(
-                    id = loginResponse.data.username.id.toString(),
-                    name = loginResponse.data.username.username,
-                    email = loginResponse.data.username.email,
-                    token = loginResponse.data.token
-                )
+        sessionManager.saveUser(
+            User(
+                id = loginResponse.data.username.id.toString(),
+                name = loginResponse.data.username.username,
+                email = loginResponse.data.username.email,
+                token = loginResponse.data.token
             )
+        )
 
-            // También lo asignamos internamente
-            setAuthToken(loginResponse.data.token)
+        // Sincroniza todos los lugares
+        sessionManager.saveAuthToken(loginResponse.data.token)
+        updateAuthToken(loginResponse.data.token)
 
-            loginResponse
-        } catch (e: Exception) {
-            throw e
-        }
+        return loginResponse
     }
 
-    suspend fun loadAuthTokenFromStorage() {
+    override suspend fun loadAuthTokenFromStorage() {
         sessionManager.getUser()?.token?.let {
-            setAuthToken(it)
+            updateAuthToken(it)
         }
     }
+
+
 }
+
 
 
 

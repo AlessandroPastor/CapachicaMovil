@@ -1,5 +1,6 @@
     package com.example.turismomovile.data.remote.api.configuracion
 
+    import com.example.turismomovile.data.local.SessionManager
     import com.example.turismomovile.data.remote.api.ApiConstants
     import com.example.turismomovile.data.remote.api.base.BaseApiService
     import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
@@ -17,7 +18,9 @@
     import io.ktor.http.ContentType
     import io.ktor.http.contentType
 
-    class AsociacionApiService (client: HttpClient): BaseApiService(client) {
+    class AsociacionApiService (client: HttpClient,
+                                sessionManager: SessionManager
+    ): BaseApiService(client, sessionManager) {
 
         suspend fun getAsociaciones(page: Int = 0, size: Int = 10, name: String?): AsociacionResponse {
             return client.get(ApiConstants.Configuration.ASOCIACION_GET) {

@@ -1,31 +1,33 @@
 package com.example.turismomovile.data.remote.api.base
 
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.dto.LoginResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
 
-abstract class BaseApiService(
-    protected val client: HttpClient
+open class BaseApiService(
+    protected val client: HttpClient,
+    protected open val sessionManager: SessionManager
 ) {
-    private var _authToken: String? = null
-    val authToken: String? get() = _authToken
+    var authToken: String? = null
 
-    // Función para agregar el token de autenticación a las peticiones HTTP
-    protected fun HttpRequestBuilder.addAuthHeader() {
-        if (_authToken.isNullOrEmpty()) {
-            throw IllegalStateException("No auth token available. Did you forget to call loadAuthTokenFromStorage()?")
+    // No suspend, solo añade el header con token ya cargado
+    protected suspend fun HttpRequestBuilder.addAuthHeader() {
+        if (authToken == null) {
+            loadAuthTokenFromStorage()
         }
-        header(HttpHeaders.Authorization, "Bearer $_authToken")
+        authToken?.let {
+            header("Authorization", "Bearer $it")
+        } ?: throw IllegalStateException("No auth token available. Please login first.")
     }
 
-    // Guardar el token directamente
-    fun setAuthToken(token: String?) {
-        _authToken = token
+    fun updateAuthToken(token: String) {  // Cambia el nombre
+        this.authToken = token
     }
 
-    // Si aún deseas compatibilidad con LoginResponse completo
-    fun saveLoginResponse(loginResponse: LoginResponse) {
-        _authToken = loginResponse.data.token
+
+    open suspend fun loadAuthTokenFromStorage() {
+        authToken = sessionManager.getAuthToken() ?: sessionManager.getUser()?.token
     }
 }

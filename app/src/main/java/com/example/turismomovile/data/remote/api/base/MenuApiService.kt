@@ -1,6 +1,7 @@
 package com.example.turismomovile.data.remote.api.base
 
 
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.dto.MenuItem
 import io.ktor.client.HttpClient
@@ -12,7 +13,9 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
-class MenuApiService(client: HttpClient) : BaseApiService(client) {
+class MenuApiService(client: HttpClient, sessionManager: SessionManager) : BaseApiService(client,
+    sessionManager
+) {
 
     suspend fun getMenuItems(): List<MenuItem> {
         println("📡 Llamando a ${ApiConstants.Configuration.MENU_ENDPOINT}")

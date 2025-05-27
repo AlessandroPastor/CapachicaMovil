@@ -13,6 +13,7 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
         private val KEY_USER_EMAIL = stringPreferencesKey("user_email")
         private val KEY_USER_NAME = stringPreferencesKey("user_name")
         private val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
+
         private val KEY_IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         private val ONBOARDING_KEY = booleanPreferencesKey("onboarding_completed")
     }
@@ -60,5 +61,16 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
 
     suspend fun isOnboardingCompleted(): Boolean {
         return dataStore.data.map { it[ONBOARDING_KEY] ?: false }.first()
+    }
+
+    suspend fun saveAuthToken(token: String) {
+        dataStore.edit {
+            it[KEY_ACCESS_TOKEN] = token
+        }
+    }
+
+    suspend fun getAuthToken(): String? {
+        val prefs = dataStore.data.first()
+        return prefs[KEY_ACCESS_TOKEN]
     }
 }
