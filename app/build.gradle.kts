@@ -123,5 +123,12 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.multiplatform.settings)
 
+    // MapBox
+    implementation("androidx.navigation:navigation-compose:2.8.9")
+    implementation("com.mapbox.maps:android:11.11.0")
+    implementation ("com.mapbox.extension:maps-compose:11.11.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    implementation ("com.google.accompanist:accompanist-permissions:0.37.2")
+
 
 }

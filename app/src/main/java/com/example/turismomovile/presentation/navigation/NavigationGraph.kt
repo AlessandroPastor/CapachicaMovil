@@ -40,7 +40,7 @@ fun NavigationGraph(
         Routes.ONBOARDING,
         Routes.LAND_PAGE,
         Routes.LOGIN,
-        Routes.EXPLORATE
+        Routes.EXPLORATE,
     )
     LaunchedEffect(navController) {
         snapshotFlow { navController.currentBackStackEntry }
@@ -113,7 +113,6 @@ fun NavigationGraph(
                 onClickExplorer = {
                     println("🚪 Usuario quiere explorar. Navegando a EXPLORER_SCREEN")
                     navController.navigate(Routes.EXPLORATE) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
                     }
                 }
             )
@@ -132,6 +131,8 @@ fun NavigationGraph(
                 }
             )
         }
+
+
 
 
 

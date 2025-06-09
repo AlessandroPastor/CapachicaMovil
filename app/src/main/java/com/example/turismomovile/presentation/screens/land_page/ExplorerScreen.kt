@@ -41,6 +41,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
+import com.example.turismomovile.presentation.MapScreen
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
@@ -214,6 +215,7 @@ fun ExplorerScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+
     val visible = remember { mutableStateOf(false) }
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
@@ -245,6 +247,8 @@ fun ExplorerScreen(
         }
     }
 
+    MapScreen()
+
     LaunchedEffect(stateAso.notification) {
         if (stateAso.notification.isVisible) {
             notificationState.showNotification(
@@ -259,130 +263,5 @@ fun ExplorerScreen(
         isRefreshing.value = true
         viewModel.refreshMunicipalidades()
         isRefreshing.value = false
-    }
-
-    AppTheme(darkTheme = isDarkMode) {
-        Box(modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-        ) {
-            PullToRefreshComponent(
-                isRefreshing = isRefreshing.value,
-                onRefresh = { handleRefresh() },
-                modifier = Modifier.fillMaxSize()
-            ) {
-                LazyColumn(
-                    state = rememberLazyListState(),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 16.dp),
-                    contentPadding = PaddingValues(bottom = 80.dp)
-                ) {
-                    item {
-                        // Slider de imágenes
-                        AnimatedVisibility(
-                            visible = visible.value,
-                            enter = fadeIn() + scaleIn(initialScale = 0.9f)
-                        ) {
-                            /*ImageSlider(
-                                images = sliderImages,
-                                title = "Explora nuestros paisajes"
-                            )*/
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-
-                        // Descripción
-                        Text(
-                            text = "Descubre experiencias únicas, cultura viva y naturaleza inolvidable en Capachica.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            color = MaterialTheme.colorScheme.onBackground,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                        )
-
-                        Spacer(modifier = Modifier.height(40.dp))
-                    }
-
-                    item {
-                        // Asociaciones
-                        AnimatedVisibility(
-                            visible = visible.value,
-                            enter = fadeIn() + scaleIn(initialScale = 0.9f)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(bottom = 16.dp)
-                            ) {
-                                Text(
-                                    text = "Lugares Emblemáticos",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    modifier = Modifier.height(600.dp),
-                                    contentPadding = PaddingValues(horizontal = 8.dp),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    items(stateAso.itemsAso) { asociacion ->
-                                        AssociationCard(
-                                            asociacion = asociacion,
-                                            onClick = { selectedAsociacion = asociacion }
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(32.dp))
-                    }
-
-                    items(5) { index ->
-                        FutureSection(index = index + 1)
-                        Spacer(modifier = Modifier.height(16.dp))
-                    }
-                }
-            }
-
-            // Diálogo de detalle
-            selectedAsociacion?.let { asociacion ->
-                AssociationDetailDialog(
-                    association = asociacion,
-                    onDismiss = { selectedAsociacion = null }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun FutureSection(index: Int) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        )
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(120.dp)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Sección futura $index",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
     }
 }
