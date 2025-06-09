@@ -1,3 +1,6 @@
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
     <string name="app_name">TurismoMovile</string>
+    <string name="mapbox_access_token" translatable="false"
+        tools:ignore="UnusedResources">pk.eyJ1IjoiZG1hbWFuaXBhciIsImEiOiJjbTl3ZDN1dTAweG9hMmtxMDhldmF1cTNqIn0.ZVt62xtSlJk49hn4bYx5tQ</string>
+
 </resources>
