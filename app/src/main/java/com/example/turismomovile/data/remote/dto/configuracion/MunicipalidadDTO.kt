@@ -26,6 +26,29 @@ data class Municipalidad(
     val updatedAt: String? = null,
     val deletedAt: String? = null
 )
+@Serializable
+data class MunicipalidadDescriptionResponse(
+    val totalPages: Int,
+    val currentPage: Int,
+    val content: List<MunicipalidadDescription>,
+    val totalElements: Int
+)
+
+@Serializable
+data class MunicipalidadDescription(
+    val id: String? = null,
+    val municipalidad_id : String?,
+    val logo: String?,
+    val direccion : String?,
+    val descripcion : String?,
+    val ruc : String?,
+    val correo : String?,
+    val nombre_alcalde : String?,
+    val anio_gestion : String?,
+    val created_at: String? = null,
+    val updated_at: String? = null,
+    val deleted_at: String? = null
+)
 
 
 @Serializable

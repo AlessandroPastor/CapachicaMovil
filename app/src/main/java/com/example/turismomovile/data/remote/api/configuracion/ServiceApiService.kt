@@ -5,7 +5,6 @@ import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadCreateDTO
-import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionResponse
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
@@ -15,8 +14,7 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 
 
-class MunicipalidadApiService (client: HttpClient,
-                               sessionManager: SessionManager
+class ServiceApiService (client: HttpClient, sessionManager: SessionManager
 ) : BaseApiService(client, sessionManager){
 
     suspend fun getMunicipalidad(page: Int = 0, size: Int = 20, name: String? = null): MunicipalidadResponse {
@@ -27,16 +25,6 @@ class MunicipalidadApiService (client: HttpClient,
         }.body<MunicipalidadResponse>()
         return response
     }
-
-    suspend fun getMunicipalidadDescription(page: Int = 0, size: Int = 20, name: String? = null): MunicipalidadDescriptionResponse {
-        val response = client.get(ApiConstants.Configuration.MUNICIPALIDAD_DESCRIPTION) {
-            parameter("page", page)
-            parameter("size", size)
-            name?.let { parameter("name", it) }
-        }.body<MunicipalidadDescriptionResponse>()
-        return response
-    }
-
 
     suspend fun getMunicipalidadById(id: String): Municipalidad {
         return client.get(ApiConstants.Configuration.MUNICIPALIDAD_GET_BYID.replace("{id}", id)) {
@@ -67,5 +55,6 @@ class MunicipalidadApiService (client: HttpClient,
             addAuthHeader()
         }
     }
+
 
 }

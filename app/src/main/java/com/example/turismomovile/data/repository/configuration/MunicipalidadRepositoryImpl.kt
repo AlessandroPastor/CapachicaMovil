@@ -3,6 +3,7 @@ package com.example.turismomovile.data.repository.configuration
 import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadCreateDTO
+import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionResponse
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadResponse
 import com.example.turismomovile.domain.repository.configuration.MunicipalidadRepository
 
@@ -18,6 +19,16 @@ class MunicipalidadRepositoryImpl (
             Result.failure(e)
         }
     }
+
+    override suspend fun getMunicipalidadDescription(page: Int, size: Int, name: String?): Result<MunicipalidadDescriptionResponse> {
+        return try {
+            Result.success(apiService.getMunicipalidadDescription(page, size, name))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
     override suspend fun getMunicipalidadById(id: String): Result<Municipalidad> {
         return try {
             Result.success(apiService.getMunicipalidadById(id))

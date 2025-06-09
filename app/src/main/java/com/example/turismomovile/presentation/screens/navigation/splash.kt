@@ -1,10 +1,7 @@
 package com.example.turismomovile.presentation.screens.navigation
 
-import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.*
 import androidx.compose.animation.core.*
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,142 +10,229 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.draw.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.turismomovile.R
 import kotlinx.coroutines.delay
 
-
-
-
 @Composable
 fun SplashScreen(
-    onSplashFinished: () -> Unit
+    onSplashFinished: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
-    var startAnimation by remember { mutableStateOf(false) }
-    var fadeOut by remember { mutableStateOf(false) }
+    // Estados de animación
+    var animationState by remember { mutableStateOf(AnimationState.Initial) }
 
-    val alphaAnim = animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0f,
-        animationSpec = tween(durationMillis = 1000), label = "alpha animation"
+    // Animaciones
+    val alphaAnim by animateFloatAsState(
+        targetValue = if (animationState != AnimationState.Initial) 1f else 0f,
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+        label = "alphaAnimation"
     )
 
-    val scaleAnim = animateFloatAsState(
-        targetValue = if (startAnimation) 1f else 0.85f,
+    val scaleAnim by animateFloatAsState(
+        targetValue = when (animationState) {
+            AnimationState.Initial -> 0.9f
+            AnimationState.ScaleUp -> 1.05f
+            AnimationState.ScaleNormal -> 1f
+            AnimationState.Exit -> 1f
+        },
         animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ), label = "scale animation"
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessMedium
+        ),
+        label = "scaleAnimation"
     )
 
-    val imageOffsetY = animateIntAsState(
-        targetValue = if (startAnimation) 0 else -400,
-        animationSpec = tween(durationMillis = 1600, easing = EaseOutBounce),
-        label = "image slide in"
-    )
-
-    val glowAnim = animateFloatAsState(
-        targetValue = if (startAnimation) 1.05f else 1f,
+    val glowAnim by animateFloatAsState(
+        targetValue = if (animationState == AnimationState.ScaleNormal) 1.1f else 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1200, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ), label = "glow animation"
+            animation = keyframes {
+                durationMillis = 2000
+                1f at 0
+                1.08f at 500
+                1.1f at 1000
+                1.08f at 1500
+                1f at 2000
+            },
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "glowAnimation"
     )
 
+    val bgGradient = Brush.verticalGradient(
+        colors = listOf(
+            MaterialTheme.colorScheme.primary,
+            MaterialTheme.colorScheme.primaryContainer
+        )
+    )
+
+
+    // Control de la secuencia de animaciones
     LaunchedEffect(Unit) {
-        startAnimation = true
-        delay(3500)
-        fadeOut = true
-        delay(500)
+        delay(300) // Pequeño delay para asegurar la composición inicial
+        animationState = AnimationState.ScaleUp
+        delay(800)
+        animationState = AnimationState.ScaleNormal
+        delay(2500)
+        animationState = AnimationState.Exit
+        delay(500) // Tiempo para la animación de salida
         onSplashFinished()
     }
 
+    // Contenido del splash
     AnimatedVisibility(
-        visible = !fadeOut,
-        exit = fadeOut(animationSpec = tween(500))
+        visible = animationState != AnimationState.Exit,
+        enter = fadeIn() + expandVertically(),
+        exit = fadeOut() + shrinkVertically(),
+        modifier = modifier.fillMaxSize()
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.primary),
+                .background(bgGradient),
             contentAlignment = Alignment.Center
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center,
                 modifier = Modifier
-                    .scale(scaleAnim.value)
-                    .alpha(alphaAnim.value)
+                    .scale(scaleAnim)
+                    .alpha(alphaAnim)
             ) {
-                AnimatedVisibility(
-                    visible = startAnimation,
-                    enter = slideInVertically(initialOffsetY = { -it })
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(200.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.1f))
-                            .shadow(10.dp, shape = CircleShape)
-                    ) {
-                        Image(
-                            painter = painterResource(R.drawable.capachica),
-                            contentDescription = "Logo Capachica",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .matchParentSize()
-                                .clip(CircleShape)
-                                .graphicsLayer(
-                                    scaleX = glowAnim.value,
-                                    scaleY = glowAnim.value
-                                )
+                // Logo con efecto de glow
+                Box(
+                    modifier = Modifier
+                        .size(220.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.2f))
+                        .shadow(
+                            elevation = 24.dp,
+                            shape = CircleShape,
+                            ambientColor = MaterialTheme.colorScheme.secondary,
+                            spotColor = MaterialTheme.colorScheme.secondary
                         )
-                    }
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.capachica),
+                        contentDescription = "Logo Capachica",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .matchParentSize()
+                            .clip(CircleShape)
+                            .graphicsLayer {
+                                scaleX = glowAnim
+                                scaleY = glowAnim
+                            }
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(28.dp))
-                AnimatedText("Capachica Turismo", 36.sp, FontWeight.Bold)
-                Spacer(modifier = Modifier.height(10.dp))
-                AnimatedText("Gestion 2023 - 2026", 20.sp, FontWeight.Medium)
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // Texto animado
+                AnimatedTextComponent(
+                    text = "Capachica Turismo",
+                    fontSize = 38.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    textColor = MaterialTheme.colorScheme.onPrimary,
+                    delay = 500
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                AnimatedTextComponent(
+                    text = "Gestión 2023 - 2026",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Medium,
+                    textColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
+                    delay = 800
+                )
 
                 Spacer(modifier = Modifier.height(40.dp))
-                CircularProgressIndicator(
-                    modifier = Modifier.size(40.dp),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    strokeWidth = 3.dp
-                )
+
+                // Indicador de carga con animación
+                AnimatedProgressIndicator(delay = 1200)
             }
         }
     }
 }
 
 @Composable
-fun AnimatedText(text: String, fontSize: TextUnit, fontWeight: FontWeight) {
+private fun AnimatedTextComponent(
+    text: String,
+    fontSize: TextUnit,
+    fontWeight: FontWeight,
+    textColor: Color,
+    delay: Long
+) {
     var visible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(800)
+        delay(delay)
         visible = true
     }
 
     AnimatedVisibility(
         visible = visible,
-        enter = fadeIn(animationSpec = tween(800)) + slideInVertically { it / 3 }
+        enter = fadeIn(animationSpec = tween(800)) +
+                slideInVertically(animationSpec = tween(800, easing = FastOutSlowInEasing)) { it / 2 },
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Text(
             text = text,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = textColor,
             fontSize = fontSize,
-            fontWeight = fontWeight
+            fontWeight = fontWeight,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.alpha(0.9f)
         )
     }
+}
+
+@Composable
+private fun AnimatedProgressIndicator(delay: Long) {
+    var visible by remember { mutableStateOf(false) }
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = tween(800),
+        label = "progressAlpha"
+    )
+
+    val rotation by rememberInfiniteTransition().animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "progressRotation"
+    )
+
+    LaunchedEffect(Unit) {
+        delay(delay)
+        visible = true
+    }
+
+    CircularProgressIndicator(
+        modifier = Modifier
+            .size(40.dp)
+            .rotate(rotation)
+            .alpha(alpha),
+        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f),
+        strokeWidth = 3.dp,
+        trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
+    )
+}
+
+private enum class AnimationState {
+    Initial, ScaleUp, ScaleNormal, Exit
 }

@@ -8,9 +8,11 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.scrollable
@@ -112,6 +114,13 @@ import kotlinx.coroutines.yield
 import org.koin.compose.koinInject
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.window.DialogProperties
 import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -936,124 +945,345 @@ fun RecommendationCard(name: String, imageRes: Int) {
 }
 
 @Composable
-private fun AssociationDetailDialog(
+fun AssociationDetailDialog(
     association: Asociacion,
     isFavorite: Boolean,
     onFavoriteClick: () -> Unit,
     onDismiss: () -> Unit
 ) {
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            decorFitsSystemWindows = true
+        )
+    ) {
+        Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 24.dp,
+            border = BorderStroke(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
             )
         ) {
             Column(
                 modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
             ) {
-                // Imagen principal
+                // Header con imagen
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(RoundedCornerShape(16.dp))
+                        .height(240.dp)
                 ) {
                     Image(
                         painter = rememberAsyncImagePainter(association.imagenes?.firstOrNull()?.url_image),
-                        contentDescription = "Imagen de ${association.nombre}",
+                        contentDescription = null,
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
                     )
+
+                    // Botón de cerrar
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(16.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                CircleShape
+                            )
+                            .size(36.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Cerrar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
 
                     // Botón de favorito
                     IconButton(
                         onClick = onFavoriteClick,
                         modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
+                            .align(Alignment.TopStart)
+                            .padding(16.dp)
+                            .background(
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
+                                CircleShape
+                            )
+                            .size(36.dp)
                     ) {
                         Icon(
                             imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = if (isFavorite) "Quitar de favoritos" else "Añadir a favoritos",
-                            tint = if (isFavorite) MaterialTheme.colorScheme.error else Color.White,
-                            modifier = Modifier.size(28.dp)
+                            tint = if (isFavorite) MaterialTheme.colorScheme.error
+                            else MaterialTheme.colorScheme.onSurface
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Text(
-                    text = association.nombre ?: "Nombre desconocido",
-                    style = MaterialTheme.typography.headlineSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    ),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
+                // Contenido
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.LocationOn,
-                        contentDescription = "Ubicación",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(20.dp)
-                    )
                     Text(
-                        text = "📍 ${association.lugar ?: "Desconocido"}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontWeight = FontWeight.Medium
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(start = 8.dp),
-                        color = MaterialTheme.colorScheme.onBackground
+                        text = association.nombre ?: "Nombre desconocido",
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     )
+
+                    // Rating y ubicación
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            repeat(5) { index ->
+                                Icon(
+                                    imageVector = Icons.Default.Star,
+                                    contentDescription = null,
+                                    tint = if (index < 4) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            Text(
+                                text = "4.8 (128 reseñas)",
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(start = 8.dp)
+                            )
+                        }
+
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                text = association.lugar ?: "Desconocido",
+                                style = MaterialTheme.typography.labelLarge,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
+                    }
+
+                    // Descripción
+                    Text(
+                        text = association.descripcion ?: "No hay descripción disponible",
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            lineHeight = 24.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                        )
+                    )
+
+                    // Horario y contacto
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        InfoRow(
+                            icon = Icons.Default.ShoppingCart,
+                            text = "Abierto de 9:00 AM a 6:00 PM"
+                        )
+                        InfoRow(
+                            icon = Icons.Default.Explore,
+                            text = "A 15 minutos del centro"
+                        )
+                    }
+
+                    // Botones de acción
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = { /* Navegar al mapa */ },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        ) {
+                            Text("Ver en mapa")
+                        }
+
+                        Button(
+                            onClick = { /* Llamar o contactar */ },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            Text("Contactar")
+                        }
+                    }
                 }
+            }
+        }
+    }
+}
 
-                Spacer(modifier = Modifier.height(16.dp))
+@Composable
+private fun InfoRow(icon: ImageVector, text: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.size(20.dp)
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.padding(start = 8.dp)
+        )
+    }
+}
 
+
+@Composable
+fun GlassEventsSection(
+    events: List<Pair<String, Int>>,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp)
+    ) {
+        Text(
+            text = "Eventos Destacados",
+            style = MaterialTheme.typography.titleLarge.copy(
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onBackground
+            ),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+        )
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+        ) {
+            items(events) { (name, imageRes) ->
+                GlassEventCard(name = name, imageRes = imageRes)
+            }
+        }
+    }
+}
+
+@Composable
+fun GlassEventCard(name: String, imageRes: Int) {
+    Card(
+        modifier = Modifier
+            .width(220.dp)
+            .height(160.dp),
+        shape = RoundedCornerShape(20.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = name,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Efecto de cristal
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.2f)
+                            ),
+                            startY = 0.3f
+                        )
+                    )
+                    .background(
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
+                        shape = RoundedCornerShape(20.dp)
+                    )
+            )
+
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .padding(16.dp)
+            ) {
                 Text(
-                    text = association.descripcion ?: "No hay descripción disponible",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Normal,
-                        lineHeight = 24.sp
-                    ),
-                    textAlign = TextAlign.Justify,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    text = name,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold,
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.5f),
+                            offset = Offset(1f, 1f),
+                            blurRadius = 4f
+                        )
+                    )
                 )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
-                Button(
-                    onClick = onDismiss,
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
+                Text(
+                    text = "25 Oct, 2023 • 10:00 AM",
+                    style = MaterialTheme.typography.labelMedium.copy(
+                        color = Color.White.copy(alpha = 0.9f),
+                        shadow = Shadow(
+                            color = Color.Black.copy(alpha = 0.3f),
+                            offset = Offset(1f, 1f),
+                            blurRadius = 2f
+                        )
                     )
-                ) {
-                    Text("Cerrar", fontSize = 16.sp)
-                }
+                )
+            }
+
+            // Badge de "Próximo"
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.9f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "PRÓXIMO",
+                    style = MaterialTheme.typography.labelSmall.copy(
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                )
             }
         }
     }
@@ -1067,78 +1297,119 @@ fun SearchBar(
     onClose: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Surface(
+    var isActive by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+
+    Box(
         modifier = modifier
             .fillMaxWidth()
             .height(56.dp)
-            .padding(horizontal = 8.dp),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.onSurface,
-        shadowElevation = 2.dp
+            .padding(horizontal = 16.dp)
     ) {
-        Row(
+        // Fondo con efecto de difuminado
+        Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.Search,
-                contentDescription = "Buscar",
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(24.dp)
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            TextField(
-                value = query,
-                onValueChange = onQueryChange,
-                placeholder = {
-                    Text(
-                        text = "Buscar lugares...",
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                        )
                     )
-                },
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    color = MaterialTheme.colorScheme.onSurface
                 ),
-                modifier = Modifier.weight(1f),
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(
-                    onSearch = { onSearch() }
-                )
+            shape = RoundedCornerShape(28.dp),
+            color = Color.Transparent,
+            shadowElevation = if (isActive) 8.dp else 4.dp,
+            border = BorderStroke(
+                width = 0.5.dp,
+                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
             )
-
-            if (query.isNotEmpty()) {
-                IconButton(
-                    onClick = { onQueryChange("") },
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Search,
+                    contentDescription = "Buscar",
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(24.dp)
+                )
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Box(
+                    modifier = Modifier.weight(1f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = "Limpiar",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    if (query.isEmpty() && !isActive) {
+                        Text(
+                            text = "Buscar lugares, eventos...",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            ),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+
+                    BasicTextField(
+                        value = query,
+                        onValueChange = onQueryChange,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .onFocusChanged { isActive = it.isFocused },
+                        textStyle = MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(
+                            imeAction = ImeAction.Search
+                        ),
+                        keyboardActions = KeyboardActions(
+                            onSearch = {
+                                onSearch()
+                                focusManager.clearFocus()
+                            }
+                        ),
+                        decorationBox = { innerTextField ->
+                            innerTextField()
+                        }
                     )
                 }
-            }
 
-            Spacer(modifier = Modifier.width(4.dp))
+                if (query.isNotEmpty()) {
+                    IconButton(
+                        onClick = {
+                            onQueryChange("")
+                            focusManager.clearFocus()
+                        },
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Close,
+                            contentDescription = "Limpiar",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
 
-            TextButton(
-                onClick = onClose,
-                modifier = Modifier.padding(start = 4.dp)
-            ) {
-                Text("Cancelar", color = MaterialTheme.colorScheme.primary)
+                if (isActive) {
+                    TextButton(
+                        onClick = {
+                            onClose()
+                            focusManager.clearFocus()
+                        },
+                        modifier = Modifier.padding(start = 4.dp)
+                    ) {
+                        Text(
+                            "Cancelar",
+                            color = MaterialTheme.colorScheme.primary,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
+                }
             }
         }
     }

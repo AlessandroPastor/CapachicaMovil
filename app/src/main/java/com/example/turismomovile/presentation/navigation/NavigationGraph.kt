@@ -211,8 +211,6 @@ private fun setupMenuRoutes(
         Routes.HomeScreen.Setup.ASOCIACIONES to "Asociaciones",
         Routes.HomeScreen.Setup.USUARIOS to "Usuarios",
         Routes.HomeScreen.Setup.SEPTIONS to "Secciones"
-
-
     )
 
     implementedRoutes.forEach { (route, title) ->
