@@ -1,583 +1,300 @@
 package com.example.turismomovile.presentation.screens.navigation
 
-import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.*
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.*
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.*
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.turismomovile.R
+import com.example.turismomovile.presentation.theme.LocalAppDimens
 import kotlinx.coroutines.delay
-import kotlin.math.*
-import kotlin.random.Random
+
+private const val SPLASH_ANIMATION_DURATION = 800
+private const val SPLASH_TOTAL_DURATION = 2500L
+private const val INITIAL_DELAY = 300L
 
 @Composable
 fun SplashScreen(
     onSplashFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // Estados de animación mejorados
-    var animationState by remember { mutableStateOf(AnimationState.Initial) }
+    val colorScheme = MaterialTheme.colorScheme
+    val dimens = LocalAppDimens.current
+
+    // Estados para las animaciones
+    var isVisible by remember { mutableStateOf(false) }
+    var showProgress by remember { mutableStateOf(false) }
+    val progress by rememberProgressAnimation(isVisible = showProgress)
 
     // Animaciones principales
-    val logoAlpha by animateFloatAsState(
-        targetValue = when (animationState) {
-            AnimationState.Initial -> 0f
-            else -> 1f
-        },
-        animationSpec = tween(1200, easing = FastOutSlowInEasing),
-        label = "logoAlpha"
-    )
+    val animations = rememberSplashAnimations(isVisible = isVisible)
 
-    val logoScale by animateFloatAsState(
-        targetValue = when (animationState) {
-            AnimationState.Initial -> 0.3f
-            AnimationState.LogoEntry -> 1.1f
-            AnimationState.LogoSettle -> 1f
-            AnimationState.TextEntry -> 1f
-            AnimationState.Complete -> 1f
-            AnimationState.Exit -> 0.8f
-        },
-        animationSpec = when (animationState) {
-            AnimationState.LogoEntry -> spring(
-                dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
-            )
-            else -> tween(800, easing = FastOutSlowInEasing)
-        },
-        label = "logoScale"
-    )
-
-    // Animación de rotación suave para el logo
-    val logoRotation by rememberInfiniteTransition(label = "logoRotation").animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(20000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "rotation"
-    )
-
-    // Efecto shimmer
-    val shimmerTransition = rememberInfiniteTransition(label = "shimmer")
-    val shimmerOffset by shimmerTransition.animateFloat(
-        initialValue = -1f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmerOffset"
-    )
-
-    // Gradiente de fondo dinámico
-    val gradientAnimation by rememberInfiniteTransition(label = "gradient").animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(8000, easing = LinearEasing),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "gradientShift"
-    )
-
-    val dynamicGradient = Brush.radialGradient(
-        colors = listOf(
-            MaterialTheme.colorScheme.primary.copy(alpha = 0.9f),
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.secondary.copy(alpha = 0.8f),
-            MaterialTheme.colorScheme.tertiary.copy(alpha = 0.6f)
-        ),
-        center = Offset(
-            x = 0.5f + gradientAnimation * 0.3f,
-            y = 0.5f + sin(gradientAnimation * 2 * PI).toFloat() * 0.2f
-        ),
-        radius = 800f + gradientAnimation * 200f
-    )
-
-    // Control de secuencia mejorado
+    // Efecto principal del splash
     LaunchedEffect(Unit) {
-        delay(500)
-        animationState = AnimationState.LogoEntry
-        delay(1000)
-        animationState = AnimationState.LogoSettle
-        delay(800)
-        animationState = AnimationState.TextEntry
-        delay(2000)
-        animationState = AnimationState.Complete
-        delay(1500)
-        animationState = AnimationState.Exit
-        delay(800)
+        delay(INITIAL_DELAY)
+        isVisible = true
+        delay(1000L)
+        showProgress = true
+        delay(SPLASH_TOTAL_DURATION - INITIAL_DELAY - 1000L)
         onSplashFinished()
     }
 
-    // Contenido principal
-    AnimatedVisibility(
-        visible = animationState != AnimationState.Exit,
-        enter = fadeIn(tween(800)),
-        exit = fadeOut(tween(800)) + scaleOut(tween(800)),
-        modifier = modifier.fillMaxSize()
+    SplashContent(
+        modifier = modifier,
+        backgroundGradient = createBackgroundGradient(colorScheme),
+        logoScale = animations.logoScale,
+        textScale = animations.textScale,
+        fadeAlpha = animations.fadeAlpha,
+        progress = progress,
+        colorScheme = colorScheme,
+        dimens = dimens
+    )
+}
+
+@Composable
+private fun SplashContent(
+    modifier: Modifier,
+    backgroundGradient: Brush,
+    logoScale: Float,
+    textScale: Float,
+    fadeAlpha: Float,
+    progress: Float,
+    colorScheme: androidx.compose.material3.ColorScheme,
+    dimens: com.example.turismomovile.presentation.theme.AppDimensions
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(backgroundGradient),
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(dynamicGradient)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = dimens.spacing_32.dp)
         ) {
-            // Sistema de partículas de fondo
-            FloatingParticles(
-                particleCount = 15,
-                isActive = animationState >= AnimationState.LogoSettle
+            // Logo animado con sombra
+            AnimatedLogo(
+                scale = logoScale,
+                alpha = fadeAlpha,
+                modifier = Modifier.padding(bottom = dimens.spacing_32.dp)
             )
 
-            // Contenido principal centrado
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp)
-            ) {
-                // Logo mejorado con múltiples efectos
-                EnhancedLogo(
-                    scale = logoScale,
-                    alpha = logoAlpha,
-                    rotation = logoRotation,
-                    shimmerOffset = shimmerOffset,
-                    isGlowing = animationState >= AnimationState.LogoSettle
-                )
+            // Contenido de texto
+            AnimatedTextContent(
+                scale = textScale,
+                alpha = fadeAlpha,
+                colorScheme = colorScheme,
+                dimens = dimens
+            )
 
-                Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(dimens.spacing_48.dp))
 
-                // Textos con animaciones escalonadas
-                AnimatedContent(
-                    targetState = animationState >= AnimationState.TextEntry,
-                    transitionSpec = {
-                        slideInVertically(
-                            animationSpec = tween(1000, easing = FastOutSlowInEasing)
-                        ) { it } + fadeIn(tween(1000)) togetherWith
-                                slideOutVertically(
-                                    animationSpec = tween(500)
-                                ) { -it } + fadeOut(tween(500))
-                    },
-                    label = "textContent"
-                ) { showText ->
-                    if (showText) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            // Título principal con efecto shimmer
-                            ShimmerText(
-                                text = "Capachica Turismo",
-                                fontSize = 42.sp,
-                                fontWeight = FontWeight.Black,
-                                shimmerOffset = shimmerOffset,
-                                delay = 0
-                            )
-
-                            Spacer(modifier = Modifier.height(12.dp))
-
-                            // Subtítulo
-                            AnimatedTextWithDelay(
-                                text = "Gestión 2023 - 2026",
-                                fontSize = 22.sp,
-                                fontWeight = FontWeight.Medium,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.9f),
-                                delay = 300
-                            )
-                        }
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(64.dp))
-
-                // Indicador de progreso mejorado
-                if (animationState >= AnimationState.Complete) {
-                    ModernProgressIndicator()
-                }
-            }
-
-            // Efectos de overlay en las esquinas
-            CornerEffects()
+            // Indicador de progreso
+            AnimatedProgressIndicator(
+                progress = progress,
+                colorScheme = colorScheme,
+                modifier = Modifier.width(200.dp)
+            )
         }
     }
 }
 
 @Composable
-private fun EnhancedLogo(
+private fun AnimatedLogo(
     scale: Float,
     alpha: Float,
-    rotation: Float,
-    shimmerOffset: Float,
-    isGlowing: Boolean
+    modifier: Modifier = Modifier
 ) {
-    val glowAlpha by animateFloatAsState(
-        targetValue = if (isGlowing) 0.6f else 0f,
-        animationSpec = tween(1000),
-        label = "glowAlpha"
-    )
-
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(280.dp)
+    Surface(
+        modifier = modifier
+            .size(160.dp)
+            .scale(scale)
+            .shadow(
+                elevation = 8.dp,
+                shape = CircleShape,
+                ambientColor = Color.Black.copy(alpha = 0.1f)
+            ),
+        shape = CircleShape,
+        color = Color.Transparent
     ) {
-        // Glow effect layers
-        repeat(3) { index ->
-            Box(
-                modifier = Modifier
-                    .size((300 + index * 20).dp)
-                    .scale(scale * 0.9f)
-                    .alpha(glowAlpha * (0.3f - index * 0.08f))
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.4f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-            )
-        }
-
-        // Logo principal con efectos
-        Box(
+        Image(
+            painter = painterResource(R.drawable.capachica),
+            contentDescription = "Logo Capachica Turismo",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(240.dp)
-                .scale(scale)
-                .alpha(alpha)
-                .rotate(rotation * 0.1f) // Rotación muy sutil
-                .clip(CircleShape)
+                .fillMaxSize()
+                .clip(CircleShape),
+            alpha = alpha
+        )
+    }
+}
+
+@Composable
+private fun AnimatedTextContent(
+    scale: Float,
+    alpha: Float,
+    colorScheme: androidx.compose.material3.ColorScheme,
+    dimens: com.example.turismomovile.presentation.theme.AppDimensions
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier.scale(scale)
+    ) {
+        Text(
+            text = "Capachica Turismo",
+            color = colorScheme.onPrimary.copy(alpha = alpha),
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            letterSpacing = 0.5.sp
+        )
+
+        Spacer(modifier = Modifier.height(dimens.spacing_8.dp))
+
+        Surface(
+            modifier = Modifier
+                .clip(RoundedCornerShape(16.dp))
                 .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.3f),
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.1f),
-                            Color.Transparent
-                        )
-                    )
-                )
-                .shadow(
-                    elevation = 32.dp,
-                    shape = CircleShape,
-                    ambientColor = MaterialTheme.colorScheme.primary,
-                    spotColor = MaterialTheme.colorScheme.secondary
-                )
+                    colorScheme.onPrimary.copy(alpha = 0.1f),
+                    RoundedCornerShape(16.dp)
+                ),
+            color = Color.Transparent
         ) {
-            Image(
-                painter = painterResource(R.drawable.capachica),
-                contentDescription = "Logo Capachica",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .matchParentSize()
-                    .clip(CircleShape)
-                    .drawWithContent {
-                        drawContent()
-                        // Efecto shimmer sobre la imagen
-                        if (shimmerOffset > -0.5f && shimmerOffset < 0.5f) {
-                            val shimmerBrush = Brush.linearGradient(
-                                colors = listOf(
-                                    Color.Transparent,
-                                    Color.White.copy(alpha = 0.3f),
-                                    Color.Transparent
-                                ),
-                                start = Offset(
-                                    size.width * (shimmerOffset + 0.5f) - 100f,
-                                    0f
-                                ),
-                                end = Offset(
-                                    size.width * (shimmerOffset + 0.5f) + 100f,
-                                    size.height
-                                )
-                            )
-                            drawRect(shimmerBrush)
-                        }
-                    }
+            Text(
+                text = "Gestión 2023 - 2026",
+                color = colorScheme.onPrimary.copy(alpha = alpha * 0.9f),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(
+                    horizontal = dimens.spacing_16.dp,
+                    vertical = dimens.spacing_8.dp
+                )
             )
         }
 
-        // Anillo decorativo
-        if (isGlowing) {
-            Box(
-                modifier = Modifier
-                    .size(260.dp)
-                    .scale(scale)
-                    .alpha(alpha * 0.8f)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.sweepGradient(
-                            colors = listOf(
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                                Color.Transparent,
-                                MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f),
-                                Color.Transparent
-                            )
-                        )
-                    )
-                    .rotate(rotation * 0.5f)
-            ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(8.dp)
-                        .clip(CircleShape)
-                        .background(Color.Transparent)
-                )
-            }
-        }
-    }
-}
+        Spacer(modifier = Modifier.height(dimens.spacing_16.dp))
 
-@Composable
-private fun ShimmerText(
-    text: String,
-    fontSize: TextUnit,
-    fontWeight: FontWeight,
-    shimmerOffset: Float,
-    delay: Long
-) {
-    var visible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        delay(delay)
-        visible = true
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(1000)) + slideInVertically(tween(1000)) { it / 2 }
-    ) {
         Text(
-            text = text,
-            fontSize = fontSize,
-            fontWeight = fontWeight,
+            text = "Descubre la belleza natural",
+            color = colorScheme.onPrimary.copy(alpha = alpha * 0.8f),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Normal,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .padding(horizontal = 24.dp)
-                .drawWithContent {
-                    drawContent()
-                    // Efecto shimmer en el texto
-                    val shimmerBrush = Brush.linearGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            Color.White.copy(alpha = 0.6f),
-                            Color.Transparent
-                        ),
-                        start = Offset(
-                            size.width * (shimmerOffset + 1f) / 2f - 100f,
-                            0f
-                        ),
-                        end = Offset(
-                            size.width * (shimmerOffset + 1f) / 2f + 100f,
-                            size.height
-                        )
-                    )
-                    drawRect(shimmerBrush, blendMode = BlendMode.Plus)
-                },
-            color = MaterialTheme.colorScheme.onPrimary
+            fontStyle = androidx.compose.ui.text.font.FontStyle.Italic
         )
     }
 }
 
 @Composable
-private fun AnimatedTextWithDelay(
-    text: String,
-    fontSize: TextUnit,
-    fontWeight: FontWeight,
-    color: Color,
-    delay: Long
+private fun AnimatedProgressIndicator(
+    progress: Float,
+    colorScheme: androidx.compose.material3.ColorScheme,
+    modifier: Modifier = Modifier
 ) {
-    var visible by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        delay(delay)
-        visible = true
-    }
-
-    AnimatedVisibility(
-        visible = visible,
-        enter = fadeIn(tween(800)) + slideInVertically(tween(800)) { it }
-    ) {
-        Text(
-            text = text,
-            fontSize = fontSize,
-            fontWeight = fontWeight,
-            color = color,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp)
-        )
-    }
+    LinearProgressIndicator(
+        progress = { progress },
+        modifier = modifier
+            .height(3.dp)
+            .clip(RoundedCornerShape(2.dp)),
+        color = colorScheme.onPrimary,
+        trackColor = colorScheme.onPrimary.copy(alpha = 0.3f),
+        strokeCap = StrokeCap.Round
+    )
 }
 
+// Composable para manejar las animaciones principales
 @Composable
-private fun ModernProgressIndicator() {
-    val infiniteTransition = rememberInfiniteTransition(label = "progress")
-
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+private fun rememberSplashAnimations(isVisible: Boolean): SplashAnimations {
+    val logoScale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.7f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
         ),
-        label = "progressRotation"
+        label = "logoScaleAnimation"
     )
 
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1500, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+    val textScale by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0.9f,
+        animationSpec = tween(
+            durationMillis = SPLASH_ANIMATION_DURATION,
+            delayMillis = 200,
+            easing = FastOutSlowInEasing
         ),
-        label = "pulseScale"
+        label = "textScaleAnimation"
     )
 
-    Box(
-        contentAlignment = Alignment.Center,
-        modifier = Modifier.size(80.dp)
-    ) {
-        // Círculo de fondo pulsante
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .scale(pulseScale)
-                .alpha(0.3f)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.onPrimary)
-        )
-
-        // Indicador principal
-        CircularProgressIndicator(
-            modifier = Modifier
-                .size(48.dp)
-                .rotate(rotation),
-            color = MaterialTheme.colorScheme.onPrimary,
-            strokeWidth = 4.dp,
-            trackColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f)
-        )
-    }
-}
-
-@Composable
-private fun FloatingParticles(
-    particleCount: Int,
-    isActive: Boolean
-) {
-    val particles = remember {
-        List(particleCount) {
-            Particle(
-                x = Random.nextFloat(),
-                y = Random.nextFloat(),
-                size = Random.nextFloat() * 8f + 4f,
-                speed = Random.nextFloat() * 0.002f + 0.001f,
-                alpha = Random.nextFloat() * 0.6f + 0.2f
-            )
-        }
-    }
-
-    val animatedParticles by rememberUpdatedState(particles)
-
-    androidx.compose.foundation.Canvas(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        if (isActive) {
-            animatedParticles.forEach { particle ->
-                val currentTime = System.currentTimeMillis()
-                val animatedY = (particle.y + sin(currentTime * particle.speed) * 0.1f) % 1f
-                val animatedX = (particle.x + cos(currentTime * particle.speed * 0.5f) * 0.05f) % 1f
-
-                drawCircle(
-                    color = Color.White.copy(alpha = particle.alpha),
-                    radius = particle.size,
-                    center = Offset(
-                        size.width * animatedX,
-                        size.height * animatedY
-                    )
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun CornerEffects() {
-    val infiniteTransition = rememberInfiniteTransition(label = "corners")
-
-    val cornerAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.1f,
-        targetValue = 0.4f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(3000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+    val fadeAlpha by animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = SPLASH_ANIMATION_DURATION,
+            easing = LinearEasing
         ),
-        label = "cornerAlpha"
+        label = "fadeAnimation"
     )
 
-    // Efectos en las esquinas
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        // Esquina superior izquierda
-        Box(
-            modifier = Modifier
-                .size(60.dp)
-                .align(Alignment.TopStart)
-                .clip(RoundedCornerShape(bottomEnd = 30.dp))
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = cornerAlpha),
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-
-        // Esquina inferior derecha
-        Box(
-            modifier = Modifier
-                .size(80.dp)
-                .align(Alignment.BottomEnd)
-                .clip(RoundedCornerShape(topStart = 40.dp))
-                .background(
-                    Brush.radialGradient(
-                        colors = listOf(
-                            Color.White.copy(alpha = cornerAlpha * 0.7f),
-                            Color.Transparent
-                        )
-                    )
-                )
+    return remember(logoScale, textScale, fadeAlpha) {
+        SplashAnimations(
+            logoScale = logoScale,
+            textScale = textScale,
+            fadeAlpha = fadeAlpha
         )
     }
 }
 
-private data class Particle(
-    val x: Float,
-    val y: Float,
-    val size: Float,
-    val speed: Float,
-    val alpha: Float
+// Composable para la animación del progreso
+@Composable
+private fun rememberProgressAnimation(isVisible: Boolean): State<Float> {
+    return animateFloatAsState(
+        targetValue = if (isVisible) 1f else 0f,
+        animationSpec = tween(
+            durationMillis = 1200,
+            easing = LinearEasing
+        ),
+        label = "progressAnimation"
+    )
+}
+
+// Función helper para crear el gradiente de fondo
+private fun createBackgroundGradient(
+    colorScheme: androidx.compose.material3.ColorScheme
+): Brush {
+    return Brush.verticalGradient(
+        colors = listOf(
+            colorScheme.primary,
+            colorScheme.primary.copy(alpha = 0.8f),
+            colorScheme.primaryContainer
+        ),
+        startY = 0f,
+        endY = Float.POSITIVE_INFINITY
+    )
+}
+
+// Data class para agrupar las animaciones
+private data class SplashAnimations(
+    val logoScale: Float,
+    val textScale: Float,
+    val fadeAlpha: Float
 )
-
-private enum class AnimationState {
-    Initial, LogoEntry, LogoSettle, TextEntry, Complete, Exit
-}

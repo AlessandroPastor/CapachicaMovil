@@ -57,7 +57,7 @@ fun MunicipalidadScreen(
 
     NotificationHost(state = notificationState) {
         Scaffold(
-            floatingActionButton = {
+            /*floatingActionButton = {
                 FloatingActionButton(
                     onClick = {
                         selectedMunicipalidad = Municipalidad(
@@ -74,12 +74,9 @@ fun MunicipalidadScreen(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
-                    Icon(Icons.Default.Add, contentDescription = "Agregar Municipalidad")
+                    //Icon(Icons.Default.Add, contentDescription = "Agregar Municipalidad")
                 }
-
-
-
-            }
+            }*/
         ) { innerPadding ->
             Box(
                 modifier = Modifier

@@ -107,6 +107,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HomeWork
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
@@ -122,6 +123,7 @@ import coil.compose.rememberImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.Service
 import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.InfoItem
+import com.example.turismomovile.presentation.components.SearchBar
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -737,7 +739,7 @@ fun BottomNavigationBar(
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             BottomNavItem(
-                icon = Icons.Default.HomeWork,
+                icon = Icons.Default.Home,
                 label = "Inicio",
                 isSelected = currentSection == LangPageViewModel.Sections.HOME,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.HOME) }
@@ -1506,7 +1508,7 @@ fun AssociationDetailDialog(
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
                         Button(
-                            onClick = { /* Navegar al mapa */ },
+                            onClick = onDismiss,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -1555,131 +1557,7 @@ private fun InfoRow(icon: ImageVector, text: String) {
     }
 }
 
-@Composable
-fun SearchBar(
-    query: String,
-    onQueryChange: (String) -> Unit,
-    onSearch: () -> Unit,
-    onClose: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    var isActive by remember { mutableStateOf(false) }
-    val focusManager = LocalFocusManager.current
 
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(56.dp)
-            .padding(horizontal = 16.dp)
-    ) {
-        // Fondo con efecto de difuminado
-        Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    Brush.horizontalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
-                        )
-                    )
-                ),
-            shape = RoundedCornerShape(28.dp),
-            color = Color.Transparent,
-            shadowElevation = if (isActive) 8.dp else 4.dp,
-            border = BorderStroke(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
-            )
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Search,
-                    contentDescription = "Buscar",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Box(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    if (query.isEmpty() && !isActive) {
-                        Text(
-                            text = "Buscar lugares, eventos...",
-                            style = MaterialTheme.typography.bodyMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-
-                    BasicTextField(
-                        value = query,
-                        onValueChange = onQueryChange,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .onFocusChanged { isActive = it.isFocused },
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            color = MaterialTheme.colorScheme.onSurface
-                        ),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(
-                            imeAction = ImeAction.Search
-                        ),
-                        keyboardActions = KeyboardActions(
-                            onSearch = {
-                                onSearch()
-                                focusManager.clearFocus()
-                            }
-                        ),
-                        decorationBox = { innerTextField ->
-                            innerTextField()
-                        }
-                    )
-                }
-
-                if (query.isNotEmpty()) {
-                    IconButton(
-                        onClick = {
-                            onQueryChange("")
-                            focusManager.clearFocus()
-                        },
-                        modifier = Modifier.size(24.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Limpiar",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                if (isActive) {
-                    TextButton(
-                        onClick = {
-                            onClose()
-                            focusManager.clearFocus()
-                        },
-                        modifier = Modifier.padding(start = 4.dp)
-                    ) {
-                        Text(
-                            "Cancelar",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.labelMedium
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun RecommendationsGrid() {
