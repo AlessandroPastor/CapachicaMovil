@@ -112,6 +112,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
@@ -121,7 +122,10 @@ import coil.compose.rememberImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.Service
 import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.InfoItem
+import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -131,14 +135,32 @@ fun WelcomeScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+
     val visible = remember { mutableStateOf(false) }
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
         initialValue = false,
         lifecycle = LocalLifecycleOwner.current.lifecycle
     )
+    // Nuevo estado para la navegación inferior
+    var currentSection by remember { mutableStateOf(LangPageViewModel.Sections.HOME) }
+    val lazyListState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
+
+    // Función para desplazarse a una sección
+    fun scrollToSection(section: LangPageViewModel.Sections) {
+        currentSection = section
+        coroutineScope.launch {
+            when (section) {
+                LangPageViewModel.Sections.HOME -> lazyListState.animateScrollToItem(0)
+                LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
+                LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
+                LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
+                LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
+            }
+        }
+    }
     val municipalidadDescriptionState by viewModel.municipalidadDescriptionState.collectAsState()
-    val stateService = viewModel.stateService.collectAsState().value
     val state by viewModel.state.collectAsStateWithLifecycle()
     val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
     val isRefreshing = remember { mutableStateOf(false) }
@@ -288,6 +310,12 @@ fun WelcomeScreen(
                         }
                     }
                 )
+            },
+            bottomBar = {
+                BottomNavigationBar(
+                    currentSection = currentSection,
+                    onSectionSelected = { scrollToSection(it) }
+                )
             }
         ) { innerPadding ->
             Box(
@@ -302,7 +330,7 @@ fun WelcomeScreen(
                     modifier = Modifier.fillMaxSize()
                 ) {
                     LazyColumn(
-                        state = rememberLazyListState(),
+                        state = lazyListState, // Usamos el estado recordado
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(horizontal = 16.dp),
@@ -689,6 +717,99 @@ fun WelcomeScreen(
     }
 }
 
+// Componente para la barra de navegación inferior
+@Composable
+fun BottomNavigationBar(
+    currentSection: LangPageViewModel.Sections,
+    onSectionSelected: (LangPageViewModel.Sections) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 8.dp,
+        tonalElevation = 8.dp
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceAround
+        ) {
+            BottomNavItem(
+                icon = Icons.Default.HomeWork,
+                label = "Inicio",
+                isSelected = currentSection == LangPageViewModel.Sections.HOME,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.HOME) }
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.Build,
+                label = "Servicios",
+                isSelected = currentSection == LangPageViewModel.Sections.SERVICES,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.SERVICES) }
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.LocationOn,
+                label = "Lugares",
+                isSelected = currentSection == LangPageViewModel.Sections.PLACES,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.PLACES) }
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.Star,
+                label = "Eventos",
+                isSelected = currentSection == LangPageViewModel.Sections.EVENTS,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.EVENTS) }
+            )
+
+            BottomNavItem(
+                icon = Icons.Default.Favorite,
+                label = "Recomendados",
+                isSelected = currentSection == LangPageViewModel.Sections.RECOMMENDATIONS,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS) }
+            )
+        }
+    }
+}
+
+@Composable
+fun BottomNavItem(
+    icon: ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val contentColor = if (isSelected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+    }
+
+    Column(
+        modifier = modifier
+            .clickable(onClick = onClick)
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = label,
+            tint = contentColor,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Text(
+            text = label,
+            color = contentColor,
+            style = MaterialTheme.typography.labelSmall,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
 
 @Composable
 fun ParallaxImageSlider(

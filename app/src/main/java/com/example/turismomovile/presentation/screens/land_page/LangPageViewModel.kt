@@ -378,5 +378,8 @@ class LangPageViewModel (
         // Recargamos los datos (puedes hacer esto de forma directa o específica si es necesario)
         loadMunicipalidad()
     }
-
+    // Agrega este enum al inicio del archivo
+    enum class Sections {
+        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS
+    }
 }
