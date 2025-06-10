@@ -6,7 +6,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import com.example.turismomovile.Utils.isNetworkAvailable
 import com.example.turismomovile.di.appModule
 import com.example.turismomovile.presentation.MapScreen
@@ -28,24 +30,30 @@ class MainActivity : ComponentActivity() {
                     android.Manifest.permission.ACCESS_COARSE_LOCATION,
                     android.Manifest.permission.ACCESS_FINE_LOCATION,
                     android.Manifest.permission.CAMERA,
-                ))
-            LaunchedEffect(true){
-                if (otorgarp.allPermissionsGranted){
-                    Toast.makeText(this@MainActivity, "Permiso concedido",
-                        Toast.LENGTH_SHORT).show()
-                }else{if (otorgarp.shouldShowRationale){
-                    Toast.makeText(this@MainActivity, "La aplicacion requiereeste permiso",
-                        Toast.LENGTH_SHORT).show()
-                }else{
-                    Toast.makeText(this@MainActivity, "El permiso fue denegado", Toast.LENGTH_SHORT).show()
-                }
+                )
+            )
+
+            val snackbarHostState = remember { SnackbarHostState() }
+
+            // Mostramos mensajes dependiendo del estado de permisos y red
+            LaunchedEffect(Unit) {
+                if (otorgarp.allPermissionsGranted) {
+                    snackbarHostState.showSnackbar("Permiso concedido correctamente")
+                } else {
+                    if (otorgarp.shouldShowRationale) {
+                        snackbarHostState.showSnackbar("La aplicación requiere permisos para funcionar")
+                    } else {
+                        snackbarHostState.showSnackbar("Permisos denegados permanentemente")
+                    }
                     otorgarp.launchMultiplePermissionRequest()
                 }
-                Toast.makeText(this@MainActivity,
-                    "Con:${isNetworkAvailable(this@MainActivity)}",Toast.LENGTH_LONG
-                ).show()
-            }
 
+                val connected = isNetworkAvailable(this@MainActivity)
+                snackbarHostState.showSnackbar(
+                    if (connected) "Acceso a red disponible"
+                    else "No hay acceso a red"
+                )
+            }
             App() // ← Aquí llamas a tu App Composable
         }
     }

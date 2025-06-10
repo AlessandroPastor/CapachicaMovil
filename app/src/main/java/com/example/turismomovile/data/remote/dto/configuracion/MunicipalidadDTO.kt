@@ -26,6 +26,16 @@ data class Municipalidad(
     val updatedAt: String? = null,
     val deletedAt: String? = null
 )
+
+@Serializable
+data class SliderMuni(
+    val id: String? = null,
+    val titulo : String?,
+    val descripcion: String?,
+    val url_images : String?,
+)
+
+
 @Serializable
 data class MunicipalidadDescriptionResponse(
     val totalPages: Int,
@@ -50,15 +60,6 @@ data class MunicipalidadDescription(
     val deleted_at: String? = null
 )
 
-
-@Serializable
-data class SliderMuni(
-    val id: String? = null,
-    val titulo : String?,
-    val descripcion: String?,
-    val url_images : String?,
-)
-
 @Serializable
 data class MunicipalidadCreateDTO(
     val distrito: String,
@@ -78,7 +79,15 @@ data class MunicipalidadState(
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState()
 )
-
+data class MunicipalidadDescriptionState(
+    val descriptions: List<MunicipalidadDescription> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val currentPage: Int = 0,
+    val totalPages: Int = 0,
+    val totalElements: Int = 0,
+    val notification: NotificationState = NotificationState()
+)
 fun String.formatDateTime(): String {
     return try {
         val instant = Instant.parse(this)

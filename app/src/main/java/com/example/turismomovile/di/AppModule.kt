@@ -12,6 +12,7 @@ import com.example.turismomovile.data.remote.api.configuracion.ModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadApiService
 import com.example.turismomovile.data.remote.api.configuracion.ParentModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.RoleApiService
+import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
 import com.example.turismomovile.data.repository.AuthRepositoryImpl
 import com.example.turismomovile.data.repository.configuration.AsociacionesRepositoryImpl
 import com.example.turismomovile.data.repository.configuration.ModuleRepositoryImpl
@@ -35,7 +36,7 @@ import com.example.turismomovile.presentation.screens.login.LoginViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import io.dev.kmpventas.data.repository.configuration.ImgAsociacionesRepositoryImpl
 import io.dev.kmpventas.presentation.screens.configuration.role.modulos_padres.ParentModuleViewModel
-import io.dev.kmpventas.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -44,9 +45,7 @@ import io.ktor.client.plugins.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
-import org.koin.androidx.compose.get
 import org.koin.dsl.module
-import org.koin.androidx.compose.koinViewModel
 
 val appModule = module {
 
@@ -96,6 +95,7 @@ val appModule = module {
     single { ModuleApiService(get(),get()) }
     single { ParentModuleApiService(get(),get()) }
     single { MunicipalidadApiService(get(),get()) }
+    single { ServiceApiService(get(),get()) }
     single { AsociacionApiService(get(),get()) }
     single { ImgAsociacionesApiService(get(),get()) }
 
@@ -121,7 +121,7 @@ val appModule = module {
     single { ThemeViewModel(get()) }
     single { LoginViewModel(get(), get()) }
     single { HomeViewModel(get(), get()) }
-    single { LangPageViewModel(get(), get(), get()) }
+    single { LangPageViewModel(get(), get(), get(),get()) }
     single { RoleViewModel(get(), get(), get()) }
     single { ModuleViewModel(get(), get()) }
     single { ParentModuleViewModel(get()) }

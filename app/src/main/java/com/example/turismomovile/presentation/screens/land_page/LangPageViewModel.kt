@@ -1,10 +1,14 @@
-package io.dev.kmpventas.presentation.screens.land_page
+package com.example.turismomovile.presentation.screens.land_page
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionState
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsoacionesState
+import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionState
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadState
+import com.example.turismomovile.data.remote.dto.configuracion.ServiceState
+import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.domain.repository.configuration.AsociacionesRepository
 import com.example.turismomovile.domain.repository.configuration.ImgAsociacionesRepository
 import com.example.turismomovile.domain.repository.configuration.MunicipalidadRepository
@@ -18,6 +22,7 @@ class LangPageViewModel (
     private val repository: MunicipalidadRepository,
     private val repositoryAso: AsociacionesRepository,
     private val repositoryImgAso: ImgAsociacionesRepository,
+    private val apiserviceService : ServiceApiService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MunicipalidadState())
@@ -29,10 +34,23 @@ class LangPageViewModel (
     private val _stateImgAso = MutableStateFlow(ImgAsoacionesState())
     val stateImgAso = _state.asStateFlow()
 
+    private val _municipalidadDescriptionState = MutableStateFlow<MunicipalidadDescriptionState>(MunicipalidadDescriptionState())
+    val municipalidadDescriptionState = _municipalidadDescriptionState.asStateFlow()
+
+    // Estado para los servicios turísticos
+    private val _stateService = MutableStateFlow(ServiceState())
+    val stateService = _stateService.asStateFlow()
+
+    // **Nuevo state para las imágenes de los sliders**
+    private val _sliderImagesState = MutableStateFlow<List<SliderMuni>>(emptyList())
+    val sliderImagesState = _sliderImagesState.asStateFlow()
+
     init {
         loadMunicipalidad()
         loadAsociaciones()
         loadImgAsoaciones()
+        loadService()
+        loadMunicipalidadDescription()
     }
 
     fun loadMunicipalidad(page: Int = 0, searchQuery: String? = null) {
@@ -41,16 +59,6 @@ class LangPageViewModel (
             try {
                 repository.getMunicipalidad(page = page, name = searchQuery)
                     .onSuccess { response ->
-
-                        println("🛰️ MUNICIPALIDAD DEBUG INFO:")
-                        println("   📄 Página actual: ${response.currentPage + 1} / ${response.totalPages}")
-                        println("   📦 Total Municipalidades esta página: ${response.content.size}")
-                        println("   🆔 IDs de Municipalidades:")
-                        response.content.forEach { municipalidad ->
-                            println("     ➡️ ID: ${municipalidad.id} | Nombre: ${municipalidad.distrito}")
-                        }
-                        println("------------------------------------------------------------")
-
                         _state.value = _state.value.copy(
                             items = response.content,
                             currentPage = response.currentPage,
@@ -58,9 +66,12 @@ class LangPageViewModel (
                             isLoading = false,
                             error = null
                         )
+
+                        // Actualizamos el estado de las imágenes de los sliders
+                        val sliderImages = response.content.flatMap { it.sliders ?: emptyList() }
+                        _sliderImagesState.value = sliderImages
                     }
                     .onFailure { error ->
-                        println("❌ Error al cargar municipalidades: ${error.message}")
                         _state.value = _state.value.copy(
                             isLoading = false,
                             error = error.message,
@@ -72,7 +83,6 @@ class LangPageViewModel (
                         )
                     }
             } catch (e: Exception) {
-                println("❌ Excepción inesperada: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message,
@@ -85,6 +95,105 @@ class LangPageViewModel (
             }
         }
     }
+
+    // Función para cargar las descripciones de la municipalidad
+    fun loadMunicipalidadDescription(page: Int = 0, size: Int = 10, searchQuery: String? = null) {
+        viewModelScope.launch {
+            // Establecemos que la carga está en proceso
+            _municipalidadDescriptionState.value = _municipalidadDescriptionState.value.copy(isLoading = true)
+
+            try {
+                // Llamamos al repositorio para obtener las descripciones de la municipalidad
+                val response = repository.getMunicipalidadDescription(page, size, searchQuery)
+                response.onSuccess { municipalidadDescriptionResponse ->
+
+                    // Debug: Mostramos la información de la respuesta
+                    println("🛰️ MUNICIPALIDAD DESCRIPTION DEBUG INFO:")
+                    println("📦 Total descripciones de la municipalidad en esta página: ${municipalidadDescriptionResponse.content.size}")
+                    municipalidadDescriptionResponse.content.forEach { description ->
+                        println("➡️ ID: ${description.id} | Título: ${description.anio_gestion}")
+                    }
+
+                    // Actualizamos el estado con los datos obtenidos
+                    _municipalidadDescriptionState.value = _municipalidadDescriptionState.value.copy(
+                        descriptions = municipalidadDescriptionResponse.content, // Asignamos el contenido de las descripciones
+                        currentPage = municipalidadDescriptionResponse.currentPage,
+                        totalPages = municipalidadDescriptionResponse.totalPages,
+                        totalElements = municipalidadDescriptionResponse.totalElements,
+                        isLoading = false,
+                        error = null
+                    )
+                }.onFailure { error ->
+                    // En caso de error, actualizamos el estado con el mensaje de error
+                    _municipalidadDescriptionState.value = _municipalidadDescriptionState.value.copy(
+                        isLoading = false,
+                        error = error.message,
+                        notification = NotificationState(
+                            message = error.message ?: "Error al cargar las descripciones de la municipalidad",
+                            type = NotificationType.ERROR,
+                            isVisible = true
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                // En caso de una excepción, actualizamos el estado con el mensaje de error
+                _municipalidadDescriptionState.value = _municipalidadDescriptionState.value.copy(
+                    isLoading = false,
+                    error = e.message,
+                    notification = NotificationState(
+                        message = e.message ?: "Error inesperado al cargar las descripciones",
+                        type = NotificationType.ERROR,
+                        isVisible = true
+                    )
+                )
+            }
+        }
+    }
+
+
+
+    fun loadService(page: Int = 0, searchQuery: String? = null, category: String? = null) {
+        viewModelScope.launch {
+            _stateService.value = _stateService.value.copy(isLoading = true)
+
+            try {
+                val response = apiserviceService.getService(
+                    page = page,
+                    name = searchQuery,
+                )
+
+                println("🛰️ [API Service] Página actual: ${response.currentPage + 1} / ${response.totalPages}")
+                println("📦 Total Servicios en esta página: ${response.content.size}")
+                response.content.forEach { service ->
+                    println("   ➡️ ID: ${service.id} | Nombre: ${service.name} | Categoría: ${service.images}")
+                }
+
+                _stateService.value = _stateService.value.copy(
+                    items = response.content,
+                    currentPage = response.currentPage,
+                    totalPages = response.totalPages,
+                    totalElements = response.totalElements,
+                    isLoading = false,
+                    error = null
+                )
+
+            } catch (e: Exception) {
+                println("❌ [API Service] Error al cargar servicios: ${e.message}")
+                _stateService.value = _stateService.value.copy(
+                    isLoading = false,
+                    error = e.message,
+                    notification = NotificationState(
+                        message = e.message ?: "Error al cargar servicios",
+                        type = NotificationType.ERROR,
+                        isVisible = true
+                    )
+                )
+            }
+        }
+    }
+
+
+
 
     fun loadAsociaciones(page: Int = 0, searchQuery: String? = null) {
         viewModelScope.launch {

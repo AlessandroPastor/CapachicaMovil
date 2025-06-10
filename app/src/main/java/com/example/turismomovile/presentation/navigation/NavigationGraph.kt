@@ -15,7 +15,7 @@ import com.example.turismomovile.presentation.screens.configuration.role.role.Ro
 import com.example.turismomovile.presentation.screens.login.LoginScreen
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
-import io.dev.kmpventas.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
 import com.example.turismomovile.presentation.screens.navigation.BaseScreenLayout
 import com.example.turismomovile.presentation.screens.navigation.DefaultScreen

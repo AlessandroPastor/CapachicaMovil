@@ -6,6 +6,9 @@ import com.example.turismomovile.data.remote.api.base.BaseApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadCreateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadResponse
+import com.example.turismomovile.data.remote.dto.configuracion.Service
+import com.example.turismomovile.data.remote.dto.configuracion.ServiceCreateDto
+import com.example.turismomovile.data.remote.dto.configuracion.ServiceResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.post
 import io.ktor.http.ContentType
@@ -17,41 +20,40 @@ import io.ktor.http.*
 class ServiceApiService (client: HttpClient, sessionManager: SessionManager
 ) : BaseApiService(client, sessionManager){
 
-    suspend fun getMunicipalidad(page: Int = 0, size: Int = 20, name: String? = null): MunicipalidadResponse {
-        val response = client.get(ApiConstants.Configuration.MUNICIPALIDAD_ENDPOINT) {
+    suspend fun getService(page: Int = 0, size: Int = 20, name: String? = null): ServiceResponse {
+        val response = client.get(ApiConstants.Configuration.SERVICE_ENDPOINT) {
             parameter("page", page)
             parameter("size", size)
             name?.let { parameter("name", it) }
-        }.body<MunicipalidadResponse>()
+        }.body<ServiceResponse>()
         return response
     }
 
-    suspend fun getMunicipalidadById(id: String): Municipalidad {
-        return client.get(ApiConstants.Configuration.MUNICIPALIDAD_GET_BYID.replace("{id}", id)) {
+    suspend fun getServiceById(id: String): Service {
+        return client.get(ApiConstants.Configuration.SERVICE_GET_BYID.replace("{id}", id)) {
             addAuthHeader()
         }.body()
     }
 
-    suspend fun createMunicipalidad(municipalidad: MunicipalidadCreateDTO): Municipalidad
-
+    suspend fun createService(municipalidad: ServiceCreateDto): Service
     {
-        return client.post(ApiConstants.Configuration.MUNICIPALIDAD_POST) {
+        return client.post(ApiConstants.Configuration.SERVICE_POST) {
             addAuthHeader()
             contentType(ContentType.Application.Json)
             setBody(municipalidad)
         }.body()
     }
 
-    suspend fun updateMunicipalidad(id: String, municipalidad: Municipalidad): Municipalidad {
-        return client.put(ApiConstants.Configuration.MUNICIPALIDAD_PUT.replace("{id}", id)) {
+    suspend fun updateService(id: String, municipalidad: Service): Service {
+        return client.put(ApiConstants.Configuration.SERVICE_PUT.replace("{id}", id)) {
             addAuthHeader()
             contentType(ContentType.Application.Json)
             setBody(municipalidad)
         }.body()
     }
 
-    suspend fun deleteMunicipalidad(id: String) {
-        client.delete(ApiConstants.Configuration.MUNICIPALIDAD_DELETE.replace("{id}", id)) {
+    suspend fun deleteService(id: String) {
+        client.delete(ApiConstants.Configuration.SERVICE_DELETE.replace("{id}", id)) {
             addAuthHeader()
         }
     }

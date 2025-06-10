@@ -33,6 +33,15 @@ data class Emprendedor(
 )
 
 @Serializable
+data class ServiceCreateDto(
+    val name: String,
+    val code: String,
+    val description: String,
+    val category: String,
+    val status: Boolean = true,
+)
+
+@Serializable
 data class ServiceImage(
     val id: String,
     val imagen_url: String,
@@ -51,3 +60,4 @@ data class ServiceState(
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState()
 )
+

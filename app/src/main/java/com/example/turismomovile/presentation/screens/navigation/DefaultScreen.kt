@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import com.example.turismomovile.presentation.theme.LocalAppDimens
 import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,28 +38,30 @@ fun DefaultScreen(
     onLogout: () -> Unit,
     paddingValues: PaddingValues
 ) {
-    // Estados para animaciones
+    val dimens = LocalAppDimens.current
+
     var isRotating by remember { mutableStateOf(false) }
-    var showProgress by remember { mutableStateOf(false) }
+    var showContent by remember { mutableStateOf(false) }
+
     val rotation by animateFloatAsState(
         targetValue = if (isRotating) 360f else 0f,
         animationSpec = infiniteRepeatable(
-            animation = tween(2000, easing = LinearEasing),
+            animation = tween(3000, easing = LinearEasing),
             repeatMode = RepeatMode.Restart
-        )
+        ),
+        label = "rotation"
     )
 
-    // Color animado para el fondo
     val animatedColor by animateColorAsState(
-        targetValue = if (showProgress) MaterialTheme.colorScheme.surfaceVariant
+        targetValue = if (showContent) MaterialTheme.colorScheme.surfaceVariant
         else MaterialTheme.colorScheme.surface,
-        animationSpec = tween(1000)
+        animationSpec = tween(1000),
+        label = "animatedColor"
     )
 
-    // Efecto de aparición gradual
     LaunchedEffect(Unit) {
         delay(300)
-        showProgress = true
+        showContent = true
         delay(500)
         isRotating = true
     }
@@ -79,21 +82,21 @@ fun DefaultScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(dimens.spacing_24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Icono animado
+            // Ícono giratorio
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(120.dp)
-                    .shadow(12.dp, shape = CircleShape)
+                    //.shadow(16.dp, shape = CircleShape)
                     .clip(CircleShape)
                     .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
             ) {
                 Icon(
-                    imageVector = Icons.Default.Construction,
+                    imageVector = Icons.Default.Build,
                     contentDescription = "En construcción",
                     modifier = Modifier
                         .size(64.dp)
@@ -102,11 +105,10 @@ fun DefaultScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
-            // Título con efecto de aparición
             AnimatedVisibility(
-                visible = showProgress,
+                visible = showContent,
                 enter = fadeIn() + slideInVertically()
             ) {
                 Text(
@@ -114,13 +116,13 @@ fun DefaultScreen(
                     style = MaterialTheme.typography.headlineMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 16.dp)
+                    modifier = Modifier.padding(horizontal = dimens.spacing_16.dp)
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(dimens.spacing_16.dp))
 
-            // Ruta actual con chip moderno
+            // Chip con ruta
             Surface(
                 color = animatedColor,
                 shape = RoundedCornerShape(24.dp),
@@ -135,7 +137,7 @@ fun DefaultScreen(
                     Icon(
                         imageVector = Icons.Default.Build,
                         contentDescription = null,
-                        modifier = Modifier.size(18.dp),
+                        modifier = Modifier.size(dimens.iconSize.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -147,17 +149,17 @@ fun DefaultScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
-            // Tarjeta con mensaje mejorado
+            // Tarjeta informativa
             ElevatedCard(
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.75f)
                 ),
-                shape = MaterialTheme.shapes.large,
+                shape = RoundedCornerShape(28.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
+                    .padding(horizontal = 12.dp)
                     .animateContentSize()
             ) {
                 Column(
@@ -167,8 +169,7 @@ fun DefaultScreen(
                     Text(
                         text = "Pantalla en Desarrollo",
                         style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = MaterialTheme.colorScheme.primary
                     )
 
                     Divider(
@@ -178,26 +179,25 @@ fun DefaultScreen(
                     )
 
                     Text(
-                        text = "Estamos trabajando duro para traerte esta funcionalidad lo antes posible.",
+                        text = "Estamos trabajando duro para traerte esta funcionalidad con la mejor experiencia.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 8.dp)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+
+                    Spacer(modifier = Modifier.height(8.dp))
 
                     Text(
                         text = "¡Vuelve pronto para descubrir las novedades!",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
-            // Botón de acción principal
             Button(
                 onClick = { navController.navigateUp() },
                 colors = ButtonDefaults.buttonColors(
@@ -208,7 +208,7 @@ fun DefaultScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 48.dp)
-                    .height(50.dp)
+                    .height(dimens.buttonHeight.dp)
             ) {
                 Icon(
                     imageVector = Icons.Default.Home,
@@ -216,7 +216,7 @@ fun DefaultScreen(
                     modifier = Modifier.size(20.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(text = "Volver al inicio")
+                Text("Volver al inicio")
             }
         }
     }
