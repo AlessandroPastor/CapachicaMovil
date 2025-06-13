@@ -1,9 +1,14 @@
 package com.example.turismomovile.presentation.screens.land_page
 
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.navigation.NavController
+import com.example.turismomovile.data.remote.api.configuracion.EmprendedorApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionState
+import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorState
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsoacionesState
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionState
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadState
@@ -14,6 +19,7 @@ import com.example.turismomovile.domain.repository.configuration.ImgAsociaciones
 import com.example.turismomovile.domain.repository.configuration.MunicipalidadRepository
 import com.example.turismomovile.presentation.components.NotificationState
 import com.example.turismomovile.presentation.components.NotificationType
+import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,11 +28,15 @@ class LangPageViewModel (
     private val repository: MunicipalidadRepository,
     private val repositoryAso: AsociacionesRepository,
     private val repositoryImgAso: ImgAsociacionesRepository,
-    private val apiserviceService : ServiceApiService
+    private val apiserviceService : ServiceApiService,
+    private val apiServiceEmprendedorService: EmprendedorApiService
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(MunicipalidadState())
     val state = _state.asStateFlow()
+
+    private val _currentSection = mutableStateOf(Sections.HOME)
+    val currentSection: State<Sections> = _currentSection
 
     private val _stateAso = MutableStateFlow(AsociacionState())
     val stateAso = _stateAso.asStateFlow()
@@ -34,14 +44,15 @@ class LangPageViewModel (
     private val _stateImgAso = MutableStateFlow(ImgAsoacionesState())
     val stateImgAso = _state.asStateFlow()
 
-    private val _municipalidadDescriptionState = MutableStateFlow<MunicipalidadDescriptionState>(MunicipalidadDescriptionState())
-    val municipalidadDescriptionState = _municipalidadDescriptionState.asStateFlow()
+    private val _stateEmprendedor = MutableStateFlow(EmprendedorState())
+    val stateEmprendedor = _stateEmprendedor.asStateFlow()
 
-    // Estado para los servicios turísticos
+    private val _municipalidadDescriptionState = MutableStateFlow(MunicipalidadDescriptionState())
+    val municipalidadDescriptionState = _municipalidadDescriptionState.asStateFlow()
+    
     private val _stateService = MutableStateFlow(ServiceState())
     val stateService = _stateService.asStateFlow()
-
-    // **Nuevo state para las imágenes de los sliders**
+    
     private val _sliderImagesState = MutableStateFlow<List<SliderMuni>>(emptyList())
     val sliderImagesState = _sliderImagesState.asStateFlow()
 
@@ -51,6 +62,7 @@ class LangPageViewModel (
         loadImgAsoaciones()
         loadService()
         loadMunicipalidadDescription()
+        loadEmprendedores()
     }
 
     fun loadMunicipalidad(page: Int = 0, searchQuery: String? = null) {
@@ -96,6 +108,45 @@ class LangPageViewModel (
         }
     }
 
+    // Función para cargar los emprendedores
+    fun loadEmprendedores(page: Int = 0, searchQuery: String? = null) {
+        viewModelScope.launch {
+            _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
+
+            try {
+                // Llamamos al servicio para obtener los emprendedores
+                val response = apiServiceEmprendedorService.getEmprendedor(page, size = 10, name = searchQuery)
+
+                println("🛰️ [Emprendedores] Página actual: ${response.currentPage + 1} / ${response.totalPages}")
+                println("📦 Total Emprendedores en esta página: ${response.content.size}")
+                response.content.forEach { emprendedor ->
+                    println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razonSocial}")
+                }
+
+                // Actualizamos el estado con los datos obtenidos
+                _stateEmprendedor.value = _stateEmprendedor.value.copy(
+                    items = response.content,
+                    currentPage = response.currentPage,
+                    totalPages = response.totalPages,
+                    totalElements = response.totalElements,
+                    isLoading = false,
+                    error = null
+                )
+
+            } catch (e: Exception) {
+                println("❌ [Emprendedores] Error al cargar emprendedores: ${e.message}")
+                _stateEmprendedor.value = _stateEmprendedor.value.copy(
+                    isLoading = false,
+                    error = e.message,
+                    notification = NotificationState(
+                        message = e.message ?: "Error al cargar los emprendedores",
+                        type = NotificationType.ERROR,
+                        isVisible = true
+                    )
+                )
+            }
+        }
+    }
     // Función para cargar las descripciones de la municipalidad
     fun loadMunicipalidadDescription(page: Int = 0, size: Int = 10, searchQuery: String? = null) {
         viewModelScope.launch {
@@ -378,8 +429,25 @@ class LangPageViewModel (
         // Recargamos los datos (puedes hacer esto de forma directa o específica si es necesario)
         loadMunicipalidad()
     }
-    // Agrega este enum al inicio del archivo
+    // Función mejorada para manejar la selección de sección
+    fun onSectionSelected(section: Sections, navController: NavController? = null) {
+        _currentSection.value = section
+
+        viewModelScope.launch {
+            when (section) {
+                Sections.HOME -> {
+                    navController?.popBackStack(Routes.LAND_PAGE, inclusive = false)
+                    navController?.navigate(Routes.LAND_PAGE)
+                }
+                Sections.PRODUCTS -> {
+                    navController?.navigate(Routes.PRODUCTOS)
+                }
+                else -> Unit
+            }
+        }
+    }
+
     enum class Sections {
-        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS
+        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS  // Nueva sección
     }
 }

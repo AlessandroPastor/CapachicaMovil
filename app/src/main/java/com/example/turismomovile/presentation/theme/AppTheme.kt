@@ -44,23 +44,106 @@ object AppColors {
     val WarningTextDark = Color(0xFFFFF3E0)  // Naranja claro
     val InfoDark = Color(0xFF0D47A1)  // Azul oscuro
     val InfoTextDark = Color(0xFFE3F2FD)  // Azul claro
-
 }
 
-// Dimensiones personalizadas
+// Dimensiones personalizadas ampliadas y organizadas
 object AppDimensions {
+    // Espaciados básicos
+    val spacing_1 = 1
     val spacing_2 = 2
     val spacing_4 = 4
+    val spacing_6 = 6
     val spacing_8 = 8
+    val spacing_12 = 12
     val spacing_16 = 16
+    val spacing_20 = 20
     val spacing_24 = 24
+    val spacing_28 = 28
     val spacing_32 = 32
+    val spacing_40 = 40
     val spacing_48 = 48
+    val spacing_56 = 56
+    val spacing_64 = 64
+    val spacing_80 = 80
+    val spacing_96 = 96
+    val spacing_120 = 120
+    val spacing_150 = 150
 
+    // Componentes específicos
     val buttonHeight = 48
+    val buttonHeightLarge = 56
     val inputHeight = 56
+    val cardHeight = 120
+    val headerHeight = 64
+    val bottomNavHeight = 80
+    val toolbarHeight = 56
+    val fabSize = 56
+    val fabSizeSmall = 40
+
+    // Iconos y elementos pequeños
     val iconSize = 24
+    val iconSizeSmall = 16
+    val iconSizeMedium = 20
+    val iconSizeLarge = 32
+    val iconSizeXLarge = 48
+
+    // Elevaciones y sombras
     val cardElevation = 4
+    val cardElevationHigh = 8
+    val cardElevationLow = 2
+    val shadowElevation = 6
+    val shadowElevationHigh = 12
+
+    // Bordes y esquinas
+    val cornerRadius = 8
+    val cornerRadiusSmall = 4
+    val cornerRadiusMedium = 12
+    val cornerRadiusLarge = 16
+    val cornerRadiusXLarge = 20
+    val cornerRadiusXXLarge = 24
+    val cornerRadiusCircle = 50
+
+    // Líneas y divisores
+    val borderWidth = 1
+    val borderWidthThick = 2
+    val dividerHeight = 1
+
+    // Contenedores y layouts
+    val screenPadding = 16
+    val screenPaddingLarge = 24
+    val cardPadding = 16
+    val cardPaddingLarge = 24
+    val listItemPadding = 16
+    val dialogPadding = 24
+
+    // Elementos específicos para login
+    val logoSize = 120
+    val logoSizeLarge = 150
+    val loginCardMaxWidth = 400
+    val loginFormSpacing = 16
+    val loginButtonSpacing = 20
+
+    // Animaciones y efectos
+    val animationDurationShort = 200
+    val animationDurationMedium = 300
+    val animationDurationLong = 600
+    val animationDelayShort = 100
+    val animationDelayMedium = 200
+    val animationDelayLong = 400
+
+    // Partículas y efectos visuales
+    val particleSize = 3
+    val particleSizeMedium = 5
+    val particleSizeLarge = 8
+    val shimmerWidth = 1000
+    val floatDistance = 8
+    val breathingScale = 0.03f
+    val glowIntensity = 4
+
+    // Responsive breakpoints
+    val mobileBreakpoint = 600
+    val tabletBreakpoint = 840
+    val desktopBreakpoint = 1200
 }
 
 // Definir los esquemas de color para tema claro y oscuro

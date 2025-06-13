@@ -21,12 +21,12 @@ data class Service(
     val code: String,
     val category: String,
     val status: Int,
-    val emprendedores: List<Emprendedor>,
+    val emprendedores: List<EmprendedorServiceS>,
     val images: List<ServiceImage>
 )
 
 @Serializable
-data class Emprendedor(
+data class EmprendedorServiceS(
     val id: String,
     val razon_social: String,
     val address: String

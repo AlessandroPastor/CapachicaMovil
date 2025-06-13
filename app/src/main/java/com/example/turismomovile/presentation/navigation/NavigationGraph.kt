@@ -14,6 +14,7 @@ import io.dev.kmpventas.presentation.screens.configuration.role.municipalidad.Mu
 import com.example.turismomovile.presentation.screens.configuration.role.role.RoleScreen
 import com.example.turismomovile.presentation.screens.login.LoginScreen
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
+import com.example.turismomovile.presentation.screens.land_page.EmprendedoresScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
@@ -104,19 +105,49 @@ fun NavigationGraph(
 
         composable(Routes.LAND_PAGE) {
             WelcomeScreen(
+                navController = navController, // Asegúrate de pasar el navController aquí
                 onStartClick = {
                     println("🚪 Usuario quiere ingresar. Navegando a LOGIN")
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true } // Limpiar la pila hasta la pantalla de inicio
                     }
                 },
                 onClickExplorer = {
-                    println("🚪 Usuario quiere explorar. Navegando a EXPLORER_SCREEN")
+                    println("🚪 Usuario quiere explorar. Navegando a EXPLORATE")
                     navController.navigate(Routes.EXPLORATE) {
+                        // Navegar a la pantalla de exploración sin limpiar la pila
+                    }
+                },
+                onClickProductos = {
+                    println("🚪 Usuario quiere ver los productos. Navegando a PRODUCTOS")
+                    navController.navigate(Routes.PRODUCTOS) {
+                        // Navegar a la pantalla de productos sin limpiar la pila
                     }
                 }
             )
         }
+
+        composable(Routes.PRODUCTOS) {
+            EmprendedoresScreen(
+                navController = navController, // Asegúrate de pasar el navController a esta pantalla también
+                onStartClick = {
+                    println("🚪 Usuario quiere ingresar. Navegando a LOGIN")
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true } // Limpiar la pila hasta la pantalla de inicio
+                    }
+                },
+                onClickExplorer = {
+                    println("🚪 Usuario quiere explorar. Navegando a EXPLORATE")
+                    navController.navigate(Routes.EXPLORATE) {
+                        // Navegar a la pantalla de exploración
+                    }
+                }
+            )
+        }
+
+
+
+
         composable(Routes.EXPLORATE) {
             ExplorerScreen(
                 onStartClick = {

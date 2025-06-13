@@ -2,7 +2,7 @@ package com.example.turismomovile.data.remote.api
 
 object ApiConstants {
     //const val BASE_URL = "http://172.22.8.17:8000"
-    const val BASE_URL = "http://172.22.2.16:8000" //PC PASTOR
+    const val BASE_URL = "http://10.80.81.3:8000" //PC PASTOR
     //const val BASE_URL = "http://192.172.2.101:8000" //PC JAMIL
     //const val BASE_URL = "http://192.177.1.13:8000" //PC CRISTIAN
 
@@ -32,7 +32,8 @@ object ApiConstants {
         const val MODULE_BY_ID = "$BASE_URL/module/{id}"
         const val MODULE_SELECTED = "$BASE_URL/module/modules-selected/roleId/{roleId}/parentModuleId/{parentModuleId}"
         const val MENU_ENDPOINT = "$BASE_URL/module/menu"
-
+        // SERVICE-EMPRENDEDOR
+        const val SERVICE_EMPRENDEDOR = "$BASE_URL/emprendedors-services/by-service"
 
         // AUTH
         const val LOGIN_ENDPOINT = "$BASE_URL/login"
@@ -79,11 +80,15 @@ object ApiConstants {
 
 
         //EMPRENDEDORES
-        const val EMPRENDEDORES_GET = "$BASE_URL/emprendedor"
+        const val EMPRENDEDORES_GET = "$BASE_URL/emprendedor_list"
         const val EMPRENDEDORES_GETBYID = "$BASE_URL/emprendedor/{id}"
         const val EMPRENDEDORES_POST = "$BASE_URL/emprendedor"
         const val EMPRENDEDORES_PUT = "$BASE_URL/emprendedor/{id}"
         const val EMPRENDEDORES_DELETE = "$BASE_URL/emprendedor/{id}"
+        const val EMPRENDEDORES_ASIGNAR = "$BASE_URL/emprendedor/services/{id}"
+        const val EMPRENDEDORES_GETBYUSERID = "$BASE_URL/emprendedor/user/{userId}"
+        const val REPORTE_VENTAS = "$BASE_URL/emprendedor/ventas/{emprendedorId}"
+        const val RESERVAS_POR_EMPRENDEDOR = "$BASE_URL/emprendedor/reservas/{emprendedorId}"
     }
 
 }

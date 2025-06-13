@@ -7,6 +7,7 @@ import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.AuthApiService
 import com.example.turismomovile.data.remote.api.base.MenuApiService
 import com.example.turismomovile.data.remote.api.configuracion.AsociacionApiService
+import com.example.turismomovile.data.remote.api.configuracion.EmprendedorApiService
 import com.example.turismomovile.data.remote.api.configuracion.ImgAsociacionesApiService
 import com.example.turismomovile.data.remote.api.configuracion.ModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadApiService
@@ -98,6 +99,8 @@ val appModule = module {
     single { ServiceApiService(get(),get()) }
     single { AsociacionApiService(get(),get()) }
     single { ImgAsociacionesApiService(get(),get()) }
+    single { EmprendedorApiService (get(),get())}
+
 
     // =====================================
     // Repositories
@@ -121,7 +124,7 @@ val appModule = module {
     single { ThemeViewModel(get()) }
     single { LoginViewModel(get(), get()) }
     single { HomeViewModel(get(), get()) }
-    single { LangPageViewModel(get(), get(), get(),get()) }
+    single { LangPageViewModel(get(), get(), get(),get(),get()) }
     single { RoleViewModel(get(), get(), get()) }
     single { ModuleViewModel(get(), get()) }
     single { ParentModuleViewModel(get()) }

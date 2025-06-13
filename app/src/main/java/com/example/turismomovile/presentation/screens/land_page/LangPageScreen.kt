@@ -1,11 +1,17 @@
 package com.example.turismomovile.presentation.screens.land_page
 
+import android.annotation.SuppressLint
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -13,6 +19,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,21 +116,33 @@ import androidx.compose.material.icons.filled.Build
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.HomeWork
+import androidx.compose.material.icons.outlined.Build
+import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.ShoppingCart
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.window.DialogProperties
+import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import coil.compose.rememberImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.Service
 import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.InfoItem
+import com.example.turismomovile.presentation.components.InfoRow
 import com.example.turismomovile.presentation.components.SearchBar
+import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -134,8 +153,11 @@ import kotlin.math.absoluteValue
 fun WelcomeScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
+    onClickProductos: () -> Unit,
     viewModel: LangPageViewModel = koinInject(),
-    themeViewModel: ThemeViewModel = koinInject()
+    themeViewModel: ThemeViewModel = koinInject(),
+    navController: NavController  // Pasamos el NavController
+
 ) {
 
     val visible = remember { mutableStateOf(false) }
@@ -149,16 +171,20 @@ fun WelcomeScreen(
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
 
-    // Función para desplazarse a una sección
+    // Función simplificada para desplazarse a una sección
     fun scrollToSection(section: LangPageViewModel.Sections) {
-        currentSection = section
-        coroutineScope.launch {
-            when (section) {
-                LangPageViewModel.Sections.HOME -> lazyListState.animateScrollToItem(0)
-                LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
-                LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
-                LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
-                LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
+        viewModel.onSectionSelected(section, navController)
+
+        // Solo manejar scroll para las secciones que no son PRODUCTOS
+        if (section != LangPageViewModel.Sections.PRODUCTS) {
+            coroutineScope.launch {
+                when (section) {
+                    LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
+                    LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
+                    LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
+                    LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
+                    else -> Unit
+                }
             }
         }
     }
@@ -316,7 +342,8 @@ fun WelcomeScreen(
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
-                    onSectionSelected = { scrollToSection(it) }
+                    onSectionSelected = { scrollToSection(it) },
+                    navController = navController
                 )
             }
         ) { innerPadding ->
@@ -464,7 +491,11 @@ fun WelcomeScreen(
                                                             modifier = Modifier
                                                                 .size(60.dp)
                                                                 .clip(CircleShape)
-                                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
+                                                                .background(
+                                                                    MaterialTheme.colorScheme.primary.copy(
+                                                                        alpha = 0.2f
+                                                                    )
+                                                                ),
                                                             contentScale = ContentScale.Crop
                                                         )
                                                     }
@@ -719,97 +750,148 @@ fun WelcomeScreen(
     }
 }
 
-// Componente para la barra de navegación inferior
 @Composable
 fun BottomNavigationBar(
     currentSection: LangPageViewModel.Sections,
     onSectionSelected: (LangPageViewModel.Sections) -> Unit,
+    navController: NavController,
     modifier: Modifier = Modifier
 ) {
     Surface(
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 8.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .shadow(elevation = 16.dp, shape = RectangleShape, clip = true),
+        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
         tonalElevation = 8.dp
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceAround
         ) {
             BottomNavItem(
-                icon = Icons.Default.Home,
+                icon = Icons.Outlined.Home,
+                selectedIcon = Icons.Filled.Home,
                 label = "Inicio",
                 isSelected = currentSection == LangPageViewModel.Sections.HOME,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.HOME) }
             )
 
             BottomNavItem(
-                icon = Icons.Default.Build,
+                icon = Icons.Outlined.Build,
+                selectedIcon = Icons.Filled.Build,
                 label = "Servicios",
                 isSelected = currentSection == LangPageViewModel.Sections.SERVICES,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.SERVICES) }
             )
 
             BottomNavItem(
-                icon = Icons.Default.LocationOn,
+                icon = Icons.Outlined.LocationOn,
+                selectedIcon = Icons.Filled.LocationOn,
                 label = "Lugares",
                 isSelected = currentSection == LangPageViewModel.Sections.PLACES,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.PLACES) }
             )
 
             BottomNavItem(
-                icon = Icons.Default.Star,
+                icon = Icons.Outlined.Star,
+                selectedIcon = Icons.Filled.Star,
                 label = "Eventos",
                 isSelected = currentSection == LangPageViewModel.Sections.EVENTS,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.EVENTS) }
             )
 
             BottomNavItem(
-                icon = Icons.Default.Favorite,
+                icon = Icons.Outlined.Favorite,
+                selectedIcon = Icons.Filled.Favorite,
                 label = "Recomendados",
                 isSelected = currentSection == LangPageViewModel.Sections.RECOMMENDATIONS,
                 onClick = { onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS) }
+            )
+
+            BottomNavItem(
+                icon = Icons.Outlined.ShoppingCart,
+                selectedIcon = Icons.Filled.ShoppingCart,
+                label = "Productos",
+                isSelected = currentSection == LangPageViewModel.Sections.PRODUCTS,
+                onClick = { onSectionSelected(LangPageViewModel.Sections.PRODUCTS) }
             )
         }
     }
 }
 
+@SuppressLint("RememberReturnType")
 @Composable
 fun BottomNavItem(
     icon: ImageVector,
+    selectedIcon: ImageVector,
     label: String,
     isSelected: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val contentColor = if (isSelected) {
-        MaterialTheme.colorScheme.primary
-    } else {
-        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-    }
+    val animatedProgress by animateFloatAsState(
+        targetValue = if (isSelected) 1f else 0f,
+        animationSpec = tween(durationMillis = 300),
+        label = "selectionAnimation"
+    )
 
     Column(
         modifier = modifier
-            .clickable(onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 4.dp),
+            .clickable(
+                onClick = onClick,
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(bounded = false, radius = 24.dp)
+            )
+            .padding(horizontal = 8.dp, vertical = 4.dp)
+            .graphicsLayer {
+                alpha = if (isSelected) 1f else 0.8f
+                scaleX = 1f + animatedProgress * 0.1f
+                scaleY = 1f + animatedProgress * 0.1f
+            },
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = label,
-            tint = contentColor,
-            modifier = Modifier.size(24.dp)
-        )
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(40.dp)
+                .background(
+                    color = if (isSelected) {
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                    } else {
+                        Color.Transparent
+                    },
+                    shape = CircleShape
+                )
+        ) {
+            Icon(
+                imageVector = if (isSelected) selectedIcon else icon,
+                contentDescription = label,
+                tint = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier.size(24.dp)
+            )
+        }
 
-        Text(
-            text = label,
-            color = contentColor,
-            style = MaterialTheme.typography.labelSmall,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        AnimatedVisibility(
+            visible = isSelected,
+            enter = fadeIn() + expandVertically(),
+            exit = fadeOut() + shrinkVertically()
+        ) {
+            Text(
+                text = label,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 2.dp)
+            )
+        }
     }
 }
 
@@ -1537,25 +1619,7 @@ fun AssociationDetailDialog(
     }
 }
 
-@Composable
-private fun InfoRow(icon: ImageVector, text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(20.dp)
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(start = 8.dp)
-        )
-    }
-}
+
 
 
 
