@@ -15,8 +15,12 @@ import com.example.turismomovile.presentation.screens.configuration.role.role.Ro
 import com.example.turismomovile.presentation.screens.login.LoginScreen
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import com.example.turismomovile.presentation.screens.land_page.EmprendedoresScreen
+import com.example.turismomovile.presentation.screens.land_page.EventsScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.land_page.PlacesScreen
+import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
+import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
 import com.example.turismomovile.presentation.screens.navigation.BaseScreenLayout
 import com.example.turismomovile.presentation.screens.navigation.DefaultScreen
@@ -43,11 +47,12 @@ fun NavigationGraph(
         Routes.LOGIN,
         Routes.EXPLORATE,
     )
+
     LaunchedEffect(navController) {
         snapshotFlow { navController.currentBackStackEntry }
             .collect { backStackEntry ->
                 val route = backStackEntry?.destination?.route
-                val token = sessionManager.getUser()?.token // ⚠️ suspend, asegúrate de usar `collect` en LaunchedEffect
+                val token = sessionManager.getUser()?.token
                 println("🧠 Token: $token | Ruta actual: $route")
 
                 if (token.isNullOrEmpty() && route !in publicRoutes) {
@@ -59,25 +64,22 @@ fun NavigationGraph(
             }
     }
 
-
-
-
     NavHost(
         navController = navController,
         startDestination = Routes.SPLASH
     ) {
+
+        // Splash Screen
         composable(Routes.SPLASH) {
             SplashScreen(
                 onSplashFinished = {
                     scope.launch {
                         val isFirstTime = !sessionManager.isOnboardingCompleted()
                         if (isFirstTime) {
-                            println("🎓 Mostrando ONBOARDING")
                             navController.navigate(Routes.ONBOARDING) {
                                 popUpTo(Routes.SPLASH) { inclusive = true }
                             }
                         } else {
-                            println("✅ Splash finalizado, navegando a LAND_PAGE")
                             navController.navigate(Routes.LAND_PAGE) {
                                 popUpTo(Routes.SPLASH) { inclusive = true }
                             }
@@ -87,9 +89,9 @@ fun NavigationGraph(
             )
         }
 
+        // Onboarding Screen
         composable(Routes.ONBOARDING) {
-            println("📘 Mostrando OnboardingScreen")
-            OnboardingScreen (
+            OnboardingScreen(
                 onComplete = {
                     scope.launch {
                         sessionManager.setOnboardingCompleted(true)
@@ -101,76 +103,39 @@ fun NavigationGraph(
             )
         }
 
-
-
+        // Welcome / Land Page
         composable(Routes.LAND_PAGE) {
             WelcomeScreen(
-                navController = navController, // Asegúrate de pasar el navController aquí
+                navController = navController,
                 onStartClick = {
-                    println("🚪 Usuario quiere ingresar. Navegando a LOGIN")
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true } // Limpiar la pila hasta la pantalla de inicio
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
                     }
                 },
                 onClickExplorer = {
-                    println("🚪 Usuario quiere explorar. Navegando a EXPLORATE")
-                    navController.navigate(Routes.EXPLORATE) {
-                        // Navegar a la pantalla de exploración sin limpiar la pila
-                    }
+                    navController.navigate(Routes.EXPLORATE)
                 },
                 onClickProductos = {
-                    println("🚪 Usuario quiere ver los productos. Navegando a PRODUCTOS")
-                    navController.navigate(Routes.PRODUCTOS) {
-                        // Navegar a la pantalla de productos sin limpiar la pila
-                    }
+                    navController.navigate(Routes.PRODUCTS)
                 }
             )
         }
 
-        composable(Routes.PRODUCTOS) {
-            EmprendedoresScreen(
-                navController = navController, // Asegúrate de pasar el navController a esta pantalla también
-                onStartClick = {
-                    println("🚪 Usuario quiere ingresar. Navegando a LOGIN")
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true } // Limpiar la pila hasta la pantalla de inicio
-                    }
-                },
-                onClickExplorer = {
-                    println("🚪 Usuario quiere explorar. Navegando a EXPLORATE")
-                    navController.navigate(Routes.EXPLORATE) {
-                        // Navegar a la pantalla de exploración
-                    }
-                }
-            )
-        }
-
-
-
-
+        // Explorer Screen
         composable(Routes.EXPLORATE) {
             ExplorerScreen(
                 onStartClick = {
-                    println("🌍 Usuario regresó a la pantalla de bienvenida")
                     navController.navigate(Routes.LAND_PAGE) {
                         popUpTo(Routes.EXPLORATE) { inclusive = true }
                     }
                 },
                 onClickExplorer = {
-                    println("🌍 Usuario quiere explorar más")
                     navController.navigate(Routes.EXPLORATE)
                 }
             )
         }
 
-
-
-
-
-
-
-
-
+        // Login Screen
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { user ->
@@ -189,9 +154,7 @@ fun NavigationGraph(
             )
         }
 
-
-
-
+        // Home Screen (privado)
         composable(Routes.HOME) {
             BaseScreenLayout(
                 navController = navController,
@@ -215,13 +178,46 @@ fun NavigationGraph(
             }
         }
 
+        // Productos -> EmprendedoresScreen
+        composable(Routes.PRODUCTS) {
+            EmprendedoresScreen(
+                navController = navController,
+                onStartClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                    }
+                },
+                onClickExplorer = {
+                    navController.navigate(Routes.EXPLORATE)
+                }
+            )
+        }
 
-        // Other routes like DeviceInfo or configuration screens
+        // Agregamos ahora los demás screens del BottomNavigation 🔥
+
+        composable(Routes.SERVICES) {
+            ServiceScreen(navController = navController)
+        }
+
+        composable(Routes.PLACES) {
+            PlacesScreen(navController = navController)
+        }
+
+        composable(Routes.EVENTS) {
+            EventsScreen(navController = navController)
+        }
+
+        composable(Routes.RECOMMENDATIONS) {
+            RecommendationsScreen(navController = navController)
+        }
+
+
+        // Tourist Info (solo si lo necesitas)
         composable(Routes.DEVICE_INFO) {
             TouristInfoScreen(navController)
         }
 
-        // Setup routes for the menu
+        // Finalmente, mantenemos la navegación privada de configuración
         setupMenuRoutes(
             navGraphBuilder = this,
             navController = navController,
@@ -229,6 +225,7 @@ fun NavigationGraph(
         )
     }
 }
+
 
 private fun setupMenuRoutes(
     navGraphBuilder: NavGraphBuilder,

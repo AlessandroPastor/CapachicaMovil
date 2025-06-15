@@ -9,7 +9,12 @@ object Routes {
     const val DEVICE_INFO = "device_info"
     const val LAND_PAGE = "landpage"
     const val EXPLORATE = "explorate"
-    const val PRODUCTOS = "productos"
+    const val PRODUCTS = "products"
+    const val SERVICES = "services"
+    const val PLACES = "places"
+    const val EVENTS = "events"
+    const val RECOMMENDATIONS = "recommendations"
+
 
     object HomeScreen {
         private const val HOME_PREFIX = "/homeScreen"

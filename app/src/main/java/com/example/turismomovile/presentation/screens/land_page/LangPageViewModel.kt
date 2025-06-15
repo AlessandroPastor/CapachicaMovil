@@ -42,7 +42,7 @@ class LangPageViewModel (
     val stateAso = _stateAso.asStateFlow()
 
     private val _stateImgAso = MutableStateFlow(ImgAsoacionesState())
-    val stateImgAso = _state.asStateFlow()
+    val stateImgAso = _stateImgAso.asStateFlow()
 
     private val _stateEmprendedor = MutableStateFlow(EmprendedorState())
     val stateEmprendedor = _stateEmprendedor.asStateFlow()
@@ -429,7 +429,7 @@ class LangPageViewModel (
         // Recargamos los datos (puedes hacer esto de forma directa o específica si es necesario)
         loadMunicipalidad()
     }
-    // Función mejorada para manejar la selección de sección
+    // ✅ FUNCION ACTUALIZADA
     fun onSectionSelected(section: Sections, navController: NavController? = null) {
         _currentSection.value = section
 
@@ -440,14 +440,26 @@ class LangPageViewModel (
                     navController?.navigate(Routes.LAND_PAGE)
                 }
                 Sections.PRODUCTS -> {
-                    navController?.navigate(Routes.PRODUCTOS)
+                    navController?.navigate(Routes.PRODUCTS)
                 }
-                else -> Unit
+                Sections.SERVICES -> {
+                    navController?.navigate(Routes.SERVICES)
+                }
+                Sections.PLACES -> {
+                    navController?.navigate(Routes.PLACES)
+                }
+                Sections.EVENTS -> {
+                    navController?.navigate(Routes.EVENTS)
+                }
+                Sections.RECOMMENDATIONS -> {
+                    navController?.navigate(Routes.RECOMMENDATIONS)
+                }
             }
         }
     }
 
+    // ✅ Enum completo
     enum class Sections {
-        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS  // Nueva sección
+        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS
     }
 }
