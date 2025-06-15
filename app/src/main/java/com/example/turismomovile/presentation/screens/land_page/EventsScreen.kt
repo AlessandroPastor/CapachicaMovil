@@ -12,36 +12,54 @@ import androidx.navigation.NavController
 import com.example.turismomovile.R
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.EventCard
+import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EventsScreen(
+    onStartClick: () -> Unit,
+    onClickExplorer: () -> Unit,
     navController: NavController,
     viewModel: LangPageViewModel = koinInject(),
-    themeViewModel: ThemeViewModel = koinInject(),
+    themeViewModel: ThemeViewModel = koinInject()
 ) {
-    // Cada vez que entra a la pantalla, seteamos el section actual
-    LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.EVENTS, navController)
-    }
-
-    val currentSection by viewModel.currentSection
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
+    val currentSection by viewModel.currentSection
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.onSectionSelected(LangPageViewModel.Sections.EVENTS)
+    }
 
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Eventos") }
+                MainTopAppBar(
+                    title = "Eventos",
+                    isSearchVisible = isSearchVisible,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { /* Agrega lógica de búsqueda de eventos si deseas */ },
+                    onToggleSearch = { isSearchVisible = true },
+                    onCloseSearch = {
+                        isSearchVisible = false
+                        searchQuery = ""
+                    },
+                    onClickExplorer = onClickExplorer,
+                    onStartClick = onStartClick,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             },
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
-                    onSectionSelected = { section -> viewModel.onSectionSelected(section, navController) },
+                    onSectionSelected = { section ->
+                        viewModel.onSectionSelected(section)
+                    },
                     navController = navController
                 )
             }
@@ -57,6 +75,8 @@ fun EventsScreen(
         }
     }
 }
+
+
 
 @Composable
 fun EventsHorizontalList() {

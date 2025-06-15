@@ -114,9 +114,6 @@ fun NavigationGraph(
                 },
                 onClickExplorer = {
                     navController.navigate(Routes.EXPLORATE)
-                },
-                onClickProductos = {
-                    navController.navigate(Routes.PRODUCTS)
                 }
             )
         }
@@ -124,14 +121,6 @@ fun NavigationGraph(
         // Explorer Screen
         composable(Routes.EXPLORATE) {
             ExplorerScreen(
-                onStartClick = {
-                    navController.navigate(Routes.LAND_PAGE) {
-                        popUpTo(Routes.EXPLORATE) { inclusive = true }
-                    }
-                },
-                onClickExplorer = {
-                    navController.navigate(Routes.EXPLORATE)
-                }
             )
         }
 
@@ -196,19 +185,51 @@ fun NavigationGraph(
         // Agregamos ahora los demás screens del BottomNavigation 🔥
 
         composable(Routes.SERVICES) {
-            ServiceScreen(navController = navController)
+            ServiceScreen(navController = navController,
+                onStartClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                    }
+                },
+                onClickExplorer = {
+                    navController.navigate(Routes.EXPLORATE)
+                })
         }
 
         composable(Routes.PLACES) {
-            PlacesScreen(navController = navController)
+            PlacesScreen(navController = navController,
+                onStartClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                    }
+                },
+                onClickExplorer = {
+                    navController.navigate(Routes.EXPLORATE)
+                })
         }
 
         composable(Routes.EVENTS) {
-            EventsScreen(navController = navController)
+            EventsScreen(navController = navController,
+                onStartClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                    }
+                },
+                onClickExplorer = {
+                    navController.navigate(Routes.EXPLORATE)
+                })
         }
 
         composable(Routes.RECOMMENDATIONS) {
-            RecommendationsScreen(navController = navController)
+            RecommendationsScreen(navController = navController,
+                onStartClick = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                    }
+                },
+                onClickExplorer = {
+                    navController.navigate(Routes.EXPLORATE)
+                })
         }
 
 

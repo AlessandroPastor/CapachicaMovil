@@ -36,6 +36,7 @@ import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
+import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
@@ -43,29 +44,49 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecommendationsScreen(
+    onStartClick: () -> Unit,
+    onClickExplorer: () -> Unit,
     navController: NavController,
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
-    // Cuando entras, seteamos la sección actual a RECOMMENDATIONS
-    LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS, navController)
-    }
-
-    val currentSection by viewModel.currentSection
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
+    val currentSection by viewModel.currentSection
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
+    // ✅ Seteamos la sección RECOMMENDATIONS al entrar
+    LaunchedEffect(Unit) {
+        viewModel.onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS)
+    }
 
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Recomendaciones") }
+                MainTopAppBar(
+                    title = "Recomendaciones",
+                    isSearchVisible = isSearchVisible,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { /* Puedes implementar búsqueda si luego hay API */ },
+                    onToggleSearch = { isSearchVisible = true },
+                    onCloseSearch = {
+                        isSearchVisible = false
+                        searchQuery = ""
+                    },
+                    onClickExplorer = onClickExplorer,
+                    onStartClick = onStartClick,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             },
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
-                    onSectionSelected = { section -> viewModel.onSectionSelected(section, navController) },
+                    onSectionSelected = { section ->
+                        viewModel.onSectionSelected(section)
+                    },
                     navController = navController
                 )
             }
@@ -81,6 +102,8 @@ fun RecommendationsScreen(
         }
     }
 }
+
+
 
 @Composable
 fun RecommendationsGrid() {

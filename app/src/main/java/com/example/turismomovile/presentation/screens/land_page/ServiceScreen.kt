@@ -64,36 +64,58 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorServiceS
 import com.example.turismomovile.data.remote.dto.configuracion.ServiceImage
+import com.example.turismomovile.presentation.components.MainTopAppBar
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServiceScreen(
+    onStartClick: () -> Unit,
+    onClickExplorer: () -> Unit,
     navController: NavController,
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
-    // Automatically select services section on entry
-    LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.SERVICES, navController)
-    }
-
-    val currentSection by viewModel.currentSection
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
+    val stateService by viewModel.stateService.collectAsStateWithLifecycle()
+    val currentSection by viewModel.currentSection
+
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
+    // ✅ Cargar servicios al iniciar
+    LaunchedEffect(Unit) {
+        viewModel.onSectionSelected(LangPageViewModel.Sections.SERVICES)
+        viewModel.loadService()
+    }
 
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
-                ServiceTopAppBar(
+                MainTopAppBar(
                     title = "Servicios",
-                    onBackClick = { navController.popBackStack() }
+                    isSearchVisible = isSearchVisible,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = {
+                        viewModel.loadService(searchQuery = searchQuery)
+                    },
+                    onToggleSearch = { isSearchVisible = true },
+                    onCloseSearch = {
+                        isSearchVisible = false
+                        searchQuery = ""
+                        viewModel.loadService() // Reiniciar al cerrar búsqueda
+                    },
+                    onClickExplorer = onClickExplorer,
+                    onStartClick = onStartClick,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             },
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
                     onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section, navController)
+                        viewModel.onSectionSelected(section)
                     },
                     navController = navController
                 )
@@ -108,6 +130,7 @@ fun ServiceScreen(
         }
     }
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

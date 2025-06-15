@@ -33,7 +33,6 @@ class EmprendedorApiService(
             parameter("page", page)
             parameter("size", size)
             name?.let { parameter("name", it) }
-            addAuthHeader()
         }.body()
     }
 

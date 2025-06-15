@@ -69,6 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
+import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
@@ -76,32 +77,53 @@ import org.koin.compose.koinInject
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacesScreen(
+    onStartClick: () -> Unit,
+    onClickExplorer: () -> Unit,
     navController: NavController,
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
-    // Cuando entras, seteamos la sección actual a PLACES
-    LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.PLACES, navController)
-    }
-
-    val currentSection by viewModel.currentSection
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
-    val stateAso = viewModel.stateAso.collectAsState().value
+    val currentSection by viewModel.currentSection
+    val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
+
     val favoriteItems = remember { mutableSetOf<String>() }
     var selectedAsociacion by remember { mutableStateOf<Asociacion?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    var isSearchVisible by remember { mutableStateOf(false) }
+
+    // ✅ Seteamos la sección PLACES al entrar
+    LaunchedEffect(Unit) {
+        viewModel.onSectionSelected(LangPageViewModel.Sections.PLACES)
+        viewModel.loadAsociaciones()
+    }
 
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = { Text("Lugares Emblemáticos") }
+                MainTopAppBar(
+                    title = "Lugares Emblemáticos",
+                    isSearchVisible = isSearchVisible,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { /* Podrías agregar búsqueda de asociaciones */ },
+                    onToggleSearch = { isSearchVisible = true },
+                    onCloseSearch = {
+                        isSearchVisible = false
+                        searchQuery = ""
+                    },
+                    onClickExplorer = onClickExplorer,
+                    onStartClick = onStartClick,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             },
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
-                    onSectionSelected = { section -> viewModel.onSectionSelected(section, navController) },
+                    onSectionSelected = { section ->
+                        viewModel.onSectionSelected(section)
+                    },
                     navController = navController
                 )
             }
@@ -112,19 +134,24 @@ fun PlacesScreen(
                     .padding(innerPadding)
                     .padding(16.dp)
             ) {
-                if (stateAso.isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                } else if (stateAso.error != null) {
-                    Text(
-                        text = "Error al cargar asociaciones: ${stateAso.error}",
-                        color = MaterialTheme.colorScheme.error
-                    )
-                } else {
-                    LazyVerticalGrid(
-                        columns = GridCells.Fixed(2),
-                        verticalArrangement = Arrangement.spacedBy(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
-                        content = {
+                when {
+                    stateAso.isLoading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    }
+
+                    stateAso.error != null -> {
+                        Text(
+                            text = "Error al cargar asociaciones: ${stateAso.error}",
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+
+                    else -> {
+                        LazyVerticalGrid(
+                            columns = GridCells.Fixed(2),
+                            verticalArrangement = Arrangement.spacedBy(16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
                             items(stateAso.itemsAso) { asociacion ->
                                 val isFavorite = favoriteItems.contains(asociacion.id)
                                 AssociationCard(
@@ -138,10 +165,9 @@ fun PlacesScreen(
                                 )
                             }
                         }
-                    )
+                    }
                 }
 
-                // Mostramos el detalle del diálogo cuando se selecciona una asociación
                 selectedAsociacion?.let { asociacion ->
                     AssociationDetailDialog(
                         association = asociacion,
@@ -160,6 +186,8 @@ fun PlacesScreen(
         }
     }
 }
+
+
 
 
 @Composable

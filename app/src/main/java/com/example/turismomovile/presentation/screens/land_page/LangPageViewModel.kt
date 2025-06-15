@@ -421,43 +421,15 @@ class LangPageViewModel (
         }
     }
 
-
-
     fun refreshMunicipalidades() {
         // Establecemos el estado de "isRefreshing" en true
         _state.value = _state.value.copy(isLoading = true)
         // Recargamos los datos (puedes hacer esto de forma directa o específica si es necesario)
         loadMunicipalidad()
     }
-    // ✅ FUNCION ACTUALIZADA
-    fun onSectionSelected(section: Sections, navController: NavController? = null) {
+    fun onSectionSelected(section: Sections) {
         _currentSection.value = section
-
-        viewModelScope.launch {
-            when (section) {
-                Sections.HOME -> {
-                    navController?.popBackStack(Routes.LAND_PAGE, inclusive = false)
-                    navController?.navigate(Routes.LAND_PAGE)
-                }
-                Sections.PRODUCTS -> {
-                    navController?.navigate(Routes.PRODUCTS)
-                }
-                Sections.SERVICES -> {
-                    navController?.navigate(Routes.SERVICES)
-                }
-                Sections.PLACES -> {
-                    navController?.navigate(Routes.PLACES)
-                }
-                Sections.EVENTS -> {
-                    navController?.navigate(Routes.EVENTS)
-                }
-                Sections.RECOMMENDATIONS -> {
-                    navController?.navigate(Routes.RECOMMENDATIONS)
-                }
-            }
-        }
     }
-
     // ✅ Enum completo
     enum class Sections {
         HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS

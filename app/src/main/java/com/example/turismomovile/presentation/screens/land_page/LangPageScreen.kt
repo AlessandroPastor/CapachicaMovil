@@ -23,9 +23,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
@@ -92,6 +89,7 @@ import coil.compose.rememberImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.InfoItem
+import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.SearchBar
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
@@ -102,7 +100,6 @@ import kotlin.math.absoluteValue
 fun WelcomeScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
-    onClickProductos: () -> Unit,
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject(),
     navController: NavController
@@ -119,7 +116,7 @@ fun WelcomeScreen(
     val coroutineScope = rememberCoroutineScope()
 
     fun scrollToSection(section: LangPageViewModel.Sections) {
-        viewModel.onSectionSelected(section, navController)
+        viewModel.onSectionSelected(section)
 
         if (section != LangPageViewModel.Sections.PRODUCTS) {
             coroutineScope.launch {
@@ -175,113 +172,41 @@ fun WelcomeScreen(
         isRefreshing.value = false
     }
 
+    // ✅ AQUÍ VIENE EL CAMBIO IMPORTANTE: usamos nuestro nuevo TopAppBar
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
-                TopAppBar(
-                    title = {
-                        AnimatedVisibility(
-                            visible = !isSearchVisible,
-                            enter = fadeIn() + slideInHorizontally()
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                municipalidadDescriptionState.descriptions.firstOrNull()?.logo?.let { logoUrl ->
-                                    Image(
-                                        painter = rememberAsyncImagePainter(logoUrl),
-                                        contentDescription = "Logo municipalidad",
-                                        modifier = Modifier
-                                            .size(32.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                }
-
-                                Text(
-                                    text = state.items.firstOrNull()?.distrito ?: "Bienvenido",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        shadow = Shadow(
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                            offset = Offset(2f, 2f),
-                                            blurRadius = 3f
-                                        )
-                                    ),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                        }
-                    },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp),
-                        titleContentColor = MaterialTheme.colorScheme.onSurface,
-                        actionIconContentColor = MaterialTheme.colorScheme.primary
-                    ),
-                    actions = {
-                        if (isSearchVisible) {
-                            SearchBar(
-                                query = searchQuery,
-                                onQueryChange = { searchQuery = it },
-                                onSearch = { /* Implement search */ },
-                                onClose = { isSearchVisible = false },
-                                modifier = Modifier.weight(1f)
-                            )
-                        } else {
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                IconButton(
-                                    onClick = { isSearchVisible = true },
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Search,
-                                        contentDescription = "Buscar"
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = onClickExplorer,
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Explore,
-                                        contentDescription = "Explorar"
-                                    )
-                                }
-
-                                IconButton(
-                                    onClick = { themeViewModel.toggleTheme() },
-                                    modifier = Modifier.size(40.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isDarkMode) Icons.Default.LightMode else Icons.Default.DarkMode,
-                                        contentDescription = "Cambiar tema"
-                                    )
-                                }
-
-                                Button(
-                                    onClick = onStartClick,
-                                    shape = RoundedCornerShape(12.dp),
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary,
-                                        contentColor = MaterialTheme.colorScheme.onPrimary
-                                    ),
-                                    modifier = Modifier.height(40.dp)
-                                ) {
-                                    Text("Ingresar", fontSize = 14.sp)
-                                }
-                            }
-                        }
-                    }
+                MainTopAppBar(
+                    title = state.items.firstOrNull()?.distrito ?: "Bienvenido",
+                    isSearchVisible = isSearchVisible,
+                    searchQuery = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    onSearch = { /* Implementar búsqueda si deseas */ },
+                    onToggleSearch = { isSearchVisible = true },
+                    onCloseSearch = { isSearchVisible = false },
+                    onClickExplorer = onClickExplorer,
+                    onStartClick = onStartClick,
+                    isDarkMode = isDarkMode,
+                    onToggleTheme = { themeViewModel.toggleTheme() }
                 )
             },
             bottomBar = {
                 BottomNavigationBar(
                     currentSection = currentSection,
-                    onSectionSelected = { scrollToSection(it) },
+                    onSectionSelected = { section ->
+                        viewModel.onSectionSelected(section)
+                        if (section != LangPageViewModel.Sections.PRODUCTS) {
+                            coroutineScope.launch {
+                                when (section) {
+                                    LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
+                                    LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
+                                    LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
+                                    LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
+                                    else -> Unit
+                                }
+                            }
+                        }
+                    },
                     navController = navController
                 )
             }

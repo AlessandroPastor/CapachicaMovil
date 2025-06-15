@@ -1,46 +1,24 @@
 package com.example.turismomovile.presentation.components
 
-import android.annotation.SuppressLint
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
-import androidx.compose.material.ripple.rememberRipple
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import io.dev.kmpventas.presentation.navigation.Routes
@@ -52,84 +30,71 @@ fun BottomNavigationBar(
     navController: NavController,
     modifier: Modifier = Modifier
 ) {
+    val navItems = listOf(
+        BottomNavItem(
+            icon = Icons.Outlined.Home,
+            selectedIcon = Icons.Filled.Home,
+            label = "Inicio",
+            section = LangPageViewModel.Sections.HOME,
+            route = Routes.LAND_PAGE
+        ),
+        BottomNavItem(
+            icon = Icons.Outlined.Build,
+            selectedIcon = Icons.Filled.Build,
+            label = "Servicios",
+            section = LangPageViewModel.Sections.SERVICES,
+            route = Routes.SERVICES
+        ),
+        BottomNavItem(
+            icon = Icons.Outlined.LocationOn,
+            selectedIcon = Icons.Filled.LocationOn,
+            label = "Lugares",
+            section = LangPageViewModel.Sections.PLACES,
+            route = Routes.PLACES
+        ),
+        BottomNavItem(
+            icon = Icons.Outlined.Star,
+            selectedIcon = Icons.Filled.Star,
+            label = "Eventos",
+            section = LangPageViewModel.Sections.EVENTS,
+            route = Routes.EVENTS
+        ),
+        BottomNavItem(
+            icon = Icons.Outlined.Favorite,
+            selectedIcon = Icons.Filled.Favorite,
+            label = "Favoritos",
+            section = LangPageViewModel.Sections.RECOMMENDATIONS,
+            route = Routes.RECOMMENDATIONS
+        ),
+        BottomNavItem(
+            icon = Icons.Outlined.ShoppingCart,
+            selectedIcon = Icons.Filled.ShoppingCart,
+            label = "Productos",
+            section = LangPageViewModel.Sections.PRODUCTS,
+            route = Routes.PRODUCTS
+        )
+    )
+
     Surface(
-        modifier = modifier
-            .fillMaxWidth()
-            .shadow(elevation = 16.dp, shape = RectangleShape, clip = true),
-        color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-        shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
-        tonalElevation = 8.dp
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 16.dp,
+        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
     ) {
-        Column {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 4.dp),
-                horizontalArrangement = Arrangement.SpaceAround
-            ) {
-                BottomNavItem(
-                    icon = Icons.Outlined.Home,
-                    selectedIcon = Icons.Filled.Home,
-                    label = "Inicio",
-                    isSelected = currentSection == LangPageViewModel.Sections.HOME,
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            navItems.forEach { item ->
+                BottomNavItemComponent(
+                    item = item,
+                    isSelected = currentSection == item.section,
                     onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.HOME)
-                        navController.navigate(Routes.LAND_PAGE)
-                    }
-                )
-
-                BottomNavItem(
-                    icon = Icons.Outlined.Build,
-                    selectedIcon = Icons.Filled.Build,
-                    label = "Servicios",
-                    isSelected = currentSection == LangPageViewModel.Sections.SERVICES,
-                    onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.SERVICES)
-                        navController.navigate(Routes.SERVICES)
-                    }
-                )
-
-                BottomNavItem(
-                    icon = Icons.Outlined.LocationOn,
-                    selectedIcon = Icons.Filled.LocationOn,
-                    label = "Lugares",
-                    isSelected = currentSection == LangPageViewModel.Sections.PLACES,
-                    onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.PLACES)
-                        navController.navigate(Routes.PLACES)
-                    }
-                )
-
-                BottomNavItem(
-                    icon = Icons.Outlined.Star,
-                    selectedIcon = Icons.Filled.Star,
-                    label = "Eventos",
-                    isSelected = currentSection == LangPageViewModel.Sections.EVENTS,
-                    onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.EVENTS)
-                        navController.navigate(Routes.EVENTS)
-                    }
-                )
-
-                BottomNavItem(
-                    icon = Icons.Outlined.Favorite,
-                    selectedIcon = Icons.Filled.Favorite,
-                    label = "Recomendados",
-                    isSelected = currentSection == LangPageViewModel.Sections.RECOMMENDATIONS,
-                    onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS)
-                        navController.navigate(Routes.RECOMMENDATIONS)
-                    }
-                )
-
-                BottomNavItem(
-                    icon = Icons.Outlined.ShoppingCart,
-                    selectedIcon = Icons.Filled.ShoppingCart,
-                    label = "Productos",
-                    isSelected = currentSection == LangPageViewModel.Sections.PRODUCTS,
-                    onClick = {
-                        onSectionSelected(LangPageViewModel.Sections.PRODUCTS)
-                        navController.navigate(Routes.PRODUCTS)
+                        onSectionSelected(item.section)
+                        safeNavigate(navController, item.route)
                     }
                 )
             }
@@ -137,75 +102,109 @@ fun BottomNavigationBar(
     }
 }
 
-@SuppressLint("RememberReturnType")
 @Composable
-fun BottomNavItem(
-    icon: ImageVector,
-    selectedIcon: ImageVector,
-    label: String,
+private fun BottomNavItemComponent(
+    item: BottomNavItem,
     isSelected: Boolean,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    onClick: () -> Unit
 ) {
-    val animatedProgress by animateFloatAsState(
-        targetValue = if (isSelected) 1f else 0f,
-        animationSpec = tween(durationMillis = 300),
-        label = "selectionAnimation"
+    val scale by animateFloatAsState(
+        targetValue = if (isSelected) 1.1f else 1f,
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioMediumBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
+        label = "scale"
     )
 
-    Column(
-        modifier = modifier
-            .clickable(
-                onClick = onClick,
-                interactionSource = remember { MutableInteractionSource() },
-                indication = rememberRipple(bounded = false, radius = 24.dp)
-            )
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .graphicsLayer {
-                alpha = if (isSelected) 1f else 0.8f
-                scaleX = 1f + animatedProgress * 0.1f
-                scaleY = 1f + animatedProgress * 0.1f
-            },
-        horizontalAlignment = Alignment.CenterHorizontally
+    val iconColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+        },
+        animationSpec = tween(300),
+        label = "iconColor"
+    )
+
+    val textColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        },
+        animationSpec = tween(300),
+        label = "textColor"
+    )
+
+    Surface(
+        onClick = onClick,
+        color = if (isSelected) {
+            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+        } else {
+            MaterialTheme.colorScheme.surface
+        },
+        shape = RoundedCornerShape(16.dp),
+        modifier = Modifier
+            .scale(scale)
+            .clip(RoundedCornerShape(16.dp))
     ) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(40.dp)
-                .background(
-                    color = if (isSelected) {
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
-                    } else {
-                        Color.Transparent
-                    },
-                    shape = CircleShape
-                )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
         ) {
-            Icon(
-                imageVector = if (isSelected) selectedIcon else icon,
-                contentDescription = label,
-                tint = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-                modifier = Modifier.size(24.dp)
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(32.dp)
+                    .background(
+                        color = if (isSelected) {
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        } else {
+                            MaterialTheme.colorScheme.surface
+                        },
+                        shape = CircleShape
+                    )
+            ) {
+                Icon(
+                    imageVector = if (isSelected) item.selectedIcon else item.icon,
+                    contentDescription = item.label,
+                    tint = iconColor,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(4.dp))
+
+            Text(
+                text = item.label,
+                color = textColor,
+                fontSize = 10.sp,
+                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
+                style = MaterialTheme.typography.labelSmall
             )
         }
+    }
+}
 
-        AnimatedVisibility(
-            visible = isSelected,
-            enter = fadeIn() + expandVertically(),
-            exit = fadeOut() + shrinkVertically()
-        ) {
-            Text(
-                text = label,
-                color = MaterialTheme.colorScheme.primary,
-                style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.padding(top = 2.dp)
-            )
+data class BottomNavItem(
+    val icon: ImageVector,
+    val selectedIcon: ImageVector,
+    val label: String,
+    val section: LangPageViewModel.Sections,
+    val route: String
+)
+
+private fun safeNavigate(navController: NavController, route: String) {
+    val currentRoute = navController.currentBackStackEntry?.destination?.route
+    if (currentRoute != route) {
+        navController.navigate(route) {
+            launchSingleTop = true
+            restoreState = true
+            popUpTo(navController.graph.startDestinationId) {
+                saveState = true
+            }
         }
     }
 }
