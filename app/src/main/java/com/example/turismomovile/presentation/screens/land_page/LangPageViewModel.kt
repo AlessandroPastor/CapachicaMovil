@@ -42,7 +42,7 @@ class LangPageViewModel (
     val stateAso = _stateAso.asStateFlow()
 
     private val _stateImgAso = MutableStateFlow(ImgAsoacionesState())
-    val stateImgAso = _state.asStateFlow()
+    val stateImgAso = _stateImgAso.asStateFlow()
 
     private val _stateEmprendedor = MutableStateFlow(EmprendedorState())
     val stateEmprendedor = _stateEmprendedor.asStateFlow()
@@ -421,33 +421,17 @@ class LangPageViewModel (
         }
     }
 
-
-
     fun refreshMunicipalidades() {
         // Establecemos el estado de "isRefreshing" en true
         _state.value = _state.value.copy(isLoading = true)
         // Recargamos los datos (puedes hacer esto de forma directa o específica si es necesario)
         loadMunicipalidad()
     }
-    // Función mejorada para manejar la selección de sección
-    fun onSectionSelected(section: Sections, navController: NavController? = null) {
+    fun onSectionSelected(section: Sections) {
         _currentSection.value = section
-
-        viewModelScope.launch {
-            when (section) {
-                Sections.HOME -> {
-                    navController?.popBackStack(Routes.LAND_PAGE, inclusive = false)
-                    navController?.navigate(Routes.LAND_PAGE)
-                }
-                Sections.PRODUCTS -> {
-                    navController?.navigate(Routes.PRODUCTOS)
-                }
-                else -> Unit
-            }
-        }
     }
-
+    // ✅ Enum completo
     enum class Sections {
-        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS  // Nueva sección
+        HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS
     }
 }
