@@ -25,6 +25,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -121,16 +123,20 @@ fun ServiceScreen(
                 )
             }
         ) { innerPadding ->
-            ServiceContent(
+            Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(innerPadding),
-                viewModel = viewModel
-            )
+                    .padding(innerPadding)
+                    .padding(horizontal = 16.dp) // padding lateral visual
+            ) {
+                ServiceContent(
+                    modifier = Modifier.fillMaxSize(),
+                    viewModel = viewModel
+                )
+            }
         }
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,11 +166,146 @@ fun ServiceContent(
 ) {
     val stateService by viewModel.stateService.collectAsStateWithLifecycle()
 
-    when {
-        stateService.isLoading -> LoadingState()
-        stateService.error != null -> ErrorState(error = stateService.error!!)
-        stateService.items.isEmpty() -> EmptyState()
-        else -> ServiceList(stateService.items, viewModel)
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp)
+    ) {
+        when {
+            stateService.isLoading -> LoadingState()
+            stateService.error != null -> ErrorState(error = stateService.error!!)
+            stateService.items.isEmpty() -> EmptyState()
+            else -> {
+                // 1. Tarjetas horizontales
+                ServiceList(services = stateService.items, viewModel = viewModel)
+
+                // 2. Frase motivacional
+                Text(
+                    text = "Explora, vive y redescubre Capachica.",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.primary,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                )
+
+                // 3. Botón de navegación adicional
+                Button(
+                    onClick = { /* ir a explorador o mapa */ },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Text("Explorar lugares turísticos")
+                }
+
+                // 4. Banner informativo
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Explore,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(32.dp)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "¿Sabías que...?",
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = "Capachica ofrece vistas únicas al Lago Titicaca y experiencias culturales inolvidables.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+                }
+
+                // 5. Servicios recomendados
+                Text(
+                    text = "Recomendados para ti",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                LazyRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(horizontal = 16.dp)
+                ) {
+                    items(stateService.items.take(5)) { service ->
+                        ServiceCard(
+                            service = service,
+                            onClick = {
+                                // abrir detalles
+                            },
+                            modifier = Modifier.width(160.dp)
+                        )
+                    }
+                }
+
+                // 6. Colabora con nosotros
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "¿Eres emprendedor?",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Registra tu servicio turístico y hazte visible para cientos de visitantes.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Button(
+                            onClick = { /* navegación al formulario */ },
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("Unirme como proveedor")
+                        }
+                    }
+                }
+
+                // 7. Footer o mensaje final
+                Text(
+                    text = "Gracias por confiar en TurismoMovile 🌄",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp, bottom = 32.dp)
+                )
+            }
+        }
     }
 }
 
