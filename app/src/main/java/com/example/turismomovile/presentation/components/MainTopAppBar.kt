@@ -332,11 +332,6 @@ private fun PremiumButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = null,
-                modifier = Modifier.size(16.dp)
-            )
             Text(
                 text = "Ingresar",
                 style = MaterialTheme.typography.labelMedium.copy(
