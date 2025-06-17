@@ -4,7 +4,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
 import com.example.turismomovile.data.remote.api.configuracion.EmprendedorApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionState
@@ -19,7 +18,6 @@ import com.example.turismomovile.domain.repository.configuration.ImgAsociaciones
 import com.example.turismomovile.domain.repository.configuration.MunicipalidadRepository
 import com.example.turismomovile.presentation.components.NotificationState
 import com.example.turismomovile.presentation.components.NotificationType
-import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -55,6 +53,9 @@ class LangPageViewModel (
     
     private val _sliderImagesState = MutableStateFlow<List<SliderMuni>>(emptyList())
     val sliderImagesState = _sliderImagesState.asStateFlow()
+
+    private val _categories = mutableStateOf<List<String>>(emptyList())
+    val categories: State<List<String>> get() = _categories
 
     init {
         loadMunicipalidad()
@@ -108,14 +109,21 @@ class LangPageViewModel (
         }
     }
 
-    // Función para cargar los emprendedores
-    fun loadEmprendedores(page: Int = 0, searchQuery: String? = null) {
+    fun loadEmprendedores(
+        page: String? = 0.toString(),
+        name: String? = null,
+        category: String? = null
+    ) {
         viewModelScope.launch {
             _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
 
             try {
-                // Llamamos al servicio para obtener los emprendedores
-                val response = apiServiceEmprendedorService.getEmprendedor(page, size = 10, name = searchQuery)
+                val response = apiServiceEmprendedorService.getEmprendedor(
+                    page = page,
+                    size = 10,
+                    name = name,
+                    category = category
+                )
 
                 println("🛰️ [Emprendedores] Página actual: ${response.currentPage + 1} / ${response.totalPages}")
                 println("📦 Total Emprendedores en esta página: ${response.content.size}")
@@ -123,7 +131,6 @@ class LangPageViewModel (
                     println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razonSocial}")
                 }
 
-                // Actualizamos el estado con los datos obtenidos
                 _stateEmprendedor.value = _stateEmprendedor.value.copy(
                     items = response.content,
                     currentPage = response.currentPage,
@@ -147,6 +154,8 @@ class LangPageViewModel (
             }
         }
     }
+
+
     // Función para cargar las descripciones de la municipalidad
     fun loadMunicipalidadDescription(page: Int = 0, size: Int = 10, searchQuery: String? = null) {
         viewModelScope.launch {
@@ -203,7 +212,7 @@ class LangPageViewModel (
 
 
 
-    fun loadService(page: Int = 0, searchQuery: String? = null, category: String? = null) {
+    fun loadService(page: String? = 0.toString(), searchQuery: String? = null, category: String? = null) {
         viewModelScope.launch {
             _stateService.value = _stateService.value.copy(isLoading = true)
 
@@ -213,12 +222,6 @@ class LangPageViewModel (
                     name = searchQuery,
                 )
 
-                println("🛰️ [API Service] Página actual: ${response.currentPage + 1} / ${response.totalPages}")
-                println("📦 Total Servicios en esta página: ${response.content.size}")
-                response.content.forEach { service ->
-                    println("   ➡️ ID: ${service.id} | Nombre: ${service.name} | Categoría: ${service.images}")
-                }
-
                 _stateService.value = _stateService.value.copy(
                     items = response.content,
                     currentPage = response.currentPage,
@@ -227,6 +230,9 @@ class LangPageViewModel (
                     isLoading = false,
                     error = null
                 )
+
+                // 🚀 Aquí extraes categorías automáticamente
+                extractCategories()
 
             } catch (e: Exception) {
                 println("❌ [API Service] Error al cargar servicios: ${e.message}")
@@ -242,6 +248,7 @@ class LangPageViewModel (
             }
         }
     }
+
 
 
 
@@ -420,7 +427,15 @@ class LangPageViewModel (
             }
         }
     }
-
+    fun extractCategories() {
+        val allServices = _stateService.value.items
+        val uniqueCategories = allServices
+            .map { it.category }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .sorted()
+        _categories.value = listOf("Todos") + uniqueCategories
+    }
     fun refreshMunicipalidades() {
         // Establecemos el estado de "isRefreshing" en true
         _state.value = _state.value.copy(isLoading = true)

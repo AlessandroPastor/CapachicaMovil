@@ -244,67 +244,6 @@ fun WelcomeScreen(
                                 )
                             }
 
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            // Sección de Servicios
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + slideInHorizontally()
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp)
-                                ) {
-                                    Row(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp, vertical = 8.dp),
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Box(
-                                            modifier = Modifier
-                                                .width(4.dp)
-                                                .height(24.dp)
-                                                .background(
-                                                    MaterialTheme.colorScheme.primary,
-                                                    RoundedCornerShape(2.dp)
-                                                )
-                                        )
-
-                                        Spacer(modifier = Modifier.width(12.dp))
-
-                                        Text(
-                                            text = "Nuestros Servicios",
-                                            style = MaterialTheme.typography.headlineMedium.copy(
-                                                fontWeight = FontWeight.Bold,
-                                                letterSpacing = 0.5.sp
-                                            ),
-                                            color = MaterialTheme.colorScheme.onBackground,
-                                            modifier = Modifier.weight(1f)
-                                        )
-
-                                        Icon(
-                                            imageVector = Icons.Default.HomeWork,
-                                            contentDescription = null,
-                                            tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                    }
-
-                                    Text(
-                                        text = "Explora todos los servicios que tenemos disponibles para ti",
-                                        style = MaterialTheme.typography.bodyMedium.copy(
-                                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
-                                            lineHeight = 20.sp
-                                        ),
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 32.dp, vertical = 4.dp)
-                                    )
-                                }
-                            }
-
                             // Mostrar descripciones de la municipalidad
                             AnimatedVisibility(
                                 visible = visible.value,

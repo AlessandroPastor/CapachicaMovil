@@ -3,9 +3,6 @@ package com.example.turismomovile.data.remote.api.configuracion
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
-import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
-import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadCreateDTO
-import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadResponse
 import com.example.turismomovile.data.remote.dto.configuracion.Service
 import com.example.turismomovile.data.remote.dto.configuracion.ServiceCreateDto
 import com.example.turismomovile.data.remote.dto.configuracion.ServiceResponse
@@ -20,7 +17,7 @@ import io.ktor.http.*
 class ServiceApiService (client: HttpClient, sessionManager: SessionManager
 ) : BaseApiService(client, sessionManager){
 
-    suspend fun getService(page: Int = 0, size: Int = 20, name: String? = null): ServiceResponse {
+    suspend fun getService(page: String? = 0.toString(), size: Int = 20, name: String? = null): ServiceResponse {
         val response = client.get(ApiConstants.Configuration.SERVICE_ENDPOINT) {
             parameter("page", page)
             parameter("size", size)

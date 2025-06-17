@@ -1,5 +1,12 @@
 package com.example.turismomovile.presentation.screens.land_page
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -16,17 +23,24 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Explore
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -35,13 +49,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,12 +67,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.configuracion.Service
 import com.example.turismomovile.presentation.components.BottomNavigationBar
@@ -66,7 +85,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorServiceS
 import com.example.turismomovile.data.remote.dto.configuracion.ServiceImage
+import com.example.turismomovile.presentation.components.EmptyState
+import com.example.turismomovile.presentation.components.ErrorState
+import com.example.turismomovile.presentation.components.LoadingOverlay
 import com.example.turismomovile.presentation.components.MainTopAppBar
+import com.example.turismomovile.presentation.components.PullToRefreshComponent
+import com.example.turismomovile.presentation.components.rememberNotificationState
+import com.example.turismomovile.presentation.components.showNotification
 import org.koin.compose.koinInject
 
 @Composable
@@ -77,35 +102,58 @@ fun ServiceScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
-    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
-    val stateService by viewModel.stateService.collectAsStateWithLifecycle()
-    val currentSection by viewModel.currentSection
-
+    // Estados
+    val notificationState = rememberNotificationState()
+    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
+        initialValue = false,
+        lifecycle = LocalLifecycleOwner.current.lifecycle
+    )
+    val stateService by viewModel.stateService.collectAsState()
+    var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
+    val lazyListState = rememberLazyListState()
+    val currentSection by viewModel.currentSection
 
-    // ✅ Cargar servicios al iniciar
+    // Efectos
     LaunchedEffect(Unit) {
         viewModel.onSectionSelected(LangPageViewModel.Sections.SERVICES)
         viewModel.loadService()
     }
 
+    LaunchedEffect(stateService.isLoading) {
+        if (!stateService.isLoading) {
+            isRefreshing = false
+        }
+    }
+
+    LaunchedEffect(stateService.notification) {
+        stateService.notification.takeIf { it.isVisible }?.let { notification ->
+            notificationState.showNotification(
+                message = notification.message,
+                type = notification.type,
+                duration = notification.duration
+            )
+        }
+    }
+
+    // UI
     AppTheme(darkTheme = isDarkMode) {
         Scaffold(
             topBar = {
                 MainTopAppBar(
-                    title = "Servicios",
+                    title = "Servicios Turísticos",
                     isSearchVisible = isSearchVisible,
                     searchQuery = searchQuery,
                     onQueryChange = { searchQuery = it },
                     onSearch = {
-                        viewModel.loadService(searchQuery = searchQuery)
+                        viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
                     },
-                    onToggleSearch = { isSearchVisible = true },
+                    onToggleSearch = { isSearchVisible = !isSearchVisible },
                     onCloseSearch = {
                         isSearchVisible = false
                         searchQuery = ""
-                        viewModel.loadService() // Reiniciar al cerrar búsqueda
+                        viewModel.loadService()
                     },
                     onClickExplorer = onClickExplorer,
                     onStartClick = onStartClick,
@@ -126,305 +174,212 @@ fun ServiceScreen(
             Box(
                 modifier = Modifier
                     .fillMaxSize()
+                    .background(
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.background,
+                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                            )
+                        )
+                    )
                     .padding(innerPadding)
-                    .padding(horizontal = 16.dp) // padding lateral visual
             ) {
-                ServiceContent(
-                    modifier = Modifier.fillMaxSize(),
-                    viewModel = viewModel
-                )
+                // Contenido principal
+                PullToRefreshComponent(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
+                    }
+                ) {
+                    ServiceContent(
+                        modifier = Modifier.fillMaxSize(),
+                        viewModel = viewModel,
+                        onExploreClick = onClickExplorer
+                    )
+                }
+
+                // Loading overlay
+                if (stateService.isLoading && stateService.items.isEmpty()) {
+                    LoadingOverlay()
+                }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ServiceTopAppBar(
-    title: String,
-    onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    TopAppBar(
-        title = { Text(title) },
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "Back"
-                )
-            }
-        },
-        modifier = modifier
-    )
-}
 
 @Composable
 fun ServiceContent(
     modifier: Modifier = Modifier,
-    viewModel: LangPageViewModel
+    viewModel: LangPageViewModel,
+    onExploreClick: () -> Unit
 ) {
     val stateService by viewModel.stateService.collectAsStateWithLifecycle()
+    val scrollState = rememberScrollState()
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(vertical = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+            .verticalScroll(scrollState)
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         when {
-            stateService.isLoading -> LoadingState()
-            stateService.error != null -> ErrorState(error = stateService.error!!)
-            stateService.items.isEmpty() -> EmptyState()
+            stateService.isLoading && stateService.items.isEmpty() -> {
+                LoadingState()
+            }
+            stateService.error != null && stateService.items.isEmpty() -> {
+                ErrorState(
+                    error = stateService.error!!,
+                    onRetry = { viewModel.loadService() }
+                )
+            }
+            stateService.items.isEmpty() -> {
+                EmptyState(onExploreClick = onExploreClick)
+            }
             else -> {
-                // 1. Tarjetas horizontales
-                ServiceList(services = stateService.items, viewModel = viewModel)
+                // Header with stats
+                ServiceHeader(serviceCount = stateService.items.size)
 
-                // 2. Frase motivacional
-                Text(
-                    text = "Explora, vive y redescubre Capachica.",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+                // Featured services carousel
+                ServiceCarousel(
+                    services = stateService.items,
+                    viewModel = viewModel,
+                    title = "Servicios Destacados"
                 )
 
-                // 3. Botón de navegación adicional
-                Button(
-                    onClick = { /* ir a explorador o mapa */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-                    Text("Explorar lugares turísticos")
-                }
+                // Motivational section
+                MotivationalSection()
 
-                // 4. Banner informativo
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                // Categories section
+                if (stateService.items.isNotEmpty()) {
+                    CategoriesSection(
+                        services = stateService.items,
+                        onExploreClick = onExploreClick
                     )
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Explore,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = "¿Sabías que...?",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = "Capachica ofrece vistas únicas al Lago Titicaca y experiencias culturales inolvidables.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                        }
-                    }
                 }
 
-                // 5. Servicios recomendados
-                Text(
-                    text = "Recomendados para ti",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                LazyRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp)
-                ) {
-                    items(stateService.items.take(5)) { service ->
-                        ServiceCard(
-                            service = service,
-                            onClick = {
-                                // abrir detalles
-                            },
-                            modifier = Modifier.width(160.dp)
-                        )
-                    }
+                // Recommended services
+                if (stateService.items.size > 3) {
+                    ServiceCarousel(
+                        services = stateService.items.shuffled().take(5),
+                        viewModel = viewModel,
+                        title = "Recomendados para ti"
+                    )
                 }
 
-                // 6. Colabora con nosotros
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "¿Eres emprendedor?",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Registra tu servicio turístico y hazte visible para cientos de visitantes.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Button(
-                            onClick = { /* navegación al formulario */ },
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Text("Unirme como proveedor")
-                        }
-                    }
-                }
+                // Business invitation
+                BusinessInvitationCard()
 
-                // 7. Footer o mensaje final
-                Text(
-                    text = "Gracias por confiar en TurismoMovile 🌄",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 24.dp, bottom = 32.dp)
-                )
+                // Footer
+                FooterSection()
             }
         }
     }
 }
 
 @Composable
-fun LoadingState() {
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(160.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(40.dp),
-                strokeWidth = 3.dp,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Text(
-                text = "Cargando servicios...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-    }
-}
-
-@Composable
-fun ErrorState(error: String) {
+private fun ServiceHeader(serviceCount: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
-        )
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp)
     ) {
         Row(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            Column {
+                Text(
+                    text = "Servicios Disponibles",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = "$serviceCount servicios encontrados",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                )
+            }
             Icon(
-                imageVector = Icons.Default.Error,
-                contentDescription = "Error",
-                tint = MaterialTheme.colorScheme.onErrorContainer,
-                modifier = Modifier.size(24.dp)
-            )
-            Text(
-                text = "Error al cargar servicios: $error",
-                color = MaterialTheme.colorScheme.onErrorContainer,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
+                imageVector = Icons.Default.Star,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(32.dp)
             )
         }
-    }
-}
-
-
-@Composable
-fun EmptyState() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Image(
-            painter = painterResource(R.drawable.tusi),
-            contentDescription = "No services found",
-            modifier = Modifier.size(120.dp)
-        )
-        Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = "No se encontraron servicios disponibles",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ServiceList(
+private fun ServiceCarousel(
     services: List<Service>,
     viewModel: LangPageViewModel,
-    modifier: Modifier = Modifier
+    title: String
 ) {
-    // Bottom sheet state
     val sheetState = rememberModalBottomSheetState()
     var showBottomSheet by remember { mutableStateOf(false) }
     var selectedService by remember { mutableStateOf<Service?>(null) }
 
-    Box(modifier = modifier.padding(16.dp)) {
+    Column {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(horizontal = 16.dp),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         LazyRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 8.dp)
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 16.dp),
+            state = rememberLazyListState()
         ) {
-            items(services) { service ->
-                ServiceCard(
-                    service = service,
-                    onClick = {
-                        selectedService = service
-                        showBottomSheet = true
-                    }
-                )
+            items(
+                items = services,
+                key = { it.id }
+            ) { service ->
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(
+                        animationSpec = spring(
+                            dampingRatio = Spring.DampingRatioMediumBouncy,
+                            stiffness = Spring.StiffnessLow
+                        )
+                    ) + scaleIn(),
+                    exit = fadeOut() + scaleOut()
+                ) {
+                    ServiceCard(
+                        service = service,
+                        onClick = {
+                            selectedService = service
+                            showBottomSheet = true
+                        },
+                        modifier = Modifier.width(160.dp)
+                    )
+                }
             }
         }
 
-        // BottomSheet for service details
+        // Bottom sheet for service details
         if (showBottomSheet) {
             ModalBottomSheet(
                 onDismissRequest = { showBottomSheet = false },
                 sheetState = sheetState,
-                modifier = Modifier.fillMaxHeight(0.85f)
+                modifier = Modifier.fillMaxHeight(0.9f)
             ) {
                 selectedService?.let { service ->
                     ServiceDetails(service = service)
@@ -442,14 +397,14 @@ private fun ServiceCard(
 ) {
     Card(
         modifier = modifier
-            .width(140.dp)
-            .clickable(onClick = onClick),
+            .clickable(onClick = onClick)
+            .wrapContentHeight(),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
+            defaultElevation = 4.dp,
             pressedElevation = 8.dp
         )
     ) {
@@ -460,13 +415,14 @@ private fun ServiceCard(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Service image with placeholder
+            // Service image
             ServiceImage(service = service)
 
             // Service name
             Text(
                 text = service.name,
                 style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
@@ -485,7 +441,7 @@ private fun ServiceCard(
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSecondaryContainer,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(vertical = 4.dp, horizontal = 8.dp)
+                    modifier = Modifier.padding(vertical = 6.dp, horizontal = 8.dp)
                 )
             }
         }
@@ -494,9 +450,11 @@ private fun ServiceCard(
 
 @Composable
 private fun ServiceImage(service: Service) {
+    val context = LocalContext.current
+
     Box(
         modifier = Modifier
-            .size(60.dp)
+            .size(70.dp)
             .clip(CircleShape)
             .background(
                 brush = Brush.linearGradient(
@@ -511,7 +469,10 @@ private fun ServiceImage(service: Service) {
         val imageUrl = service.images.firstOrNull()?.imagen_url
         if (!imageUrl.isNullOrEmpty()) {
             AsyncImage(
-                model = imageUrl,
+                model = ImageRequest.Builder(context)
+                    .data(imageUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = service.name,
                 modifier = Modifier
                     .fillMaxSize()
@@ -525,12 +486,239 @@ private fun ServiceImage(service: Service) {
                 painter = painterResource(R.drawable.tusi),
                 contentDescription = "Placeholder",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(30.dp)
+                modifier = Modifier.size(35.dp)
             )
         }
     }
 }
 
+@Composable
+private fun MotivationalSection() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = "🌄",
+                style = MaterialTheme.typography.headlineLarge
+            )
+            Text(
+                text = "Explora, vive y redescubre",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = "Capachica",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.ExtraBold,
+                color = MaterialTheme.colorScheme.primary,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoriesSection(
+    services: List<Service>,
+    onExploreClick: () -> Unit
+) {
+    val categories = services.groupBy { it.category }.keys.take(4)
+
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
+        Text(
+            text = "Categorías Populares",
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(categories.toList()) { category ->
+                CategoryChip(
+                    category = category,
+                    onClick = { /* Filter by category */ }
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = onExploreClick,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Explore,
+                contentDescription = null,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text("Explorar todos los lugares")
+        }
+    }
+}
+
+@Composable
+private fun CategoryChip(
+    category: String,
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        colors = ButtonDefaults.outlinedButtonColors(
+            contentColor = MaterialTheme.colorScheme.primary
+        )
+    ) {
+        Text(text = category)
+    }
+}
+
+@Composable
+private fun BusinessInvitationCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Star,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(28.dp)
+                )
+                Text(
+                    text = "¿Eres emprendedor?",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Text(
+                text = "Únete a nuestra plataforma y haz visible tu servicio turístico para cientos de visitantes que llegan a Capachica cada día.",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+            )
+
+            Button(
+                onClick = { /* Navigation to registration */ },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "Registrar mi servicio",
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FooterSection() {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
+            .padding(top = 16.dp, bottom = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = "Gracias por confiar en",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = "TurismoMovile",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            textAlign = TextAlign.Center
+        )
+        Text(
+            text = "Tu compañero de viaje en Capachica",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+fun LoadingState() {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(200.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp),
+                strokeWidth = 4.dp,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Cargando servicios turísticos...",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+
+
+
+
+// Service Details Components (kept the same as original)
 @Composable
 fun ServiceDetails(service: Service) {
     Column(
@@ -547,7 +735,7 @@ fun ServiceDetails(service: Service) {
 
         // Main information
         ServiceHeader(service)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Description
         ServiceDescription(service.description)
@@ -563,23 +751,24 @@ fun ServiceDetails(service: Service) {
 @Composable
 private fun ServiceImageCarousel(images: List<ServiceImage>) {
     Text(
-        text = "Imágenes",
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+        text = "Galería de imágenes",
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onSurface,
-        modifier = Modifier.padding(bottom = 8.dp)
+        modifier = Modifier.padding(bottom = 12.dp)
     )
 
     LazyRow(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
         items(images) { image ->
             AsyncImage(
                 model = image.imagen_url,
                 contentDescription = image.description,
                 modifier = Modifier
-                    .size(150.dp)
-                    .clip(RoundedCornerShape(8.dp)),
+                    .size(180.dp)
+                    .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop,
                 placeholder = painterResource(R.drawable.tusi),
                 error = painterResource(R.drawable.tusi)
@@ -590,59 +779,164 @@ private fun ServiceImageCarousel(images: List<ServiceImage>) {
 
 @Composable
 private fun ServiceHeader(service: Service) {
-    Text(
-        text = service.name,
-        style = MaterialTheme.typography.headlineSmall,
-        color = MaterialTheme.colorScheme.onSurface
-    )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = service.name,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimaryContainer
+            )
 
-    Text(
-        text = service.category,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 4.dp)
-    )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Surface(
+                shape = RoundedCornerShape(8.dp),
+                color = MaterialTheme.colorScheme.primary
+            ) {
+                Text(
+                    text = service.category,
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                )
+            }
+        }
+    }
 }
 
 @Composable
 private fun ServiceDescription(description: String) {
-    Text(
-        text = "Descripción:",
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurface
-    )
-    Text(
-        text = description,
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 4.dp)
-    )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Descripción",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
+            )
+        }
+    }
 }
 
 @Composable
 private fun ServiceProviders(providers: List<EmprendedorServiceS>) {
-    Text(
-        text = "Proveído por:",
-        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
-        color = MaterialTheme.colorScheme.onSurface
-    )
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer
+        ),
+        shape = RoundedCornerShape(16.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp)
+        ) {
+            Text(
+                text = "Proveído por",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSecondaryContainer
+            )
 
-    providers.forEach { emprendedor ->
-        Column(modifier = Modifier.padding(vertical = 8.dp)) {
-            emprendedor.razon_social?.let {
+            Spacer(modifier = Modifier.height(12.dp))
+
+            providers.forEach { emprendedor ->
+                ProviderItem(emprendedor = emprendedor)
+                if (emprendedor != providers.last()) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProviderItem(emprendedor: EmprendedorServiceS) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        // Provider avatar/icon
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = emprendedor.razon_social?.take(1)?.uppercase() ?: "E",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+
+        Column(
+            modifier = Modifier.weight(1f)
+        ) {
+            emprendedor.razon_social?.let { name ->
                 Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
-            emprendedor.address?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+
+            emprendedor.address?.let { address ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Text(
+                        text = address,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                    )
+                }
             }
+        }
+
+        // Contact button (if you have contact info)
+        IconButton(
+            onClick = { /* Handle contact action */ }
+        ) {
+            Icon(
+                imageVector = Icons.Default.Contacts,
+                contentDescription = "Contactar",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

@@ -1,22 +1,35 @@
 package com.example.turismomovile.presentation.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -39,8 +52,8 @@ fun BottomNavigationBar(
             route = Routes.LAND_PAGE
         ),
         BottomNavItem(
-            icon = Icons.Outlined.Build,
-            selectedIcon = Icons.Filled.Build,
+            icon = Icons.Outlined.MiscellaneousServices,
+            selectedIcon = Icons.Filled.MiscellaneousServices,
             label = "Servicios",
             section = LangPageViewModel.Sections.SERVICES,
             route = Routes.SERVICES
@@ -53,50 +66,77 @@ fun BottomNavigationBar(
             route = Routes.PLACES
         ),
         BottomNavItem(
-            icon = Icons.Outlined.Star,
-            selectedIcon = Icons.Filled.Star,
+            icon = Icons.Outlined.Event,
+            selectedIcon = Icons.Filled.Event,
             label = "Eventos",
             section = LangPageViewModel.Sections.EVENTS,
             route = Routes.EVENTS
         ),
         BottomNavItem(
-            icon = Icons.Outlined.Favorite,
+            icon = Icons.Outlined.FavoriteBorder,
             selectedIcon = Icons.Filled.Favorite,
             label = "Favoritos",
             section = LangPageViewModel.Sections.RECOMMENDATIONS,
             route = Routes.RECOMMENDATIONS
         ),
         BottomNavItem(
-            icon = Icons.Outlined.ShoppingCart,
-            selectedIcon = Icons.Filled.ShoppingCart,
+            icon = Icons.Outlined.ShoppingBag,
+            selectedIcon = Icons.Filled.ShoppingBag,
             label = "Productos",
             section = LangPageViewModel.Sections.PRODUCTS,
             route = Routes.PRODUCTS
         )
     )
 
+    // Diseño más limpio y moderno
+    val backgroundColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.08f)
+
     Surface(
         modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shadowElevation = 16.dp,
-        shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)
+        color = backgroundColor,
+        shadowElevation = 8.dp,
+        tonalElevation = 4.dp,
+        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+        border = BorderStroke(0.5.dp, borderColor)
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 8.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            navItems.forEach { item ->
-                BottomNavItemComponent(
-                    item = item,
-                    isSelected = currentSection == item.section,
-                    onClick = {
-                        onSectionSelected(item.section)
-                        safeNavigate(navController, item.route)
-                    }
+        Column {
+            // Indicador superior minimalista
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(32.dp)
+                        .height(3.dp)
+                        .background(
+                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f),
+                            RoundedCornerShape(2.dp)
+                        )
                 )
+            }
+
+            // Items de navegación
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp, vertical = 12.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                navItems.forEach { item ->
+                    BottomNavItemComponent(
+                        item = item,
+                        isSelected = currentSection == item.section,
+                        onClick = {
+                            onSectionSelected(item.section)
+                            safeNavigate(navController, item.route)
+                        }
+                    )
+                }
             }
         }
     }
@@ -108,22 +148,14 @@ private fun BottomNavItemComponent(
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val scale by animateFloatAsState(
-        targetValue = if (isSelected) 1.1f else 1f,
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessLow
-        ),
-        label = "scale"
-    )
-
+    // Animaciones suaves y sutiles
     val iconColor by animateColorAsState(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.65f)
         },
-        animationSpec = tween(300),
+        animationSpec = tween(durationMillis = 200, easing = LinearEasing),
         label = "iconColor"
     )
 
@@ -131,60 +163,62 @@ private fun BottomNavItemComponent(
         targetValue = if (isSelected) {
             MaterialTheme.colorScheme.primary
         } else {
-            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
         },
-        animationSpec = tween(300),
+        animationSpec = tween(durationMillis = 200, easing = LinearEasing),
         label = "textColor"
     )
 
-    Surface(
-        onClick = onClick,
-        color = if (isSelected) {
-            MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-        } else {
-            MaterialTheme.colorScheme.surface
-        },
-        shape = RoundedCornerShape(16.dp),
+    // Efecto de fondo sutil para item seleccionado
+    val backgroundAlpha by animateFloatAsState(
+        targetValue = if (isSelected) 0.1f else 0f,
+        animationSpec = tween(durationMillis = 200, easing = LinearEasing),
+        label = "backgroundAlpha"
+    )
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
         modifier = Modifier
-            .scale(scale)
+            .width(56.dp)
             .clip(RoundedCornerShape(16.dp))
-    ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier
-                    .size(32.dp)
-                    .background(
-                        color = if (isSelected) {
-                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
-                        } else {
-                            MaterialTheme.colorScheme.surface
-                        },
-                        shape = CircleShape
-                    )
-            ) {
-                Icon(
-                    imageVector = if (isSelected) item.selectedIcon else item.icon,
-                    contentDescription = item.label,
-                    tint = iconColor,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(4.dp))
-
-            Text(
-                text = item.label,
-                color = textColor,
-                fontSize = 10.sp,
-                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal,
-                style = MaterialTheme.typography.labelSmall
+            .background(
+                MaterialTheme.colorScheme.primary.copy(alpha = backgroundAlpha),
+                RoundedCornerShape(16.dp)
             )
-        }
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = rememberRipple(
+                    bounded = true,
+                    radius = 24.dp,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                )
+            ) { onClick() }
+            .padding(vertical = 8.dp)
+    ) {
+        // Icono con transición suave
+        Icon(
+            imageVector = if (isSelected) item.selectedIcon else item.icon,
+            contentDescription = item.label,
+            tint = iconColor,
+            modifier = Modifier.size(24.dp)
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        // Texto siempre visible con transición de color
+        Text(
+            text = item.label,
+            color = textColor,
+            fontSize = if (isSelected) 11.sp else 10.sp,
+            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium,
+            style = MaterialTheme.typography.labelSmall.copy(
+                letterSpacing = 0.2.sp
+            ),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            textAlign = TextAlign.Center
+        )
     }
 }
 

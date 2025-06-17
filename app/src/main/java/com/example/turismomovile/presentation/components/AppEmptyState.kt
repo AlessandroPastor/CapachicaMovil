@@ -16,7 +16,7 @@ fun AppEmptyState(
     title: String,
     description: String? = null,
     modifier: Modifier = Modifier,
-    icon: ImageVector = Icons.Default.Info // Cambié el tipo a `ImageVector`
+    icon: ImageVector = Icons.Default.Info
 ) {
     Box(
         modifier = modifier

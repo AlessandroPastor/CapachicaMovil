@@ -1,6 +1,8 @@
 package com.example.turismomovile.presentation.screens.land_page
 
-import android.provider.MediaStore.Images
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -8,6 +10,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,17 +19,22 @@ import androidx.compose.ui.draw.*
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
+import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.configuracion.Emprendedor
 import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorState
 import com.example.turismomovile.data.remote.dto.configuracion.Imagen
 import com.example.turismomovile.data.remote.dto.configuracion.Producto
 import com.example.turismomovile.presentation.components.*
+import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedorStatusBadge
+import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedoresStatsCard
+import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.ScrollableRow
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
@@ -84,7 +92,9 @@ fun EmprendedoresScreen(
                     isSearchVisible = isSearchVisible,
                     searchQuery = searchQuery,
                     onQueryChange = { searchQuery = it },
-                    onSearch = {},
+                    onSearch = {
+                        viewModel.loadEmprendedores(name = searchQuery)
+                    },
                     onToggleSearch = { isSearchVisible = !isSearchVisible },
                     onCloseSearch = {
                         isSearchVisible = false
@@ -171,7 +181,6 @@ private fun EmprendedoresListContent(
         contentPadding = PaddingValues(vertical = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Estadísticas
         item {
             EmprendedoresStatsCard(
                 totalEmprendedores = stateEmprendedor.totalElements,
@@ -179,12 +188,10 @@ private fun EmprendedoresListContent(
             )
         }
 
-        // Filtros
         item {
             EmprendedoresFilterSection()
         }
 
-        // Lista de emprendedores
         items(stateEmprendedor.items) { emprendedor ->
             EmprendedorCard(
                 emprendedor = emprendedor,
@@ -192,72 +199,118 @@ private fun EmprendedoresListContent(
             )
         }
 
-        // Espaciado final
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 
-@Composable
-private fun EmprendedoresFilterSection() {
-    var selectedFilter by remember { mutableStateOf("Todos") }
-    val filters = listOf("Todos", "Hospedaje", "Artesanías", "Tours", "Gastronomía")
 
-    Column {
+@Composable
+private fun EmprendedoresFilterSection(
+    viewModel: LangPageViewModel = koinInject()
+) {
+    var selectedFilter by remember { mutableStateOf("Todos") }
+    val categories by viewModel.categories
+    val scrollState = rememberScrollState()
+
+    // Colores más vibrantes y alegres
+    val chipColors = mapOf(
+        "Todos" to Color(0xFF6A1B9A).copy(alpha = 0.2f),  // Púrpura vibrante
+        "Hospedaje" to Color(0xFF00C853).copy(alpha = 0.2f),  // Verde esmeralda
+        "Artesanías" to Color(0xFFFF4081).copy(alpha = 0.2f),  // Rosa fucsia
+        "Turismo" to Color(0xFF2962FF).copy(alpha = 0.2f),  // Azul brillante
+        "Gastronomía" to Color(0xFFFF6D00).copy(alpha = 0.2f),  // Naranja intenso
+        "Transporte" to Color(0xFF00B8D4).copy(alpha = 0.2f)   // Turquesa
+    )
+
+    // Colores para el borde cuando está seleccionado (versiones más saturadas)
+    val borderColors = mapOf(
+        "Todos" to Color(0xFF6A1B9A),
+        "Hospedaje" to Color(0xFF00C853),
+        "Artesanías" to Color(0xFFFF4081),
+        "Turismo" to Color(0xFF2962FF),
+        "Gastronomía" to Color(0xFFFF6D00),
+        "Transporte" to Color(0xFF00B8D4)
+    )
+
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
         Text(
-            text = "Filtrar por categoría:",
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-            modifier = Modifier.padding(bottom = 8.dp)
+            text = "Explora por categoría",
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
         )
 
-        ScrollableRow(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            filters.forEach { filter ->
-                FilterChip(
-                    label = filter,
-                    selected = filter == selectedFilter,
-                    onSelected = { selectedFilter = filter }
-                )
+            categories.forEach { category ->
+                val isSelected = category == selectedFilter
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            color = if (isSelected)
+                                chipColors[category] ?: MaterialTheme.colorScheme.surface
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        )
+                        .border(
+                            width = if (isSelected) 1.5.dp else 0.5.dp,
+                            color = if (isSelected)
+                                borderColors[category] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable {
+                            selectedFilter = category
+                            val value = if (category == "Todos") null else category
+                            viewModel.loadEmprendedores(category = value)
+                        }
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = when (category) {
+                                "Todos" -> R.drawable.all
+                                "Hospedaje" -> R.drawable.hotel
+                                "Artesanías" -> R.drawable.artesania
+                                "Turismo" -> R.drawable.torus
+                                "Gastronomía" -> R.drawable.gastronia
+                                "Transporte" -> R.drawable.velero
+                                else -> R.drawable.categoria
+                            }),
+                            contentDescription = null,
+                            tint = if (isSelected)
+                                borderColors[category] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = category,
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+                            ),
+                            color = if (isSelected)
+                                borderColors[category] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
             }
         }
-    }
-}
-
-@Composable
-private fun ScrollableRow(
-    modifier: Modifier = Modifier,
-    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
-    content: @Composable RowScope.() -> Unit
-) {
-    Row(
-        modifier = modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = horizontalArrangement,
-        content = content
-    )
-}
-
-@Composable
-private fun FilterChip(
-    label: String,
-    selected: Boolean,
-    onSelected: () -> Unit
-) {
-    Surface(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .clickable(onClick = onSelected),
-        color = if (selected) MaterialTheme.colorScheme.primary
-        else MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = if (selected) MaterialTheme.colorScheme.onPrimary
-        else MaterialTheme.colorScheme.onSurface
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelMedium,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-        )
     }
 }
 
@@ -309,18 +362,26 @@ fun EmprendedorDetailModal(
                 .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
+
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = emprendedor.razonSocial ?: "Emprendedor",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(
+                        text = emprendedor.razonSocial ?: "Emprendedor",
+                        style = MaterialTheme.typography.headlineMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = emprendedor.name_family ?: "Nombre de Familia",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
 
                 IconButton(onClick = onDismiss) {
                     Icon(
@@ -333,17 +394,17 @@ fun EmprendedorDetailModal(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Carrusel de imágenes
             if (emprendedor.imagenes.isNotEmpty()) {
                 EmprendedorImagesCarousel(imagenes = emprendedor.imagenes)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-
-            // Información básica
+            // Información básica (puede ser otro composable)
             EmprendedorBasicInfo(emprendedor)
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Productos/Servicios
+            // Productos / Servicios
             Text(
                 text = "Productos y Servicios",
                 style = MaterialTheme.typography.titleMedium,
@@ -352,10 +413,13 @@ fun EmprendedorDetailModal(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Aquí recorremos los productos
             emprendedor.products.forEach { product ->
                 ProductItem(product = product)
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Botón de contacto
             Button(
@@ -372,12 +436,13 @@ fun EmprendedorDetailModal(
                 Text(
                     text = "Contactar al emprendedor",
                     style = MaterialTheme.typography.labelLarge,
-                    modifier = Modifier.padding(vertical = 8.dp)
+                    fontWeight = FontWeight.Bold
                 )
             }
         }
     }
 }
+
 
 @Composable
 private fun EmprendedorImagesCarousel(imagenes: List<Imagen>) {
@@ -580,60 +645,7 @@ private fun ProductItem(product: Producto) {
     }
 }
 
-@Composable
-fun EmprendedoresStatsCard(
-    totalEmprendedores: Int,
-    isLoading: Boolean
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .shadow(8.dp, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer
-        )
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Emprendedores",
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = if (isLoading) "Cargando..." else "$totalEmprendedores registrados",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                )
-            }
 
-            Box(
-                modifier = Modifier
-                    .size(60.dp)
-                    .background(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                        CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Business,
-                    contentDescription = null,
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            }
-        }
-    }
-}
 
 @Composable
 fun EmprendedorCard(
@@ -703,7 +715,7 @@ fun EmprendedorCard(
                             .padding(16.dp)
                     ) {
                         Text(
-                            text = emprendedor.razonSocial ?: "Emprendedor",
+                            text = emprendedor.name_family ?: "Emprendedor",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
@@ -812,7 +824,7 @@ fun EmprendedorCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Icon(
-                            imageVector = Icons.Default.ArrowForward,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp)
                         )
@@ -820,54 +832,5 @@ fun EmprendedorCard(
                 }
             }
         }
-    }
-}
-
-
-@Composable
-private fun DefaultBackgroundGradient() {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
-                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f)
-                    )
-                ),
-                shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Business,
-            contentDescription = null,
-            modifier = Modifier.size(40.dp),
-            tint = Color.White.copy(alpha = 0.8f)
-        )
-    }
-}
-
-@Composable
-private fun EmprendedorStatusBadge(status: Int) {
-    val (statusColor, statusText) = when (status) {
-        1 -> Color(0xFF4CAF50) to "Activo" // Verde
-        0 -> Color(0xFFF44336) to "Inactivo" // Rojo
-        else -> Color(0xFFFF9800) to "Pendiente" // Naranja
-    }
-
-    Surface(
-        color = statusColor,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.shadow(2.dp, RoundedCornerShape(12.dp))
-    ) {
-        Text(
-            text = statusText,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = Color.White,
-            fontWeight = FontWeight.Bold
-        )
     }
 }

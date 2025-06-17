@@ -28,11 +28,12 @@ class EmprendedorApiService(
 ) : BaseApiService(client, sessionManager) {
 
     // Obtener lista paginada de emprendedores con filtro por name
-    suspend fun getEmprendedor(page: Int = 0, size: Int = 10, name: String? = null): EmprendedorResponse {
+    suspend fun getEmprendedor(page: String? = 0.toString(), size: Int = 10, category: String? = null,name: String? = null): EmprendedorResponse {
         return client.get(ApiConstants.Configuration.EMPRENDEDORES_GET) {
             parameter("page", page)
             parameter("size", size)
             name?.let { parameter("name", it) }
+            category?.let { parameter("category", it) }
         }.body()
     }
 
