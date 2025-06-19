@@ -1,8 +1,5 @@
 package com.example.turismomovile.presentation.screens.land_page
 
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.spring
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.*
@@ -20,6 +17,7 @@ import androidx.compose.ui.graphics.*
 import androidx.compose.ui.layout.*
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
@@ -32,9 +30,8 @@ import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorState
 import com.example.turismomovile.data.remote.dto.configuracion.Imagen
 import com.example.turismomovile.data.remote.dto.configuracion.Producto
 import com.example.turismomovile.presentation.components.*
-import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedorStatusBadge
 import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedoresStatsCard
-import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.ScrollableRow
+import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.LogoDeFamilia
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
@@ -362,8 +359,7 @@ fun EmprendedorDetailModal(
                 .padding(horizontal = 24.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-
-            // Header
+            // Header: Emprendedor y cerrar
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -371,7 +367,7 @@ fun EmprendedorDetailModal(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = emprendedor.razonSocial ?: "Emprendedor",
+                        text = emprendedor.razon_social ?: "Prepended",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -394,13 +390,13 @@ fun EmprendedorDetailModal(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Carrusel de imágenes
+            // Carrusel de imágenes si existen
             if (emprendedor.imagenes.isNotEmpty()) {
                 EmprendedorImagesCarousel(imagenes = emprendedor.imagenes)
                 Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // Información básica (puede ser otro composable)
+            // Información básica
             EmprendedorBasicInfo(emprendedor)
             Spacer(modifier = Modifier.height(16.dp))
 
@@ -413,9 +409,18 @@ fun EmprendedorDetailModal(
             )
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Aquí recorremos los productos
-            emprendedor.products.forEach { product ->
-                ProductItem(product = product)
+            // Recorremos los productos y los mostramos
+            if (emprendedor.products.isNotEmpty()) {
+                emprendedor.products.forEach { product ->
+                    ProductItem(product = product)
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            } else {
+                Text(
+                    text = "No hay productos o servicios disponibles.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
@@ -431,7 +436,8 @@ fun EmprendedorDetailModal(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
                 ),
-                shape = RoundedCornerShape(12.dp)
+                shape = RoundedCornerShape(12.dp),
+                elevation = ButtonDefaults.buttonElevation(8.dp)
             ) {
                 Text(
                     text = "Contactar al emprendedor",
@@ -442,6 +448,7 @@ fun EmprendedorDetailModal(
         }
     }
 }
+
 
 
 @Composable
@@ -676,7 +683,7 @@ fun EmprendedorCard(
                 if (!logoUrl.isNullOrEmpty()) {
                     AsyncImage(
                         model = logoUrl,  // 🔥 usamos directamente el valor de la propiedad
-                        contentDescription = "Logo ${emprendedor.razonSocial}",
+                        contentDescription = "Logo ${emprendedor.razon_social}",
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
@@ -750,7 +757,7 @@ fun EmprendedorCard(
                             .align(Alignment.TopEnd)
                             .padding(12.dp)
                     ) {
-                        EmprendedorStatusBadge(emprendedor.status)
+                        LogoDeFamilia(emprendedor.img_logo)
                     }
                 }
             }
@@ -806,10 +813,15 @@ fun EmprendedorCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "${emprendedor.products.size} productos",
+                        text = buildAnnotatedString {
+                            append("${emprendedor.products.size} servicios")
+                            append(" • ")
+                            append(emprendedor.products.mapNotNull { it.service_name }.distinct().joinToString(", "))
+                        },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                     )
+
 
                     TextButton(
                         onClick = onClick,

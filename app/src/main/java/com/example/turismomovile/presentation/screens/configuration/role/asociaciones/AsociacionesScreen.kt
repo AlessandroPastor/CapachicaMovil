@@ -27,14 +27,13 @@ import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsociaciones
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
-import com.example.turismomovile.data.remote.dto.configuracion.empty
 import com.example.turismomovile.data.remote.dto.configuracion.toCreateDTO
 import com.example.turismomovile.presentation.components.AppDialog
 import com.example.turismomovile.presentation.components.AppEmptyState
 import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.SearchBarSimple
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
-import io.dev.kmpventas.presentation.screens.configuration.role.municipalidad.SearchBarSimple
 import org.koin.compose.koinInject
 
 

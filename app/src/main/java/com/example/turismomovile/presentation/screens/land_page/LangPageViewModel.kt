@@ -125,10 +125,10 @@ class LangPageViewModel (
                     category = category
                 )
 
-                println("🛰️ [Emprendedores] Página actual: ${response.currentPage + 1} / ${response.totalPages}")
+                println("🛰️ [Emprendedores] Página actual: ${response.currentPage} / ${response.totalPages}")
                 println("📦 Total Emprendedores en esta página: ${response.content.size}")
                 response.content.forEach { emprendedor ->
-                    println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razonSocial}")
+                    println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razon_social}")
                 }
 
                 _stateEmprendedor.value = _stateEmprendedor.value.copy(

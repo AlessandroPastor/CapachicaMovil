@@ -17,7 +17,7 @@ data class EmprendedorResponse(
 @Serializable
 data class Emprendedor(
     val id: String? = null,
-    val razonSocial: String? = null,
+    val razon_social: String? = null,
     val address: String? = null,
     val code: String? = null,
     val ruc: String? = null,

@@ -131,4 +131,14 @@ dependencies {
     implementation ("com.google.accompanist:accompanist-permissions:0.37.2")
 
 
+    // Google Maps Compose
+    implementation("com.google.maps.android:maps-compose:4.2.0")
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+
+    // Lottie para Jetpack Compose
+    implementation("com.airbnb.android:lottie-compose:6.3.0")
+
+   // DataStore
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
+
 }

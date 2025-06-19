@@ -20,6 +20,7 @@ class MunicipalidadViewModel (
 
     private val _state = MutableStateFlow(MunicipalidadState())
     val state = _state.asStateFlow()
+
     init {
         loadMunicipalidad()
     }
@@ -33,7 +34,7 @@ class MunicipalidadViewModel (
 
                         // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥
                         println("🛰️ MUNICIPALIDAD DEBUG INFO:")
-                        println("   📄 Página actual: ${response.currentPage + 1} / ${response.totalPages}")
+                        println("   📄 Página actual: ${response.currentPage} / ${response.totalPages}")
                         println("   📦 Total Municipalidades esta página: ${response.content.size}")
                         println("   🆔 IDs de Municipalidades:")
                         response.content.forEach { municipalidad ->
@@ -152,57 +153,4 @@ class MunicipalidadViewModel (
             }
         }
     }
-
-    fun deleteMunicipalidad(id: String) {
-        viewModelScope.launch {
-            println("🗑️ Intentando eliminar municipalidad con ID=$id")
-            _state.value = _state.value.copy(isLoading = true)
-            repository.deleteMunicipalidad(id)
-                .onSuccess {
-                    println("✅ Municipalidad eliminada correctamente: ID=$id")
-                    loadMunicipalidad()
-                    _state.value = _state.value.copy(
-                        notification = NotificationState(
-                            message = "Municipalidad eliminada exitosamente",
-                            type = NotificationType.SUCCESS,
-                            isVisible = true
-                        )
-                    )
-                }
-                .onFailure { error ->
-                    println("❌ Error al eliminar municipalidad ID=$id: ${error.message}")
-                    _state.value = _state.value.copy(
-                        isLoading = false,
-                        notification = NotificationState(
-                            message = error.message ?: "Error al eliminar municipalidad",
-                            type = NotificationType.ERROR,
-                            isVisible = true
-                        )
-                    )
-                }
-        }
-    }
-
-
-
-    fun closeDialog() {
-        _state.value = _state.value.copy(
-            isDialogOpen = false,
-            selectedItem = null
-        )
-    }
-
-    fun nextPage() {
-        if (_state.value.currentPage + 1 < _state.value.totalPages) {
-            loadMunicipalidad(page = _state.value.currentPage + 1)
-        }
-    }
-
-    fun previousPage() {
-        if (_state.value.currentPage > 0) {
-            loadMunicipalidad(page = _state.value.currentPage - 1)
-        }
-    }
-
-
 }

@@ -10,7 +10,7 @@ import com.example.turismomovile.presentation.screens.configuration.role.asociac
 import io.dev.kmpventas.presentation.navigation.Routes
 import com.example.turismomovile.presentation.screens.configuration.role.modules.ModuleScreen
 import com.example.turismomovile.presentation.screens.configuration.role.modulos_padres.ParentModuleScreen
-import io.dev.kmpventas.presentation.screens.configuration.role.municipalidad.MunicipalidadScreen
+import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadScreen
 import com.example.turismomovile.presentation.screens.configuration.role.role.RoleScreen
 import com.example.turismomovile.presentation.screens.login.LoginScreen
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel

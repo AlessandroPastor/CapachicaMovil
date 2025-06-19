@@ -41,7 +41,8 @@ data class MunicipalidadDescriptionResponse(
     val totalPages: Int,
     val currentPage: Int,
     val content: List<MunicipalidadDescription>,
-    val totalElements: Int
+    val totalElements: Int,
+    val perPage: Int
 )
 
 @Serializable
@@ -58,6 +59,35 @@ data class MunicipalidadDescription(
     val created_at: String? = null,
     val updated_at: String? = null,
     val deleted_at: String? = null
+)
+
+@Serializable
+data class ApiResponseWrapper<T>(
+    val status: Boolean,
+    val message: String,
+    val data: T
+)
+
+@Serializable
+data class MunicipalidadDescriptionUpdateDto(
+    val municipalidad_id: String?,
+    val logo: String?,
+    val direccion: String?,
+    val descripcion: String?,
+    val ruc: String?,
+    val correo: String?,
+    val nombre_alcalde: String?,
+    val anio_gestion: String?
+)
+
+data class MunicipalidadDescriptionState(
+    val descriptions: List<MunicipalidadDescription> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val currentPage: Int = 0,
+    val totalPages: Int = 0,
+    val totalElements: Int = 0,
+    val notification: NotificationState = NotificationState()
 )
 
 @Serializable
@@ -79,15 +109,10 @@ data class MunicipalidadState(
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState()
 )
-data class MunicipalidadDescriptionState(
-    val descriptions: List<MunicipalidadDescription> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val currentPage: Int = 0,
-    val totalPages: Int = 0,
-    val totalElements: Int = 0,
-    val notification: NotificationState = NotificationState()
-)
+
+
+
+
 fun String.formatDateTime(): String {
     return try {
         val instant = Instant.parse(this)
@@ -97,3 +122,11 @@ fun String.formatDateTime(): String {
         this
     }
 }
+
+
+// En lugar de múltiples estados separados
+data class MunicipalidadScreenState(
+    val searchQuery: String = "",
+    val selectedMunicipalidad: Municipalidad? = null,
+    val selectedMunicipalidadDescription: MunicipalidadDescription? = null
+)

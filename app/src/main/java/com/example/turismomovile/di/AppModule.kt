@@ -11,6 +11,7 @@ import com.example.turismomovile.data.remote.api.configuracion.EmprendedorApiSer
 import com.example.turismomovile.data.remote.api.configuracion.ImgAsociacionesApiService
 import com.example.turismomovile.data.remote.api.configuracion.ModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadApiService
+import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadDescriptionApiService
 import com.example.turismomovile.data.remote.api.configuracion.ParentModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.RoleApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
@@ -30,6 +31,7 @@ import com.example.turismomovile.domain.repository.configuration.RoleRepository
 import com.example.turismomovile.domain.usecase.LoginUseCase
 import com.example.turismomovile.presentation.screens.configuration.role.asociaciones.AsociacionesViewModel
 import com.example.turismomovile.presentation.screens.configuration.role.modules.ModuleViewModel
+import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadDescriptionViewModel
 import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadViewModel
 import com.example.turismomovile.presentation.screens.configuration.role.role.RoleViewModel
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
@@ -95,6 +97,7 @@ val appModule = module {
     single { RoleApiService(get(),get()) }
     single { ModuleApiService(get(),get()) }
     single { ParentModuleApiService(get(),get()) }
+    single { MunicipalidadDescriptionApiService(get(),get()) }
     single { MunicipalidadApiService(get(),get()) }
     single { ServiceApiService(get(),get()) }
     single { AsociacionApiService(get(),get()) }
@@ -128,6 +131,7 @@ val appModule = module {
     single { RoleViewModel(get(), get(), get()) }
     single { ModuleViewModel(get(), get()) }
     single { ParentModuleViewModel(get()) }
+    single { MunicipalidadDescriptionViewModel(get()) }
     single { MunicipalidadViewModel(get()) }
     single { AsociacionesViewModel(get(), get(), get()) }
 }

@@ -2,14 +2,21 @@ package com.example.turismomovile.presentation.screens.land_page
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInHorizontally
-import androidx.compose.foundation.Image
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,34 +26,27 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.DarkMode
-import androidx.compose.material.icons.filled.Explore
-import androidx.compose.material.icons.filled.LightMode
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material.icons.filled.Badge
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.surfaceColorAtElevation
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,11 +66,9 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.rememberAsyncImagePainter
 import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
@@ -80,22 +78,32 @@ import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
-import androidx.compose.material.icons.filled.HomeWork
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.RocketLaunch
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontStyle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
-import coil.compose.rememberImagePainter
+import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
+import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescription
 import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.BottomNavigationBar
-import com.example.turismomovile.presentation.components.InfoItem
 import com.example.turismomovile.presentation.components.MainTopAppBar
-import com.example.turismomovile.presentation.components.SearchBar
+import com.example.turismomovile.presentation.components.NotificationHost
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WelcomeScreen(
     onStartClick: () -> Unit,
@@ -109,37 +117,18 @@ fun WelcomeScreen(
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
         initialValue = false,
-        lifecycle = LocalLifecycleOwner.current.lifecycle
+        lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     )
-    var currentSection by remember { mutableStateOf(LangPageViewModel.Sections.HOME) }
+    val currentSection by remember { mutableStateOf(LangPageViewModel.Sections.HOME) }
     val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
-
-    fun scrollToSection(section: LangPageViewModel.Sections) {
-        viewModel.onSectionSelected(section)
-
-        if (section != LangPageViewModel.Sections.PRODUCTS) {
-            coroutineScope.launch {
-                when (section) {
-                    LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
-                    LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
-                    LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
-                    LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
-                    else -> Unit
-                }
-            }
-        }
-    }
-
     val municipalidadDescriptionState by viewModel.municipalidadDescriptionState.collectAsState()
     val state by viewModel.state.collectAsStateWithLifecycle()
     val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
     val isRefreshing = remember { mutableStateOf(false) }
-    var selectedAsociacion by remember { mutableStateOf<Asociacion?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val sliderImages by viewModel.sliderImagesState.collectAsState()
-    val favoriteItems = remember { mutableSetOf<String>() }
 
     LaunchedEffect(Unit) {
         delay(300)
@@ -172,525 +161,797 @@ fun WelcomeScreen(
         isRefreshing.value = false
     }
 
-    // ✅ AQUÍ VIENE EL CAMBIO IMPORTANTE: usamos nuestro nuevo TopAppBar
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = state.items.firstOrNull()?.distrito ?: "Bienvenido",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = { /* Implementar búsqueda si deseas */ },
-                    onToggleSearch = { isSearchVisible = true },
-                    onCloseSearch = { isSearchVisible = false },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section)
-                        if (section != LangPageViewModel.Sections.PRODUCTS) {
-                            coroutineScope.launch {
-                                when (section) {
-                                    LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(1)
-                                    LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(2)
-                                    LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(3)
-                                    LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(4)
-                                    else -> Unit
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = state.items.firstOrNull()?.distrito ?: "Municipalidad",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = { /* Implementar búsqueda */ },
+                        onToggleSearch = { isSearchVisible = true },
+                        onCloseSearch = { isSearchVisible = false },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                            if (section != LangPageViewModel.Sections.PRODUCTS) {
+                                coroutineScope.launch {
+                                    when (section) {
+                                        LangPageViewModel.Sections.SERVICES -> lazyListState.animateScrollToItem(2)
+                                        LangPageViewModel.Sections.PLACES -> lazyListState.animateScrollToItem(3)
+                                        LangPageViewModel.Sections.EVENTS -> lazyListState.animateScrollToItem(4)
+                                        LangPageViewModel.Sections.RECOMMENDATIONS -> lazyListState.animateScrollToItem(5)
+                                        else -> Unit
+                                    }
                                 }
                             }
-                        }
-                    },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(innerPadding)
-            ) {
-                PullToRefreshComponent(
-                    isRefreshing = isRefreshing.value,
-                    onRefresh = { handleRefresh() },
-                    modifier = Modifier.fillMaxSize()
+                        },
+                        navController = navController
+                    )
+                }
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(MaterialTheme.colorScheme.background)
+                        .padding(innerPadding)
                 ) {
-                    LazyColumn(
-                        state = lazyListState,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 16.dp),
-                        contentPadding = PaddingValues(bottom = 80.dp)
+                    PullToRefreshComponent(
+                        isRefreshing = isRefreshing.value,
+                        onRefresh = { handleRefresh() },
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        item {
-                            Spacer(modifier = Modifier.height(16.dp))
+                        LazyColumn(
+                            state = lazyListState,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(horizontal = 16.dp),
+                            contentPadding = PaddingValues(bottom = 80.dp)
+                        ) {
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
 
-                            // Slider de imágenes con efecto parallax
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + scaleIn(initialScale = 0.9f)
-                            ) {
-                                ParallaxImageSlider(
-                                    sliders = sliderImages,
-                                    title = "Explora Capachica",
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-
-                            // Mostrar descripciones de la municipalidad
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + slideInHorizontally { it * 2 }
-                            ) {
-                                if (municipalidadDescriptionState.descriptions.isNotEmpty()) {
-                                    municipalidadDescriptionState.descriptions.forEach { description ->
-                                        Card(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(horizontal = 16.dp, vertical = 8.dp),
-                                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                            colors = CardDefaults.cardColors(
-                                                containerColor = MaterialTheme.colorScheme.surface
-                                            )
-                                        ) {
-                                            Column(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(16.dp)
-                                            ) {
-                                                Row(
-                                                    modifier = Modifier
-                                                        .fillMaxWidth()
-                                                        .padding(bottom = 16.dp),
-                                                    verticalAlignment = Alignment.CenterVertically,
-                                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                                ) {
-                                                    description.logo?.let {
-                                                        Image(
-                                                            painter = rememberImagePainter(it),
-                                                            contentDescription = "Logo de la municipalidad",
-                                                            modifier = Modifier
-                                                                .size(60.dp)
-                                                                .clip(CircleShape)
-                                                                .background(
-                                                                    MaterialTheme.colorScheme.primary.copy(
-                                                                        alpha = 0.2f
-                                                                    )
-                                                                ),
-                                                            contentScale = ContentScale.Crop
-                                                        )
-                                                    }
-
-                                                    Text(
-                                                        text = state.items.firstOrNull()?.distrito ?: "Municipalidad",
-                                                        style = MaterialTheme.typography.titleLarge.copy(
-                                                            fontWeight = FontWeight.Bold
-                                                        ),
-                                                        color = MaterialTheme.colorScheme.onSurface,
-                                                        modifier = Modifier.weight(1f)
-                                                    )
-                                                }
-
-                                                description.descripcion?.let {
-                                                    Text(
-                                                        text = it,
-                                                        style = MaterialTheme.typography.bodyLarge.copy(
-                                                            lineHeight = 24.sp
-                                                        ),
-                                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f),
-                                                        modifier = Modifier.padding(bottom = 16.dp)
-                                                    )
-                                                }
-
-                                                Column(
-                                                    modifier = Modifier.fillMaxWidth(),
-                                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                                ) {
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                                    ) {
-                                                        description.direccion?.let {
-                                                            InfoItem(
-                                                                label = "Dirección",
-                                                                value = it,
-                                                                modifier = Modifier.weight(1f)
-                                                            )
-                                                        }
-
-                                                        description.ruc?.let {
-                                                            InfoItem(
-                                                                label = "RUC",
-                                                                value = it,
-                                                                modifier = Modifier.weight(1f)
-                                                            )
-                                                        }
-                                                    }
-
-                                                    Row(
-                                                        modifier = Modifier.fillMaxWidth(),
-                                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                                    ) {
-                                                        description.correo?.let {
-                                                            InfoItem(
-                                                                label = "Correo",
-                                                                value = it,
-                                                                modifier = Modifier.weight(1f)
-                                                            )
-                                                        }
-
-                                                        description.nombre_alcalde?.let {
-                                                            InfoItem(
-                                                                label = "Alcalde",
-                                                                value = it,
-                                                                modifier = Modifier.weight(1f)
-                                                            )
-                                                        }
-                                                    }
-
-                                                    description.anio_gestion?.let {
-                                                        InfoItem(
-                                                            label = "Año de gestión",
-                                                            value = it,
-                                                            modifier = Modifier.fillMaxWidth()
-                                                        )
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .padding(horizontal = 16.dp),
-                                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-                                    ) {
-                                        Text(
-                                            text = "No hay información de la municipalidad disponible.",
-                                            style = MaterialTheme.typography.bodyLarge,
-                                            textAlign = TextAlign.Center,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .padding(24.dp)
-                                        )
-                                    }
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.height(40.dp))
-                        }
-
-                        // Lugares destacados - Convertido a items individuales
-                        item {
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + scaleIn(initialScale = 0.9f)
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 16.dp)
+                                // Hero Section con información del alcalde destacada
+                                AnimatedVisibility(
+                                    visible = visible.value,
+                                    enter = fadeIn() + scaleIn(initialScale = 0.9f)
                                 ) {
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "Lugares Emblemáticos",
-                                            style = MaterialTheme.typography.titleLarge.copy(
-                                                fontWeight = FontWeight.Bold
-                                            ),
-                                            color = MaterialTheme.colorScheme.onBackground
-                                        )
-
-                                        Text(
-                                            text = "Ver todos",
-                                            style = MaterialTheme.typography.bodyMedium.copy(
-                                                color = MaterialTheme.colorScheme.primary
-                                            ),
-                                            modifier = Modifier.clickable { /* Navegar a todos */ }
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(16.dp))
-                                }
-                            }
-                        }
-
-                        // Mostrar las asociaciones como items individuales en pares (2 columnas)
-                        val associations = stateAso.itemsAso
-                        val chunkedAssociations = associations.chunked(2)
-
-                        items(chunkedAssociations) { rowAssociations ->
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + slideInHorizontally()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(vertical = 8.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    rowAssociations.forEach { asociacion ->
-                                        val isFavorite = favoriteItems.contains(asociacion.id)
-                                        AssociationCard(
-                                            asociacion = asociacion,
-                                            isFavorite = isFavorite,
-                                            onFavoriteClick = {
-                                                if (isFavorite) {
-                                                    favoriteItems.remove(asociacion.id)
-                                                } else {
-                                                    asociacion.id?.let { favoriteItems.add(it) }
-                                                }
-                                            },
-                                            onClick = { selectedAsociacion = asociacion },
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .animateContentSize(
-                                                    animationSpec = spring(
-                                                        dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                        stiffness = Spring.StiffnessLow
-                                                    )
-                                                )
-                                        )
-                                    }
-
-                                    // Si solo hay una asociación en la fila, agregar un Spacer para equilibrar
-                                    if (rowAssociations.size == 1) {
-                                        Spacer(modifier = Modifier.weight(1f))
-                                    }
-                                }
-                            }
-                        }
-
-                        item {
-                            Spacer(modifier = Modifier.height(32.dp))
-
-                            // Eventos próximos
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + slideInHorizontally { -it }
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp)
-                                ) {
-                                    Text(
-                                        text = "Eventos Próximos",
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        modifier = Modifier.padding(bottom = 16.dp),
-                                        color = MaterialTheme.colorScheme.onBackground
+                                    MunicipalidadHeroSection(
+                                        municipalidad = state.items.firstOrNull(),
+                                        description = municipalidadDescriptionState.descriptions.firstOrNull(),
+                                        sliderImages = sliderImages
                                     )
+                                }
+                            }
 
-                                    // Placeholder para eventos - puedes reemplazar con tu implementación
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(120.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                        )
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "Eventos próximos",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Información detallada de la municipalidad
+                                AnimatedVisibility(
+                                    visible = visible.value,
+                                    enter = fadeIn() + slideInHorizontally { it * 2 }
+                                ) {
+                                    if (municipalidadDescriptionState.descriptions.isNotEmpty()) {
+                                        municipalidadDescriptionState.descriptions.forEach { description ->
+                                            MunicipalidadDetailedInfo(
+                                                municipalidad = state.items.firstOrNull(),
+                                                description = description
                                             )
                                         }
+                                    } else {
+                                        EmptyMunicipalidadInfo()
                                     }
                                 }
                             }
-                        }
 
-                        item {
-                            // Recomendaciones
-                            AnimatedVisibility(
-                                visible = visible.value,
-                                enter = fadeIn() + slideInHorizontally()
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(bottom = 24.dp)
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
+
+                                // Sección de contacto y servicios
+                                AnimatedVisibility(
+                                    visible = visible.value,
+                                    enter = fadeIn() + slideInVertically { it }
                                 ) {
-                                    Text(
-                                        text = "Recomendados para ti",
-                                        style = MaterialTheme.typography.titleLarge.copy(
-                                            fontWeight = FontWeight.Bold
-                                        ),
-                                        modifier = Modifier.padding(bottom = 16.dp),
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-
-                                    // Placeholder para recomendaciones - puedes reemplazar con tu implementación
-                                    Card(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(120.dp),
-                                        colors = CardDefaults.cardColors(
-                                            containerColor = MaterialTheme.colorScheme.surfaceVariant
-                                        )
-                                    ) {
-                                        Box(
-                                            modifier = Modifier.fillMaxSize(),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            Text(
-                                                text = "Recomendaciones",
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                        }
+                                    municipalidadDescriptionState.descriptions.firstOrNull()?.let { description ->
+                                        ContactAndServicesSection(description = description)
+                                    }
+                                }
+                            }
+                            item {
+                                Spacer(modifier = Modifier.height(24.dp))
+                                AnimatedVisibility(
+                                    visible = visible.value,
+                                    enter = fadeIn() + slideInHorizontally { -it }
+                                ) {
+                                    state.items.firstOrNull()?.let { municipalidad ->
+                                        MunicipalidadStatsSection(municipalidad = municipalidad)
                                     }
                                 }
                             }
                         }
                     }
                 }
+            }
+        }
+    }
+}
 
-                // Diálogo de detalle con animación
-                selectedAsociacion?.let { asociacion ->
-                    AssociationDetailDialog(
-                        association = asociacion,
-                        isFavorite = favoriteItems.contains(asociacion.id),
-                        onFavoriteClick = {
-                            if (favoriteItems.contains(asociacion.id)) {
-                                favoriteItems.remove(asociacion.id)
-                            } else {
-                                asociacion.id?.let { favoriteItems.add(it) }
-                            }
-                        },
-                        onDismiss = { selectedAsociacion = null }
+@Composable
+fun MunicipalidadHeroSection(
+    municipalidad: Municipalidad?,
+    description: MunicipalidadDescription?,
+    sliderImages: List<SliderMuni>
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(320.dp),
+        shape = RoundedCornerShape(20.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Box(modifier = Modifier.fillMaxSize()) {
+            // Slider de imágenes de fondo
+            if (sliderImages.isNotEmpty()) {
+                ParallaxImageSlider(
+                    sliders = sliderImages,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Gradiente overlay
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color.Black.copy(alpha = 0.3f),
+                                Color.Black.copy(alpha = 0.8f)
+                            ),
+                            startY = 0f,
+                            endY = Float.POSITIVE_INFINITY
+                        )
                     )
+            )
+
+            // Contenido principal
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                // Logo y nombre de la municipalidad
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    description?.logo?.let { logoUrl ->
+                        AsyncImage(
+                            model = logoUrl,
+                            contentDescription = "Logo",
+                            modifier = Modifier
+                                .size(60.dp)
+                                .clip(CircleShape)
+                                .background(Color.White.copy(alpha = 0.9f))
+                                .padding(4.dp),
+                            contentScale = ContentScale.Fit
+                        )
+                    }
+
+                    Column {
+                        Text(
+                            text = "Municipalidad de",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = Color.White.copy(alpha = 0.8f)
+                        )
+                        Text(
+                            text = municipalidad?.distrito ?: "Distrito",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = Color.White
+                        )
+                    }
+                }
+
+                // Información del alcalde destacada
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    description?.nombre_alcalde?.let { alcalde ->
+                        Card(
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.9f)
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Person,
+                                        contentDescription = "Alcalde",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Alcalde",
+                                        style = MaterialTheme.typography.labelMedium,
+                                        color = Color.White.copy(alpha = 0.9f)
+                                    )
+                                }
+                                Text(
+                                    text = alcalde,
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    color = Color.White
+                                )
+                                description.anio_gestion?.let { gestion ->
+                                    Text(
+                                        text = "Gestión $gestion",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color.White.copy(alpha = 0.8f)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
+@Composable
+fun MunicipalidadDetailedInfo(
+    municipalidad: Municipalidad?,
+    description: MunicipalidadDescription,
+    modifier: Modifier = Modifier
+) {
+    val scrollState = rememberScrollState()
+    val interactionSource = remember { MutableInteractionSource() }
+    val elevation by animateDpAsState(
+        targetValue = if (interactionSource.collectIsPressedAsState().value) 2.dp else 8.dp,
+        label = "cardElevation"
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = {}
+            ),
+        shape = RoundedCornerShape(24.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(max = 600.dp)
+                .verticalScroll(scrollState)
+                .padding(20.dp)
+        ) {
+            // Título con decoración
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(bottom = 16.dp)
+            ) {
+                Box(
+                    modifier = Modifier
+                        .width(4.dp)
+                        .height(24.dp)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary
+                                )
+                            ),
+                            shape = RoundedCornerShape(2.dp)
+                        )
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Text(
+                    text = "Información General",
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.ExtraBold,
+                        letterSpacing = 0.5.sp
+                    ),
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+
+            // Descripción con animación de aparición
+            AnimatedVisibility(
+                visible = description.descripcion != null,
+                enter = fadeIn() + expandVertically(),
+                exit = fadeOut() + shrinkVertically()
+            ) {
+                description.descripcion?.let { desc ->
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f)
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        ),
+                        modifier = Modifier.animateContentSize()
+                    ) {
+                        Text(
+                            text = desc,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                lineHeight = 26.sp,
+                                fontStyle = FontStyle.Italic
+                            ),
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(20.dp))
+                }
+            }
+
+            // Grid de información mejorado
+            Column(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Primera fila con animación escalonada
+                AnimatedVisibility(
+                    visible = municipalidad?.provincia != null || municipalidad?.region != null,
+                    enter = fadeIn() + slideInHorizontally { it / 2 },
+                    exit = fadeOut() + slideOutHorizontally { it / 2 }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        municipalidad?.provincia?.let { provincia ->
+                            InfoCardItem(
+                                icon = Icons.Default.LocationOn,
+                                label = "Provincia",
+                                value = provincia,
+                                modifier = Modifier.weight(1f),
+                                iconTint = MaterialTheme.colorScheme.tertiary
+                            )
+                        }
+                        municipalidad?.region?.let { region ->
+                            InfoCardItem(
+                                icon = Icons.Default.Public,
+                                label = "Región",
+                                value = region,
+                                modifier = Modifier.weight(1f),
+                                iconTint = MaterialTheme.colorScheme.secondary
+                            )
+                        }
+                    }
+                }
+
+                // Elementos individuales con animaciones
+                val items = listOfNotNull(
+                    description.direccion?.let { Triple(Icons.Default.Place, "Dirección", it) },
+                    description.ruc?.let { Triple(Icons.Default.Badge, "RUC", it) },
+                    description.correo?.let { Triple(Icons.Default.Email, "Correo", it) }
+                )
+
+                items.forEachIndexed { index, (icon, label, value) ->
+                    AnimatedVisibility(
+                        visible = true,
+                        enter = fadeIn() + slideInVertically { (index + 1) * 30 },
+                        exit = fadeOut() + slideOutVertically { (index + 1) * 30 }
+                    ) {
+                        InfoCardItem(
+                            icon = icon,
+                            label = label,
+                            value = value,
+                            modifier = Modifier.fillMaxWidth(),
+                            iconTint = MaterialTheme.colorScheme.primary
+                        )
+                        if (index < items.lastIndex) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                    }
+                }
+            }
+
+            // Footer decorativo
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 16.dp)
+                    .height(1.dp)
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color.Transparent,
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                Color.Transparent
+                            )
+                        )
+                    )
+            )
+        }
+    }
+}
+
+@Composable
+private fun InfoCardItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    iconTint: Color = MaterialTheme.colorScheme.primary
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerLowest,
+        tonalElevation = 2.dp,
+        border = BorderStroke(0.5.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.1f))
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconTint,
+                modifier = Modifier.size(20.dp)
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Column {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.alpha(0.8f)
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ContactAndServicesSection(
+    description: MunicipalidadDescription
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Text(
+                text = "Contacto y Servicios",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            description.correo?.let { correo ->
+                ContactItem(
+                    icon = Icons.Default.Email,
+                    label = "Correo Electrónico",
+                    value = correo,
+                    isClickable = true
+                )
+                Spacer(modifier = Modifier.height(12.dp))
+            }
+
+            description.direccion?.let { direccion ->
+                ContactItem(
+                    icon = Icons.Default.LocationOn,
+                    label = "Ubicación",
+                    value = direccion,
+                    isClickable = false
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun MunicipalidadStatsSection(
+    municipalidad: Municipalidad
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            Text(
+                text = "Ubicación Geográfica",
+                style = MaterialTheme.typography.headlineSmall.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                StatCard(
+                    title = "Distrito",
+                    value = municipalidad.distrito ?: "N/A",
+                    icon = Icons.Default.LocationCity,
+                    modifier = Modifier.weight(1f)
+                )
+
+                StatCard(
+                    title = "Provincia",
+                    value = municipalidad.provincia ?: "N/A",
+                    icon = Icons.Default.Map,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun InfoCardItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(10.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(6.dp)
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = label,
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.Medium
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}
+
+@Composable
+fun ContactItem(
+    icon: ImageVector,
+    label: String,
+    value: String,
+    isClickable: Boolean
+) {
+    Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.3f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            if (isClickable) {
+                Icon(
+                    imageVector = Icons.Default.RocketLaunch,
+                    contentDescription = "Abrir",
+                    tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.7f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    icon: ImageVector,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = MaterialTheme.colorScheme.tertiary,
+                modifier = Modifier.size(32.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold
+                ),
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+            Text(
+                text = title,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun EmptyMunicipalidadInfo() {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = "Sin información",
+                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.size(48.dp)
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "No hay información de la municipalidad disponible.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
 
 @Composable
 fun ParallaxImageSlider(
     sliders: List<SliderMuni>,
-    title: String,
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(initialPage = 0) {
         sliders.size
     }
 
-    Column(modifier = modifier) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground
-            ),
-            modifier = Modifier.padding(start = 8.dp, bottom = 16.dp)
-        )
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier
+    ) { page ->
+        val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+        val slider = sliders[page]
+        val imageUrl = slider.url_images
 
-        HorizontalPager(
-            state = pagerState,
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-        ) { page ->
-            val pageOffset = (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
-            val slider = sliders[page]  // Obtener el SliderMuni actual
-            val imageUrl = slider.url_images // La URL de la imagen
-
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-                    .graphicsLayer {
-                        // Efecto parallax basado en el offset
-                        val absOffset = pageOffset.absoluteValue
-
-                        // Ajustamos la opacidad y escala
-                        alpha = 1f - (absOffset * 0.5f)
-                        val scale = 0.9f + (1f - absOffset) * 0.1f
-                        scaleX = scale
-                        scaleY = scale
-
-                        // Efecto de profundidad (parallax)
-                        translationX = pageOffset * size.width * 0.5f
-                    },
-                shape = RoundedCornerShape(16.dp),
-                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    // Cargar la imagen desde la URL proporcionada por el backend
-                    AsyncImage(
-                        model = imageUrl,
-                        contentDescription = "Imagen turística $page",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize(),
-                        placeholder = painterResource(R.drawable.tusi),
-                        error = painterResource(R.drawable.tusi)
-                    )
-
-                    // Gradiente para mejorar legibilidad del texto
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(
-                                Brush.verticalGradient(
-                                    colors = listOf(
-                                        Color.Transparent,
-                                        Color.Black.copy(alpha = 0.7f)
-                                    ),
-                                    startY = 0.5f
-                                )
-                            )
-                    )
-
-                    // Indicadores de página
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .padding(bottom = 16.dp)
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            repeat(sliders.size) { index ->
-                                Box(
-                                    modifier = Modifier
-                                        .size(10.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            if (pagerState.currentPage == index) {
-                                                MaterialTheme.colorScheme.primary
-                                            } else {
-                                                MaterialTheme.colorScheme.onBackground.copy(alpha = 0.3f)
-                                            }
-                                        )
-                                )
-                            }
-                        }
-                    }
+                .fillMaxSize()
+                .graphicsLayer {
+                    val absOffset = pageOffset.absoluteValue
+                    alpha = 1f - (absOffset * 0.3f)
+                    val scale = 0.95f + (1f - absOffset) * 0.05f
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = pageOffset * size.width * 0.3f
                 }
-            }
+        ) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = "Imagen ${page + 1}",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxSize(),
+                placeholder = painterResource(R.drawable.escallani),
+                error = painterResource(R.drawable.escallani)
+            )
         }
     }
 }
-
