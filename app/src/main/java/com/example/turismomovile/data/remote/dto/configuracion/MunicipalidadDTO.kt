@@ -62,12 +62,9 @@ data class MunicipalidadDescription(
 )
 
 @Serializable
-data class ApiResponseWrapper<T>(
-    val status: Boolean,
-    val message: String,
-    val data: T
+data class MunicipalidadDescriptionResponseUpdate(
+    val content: MunicipalidadDescription? // Solo un objeto, no una lista
 )
-
 @Serializable
 data class MunicipalidadDescriptionUpdateDto(
     val municipalidad_id: String?,
@@ -79,6 +76,7 @@ data class MunicipalidadDescriptionUpdateDto(
     val nombre_alcalde: String?,
     val anio_gestion: String?
 )
+
 
 data class MunicipalidadDescriptionState(
     val descriptions: List<MunicipalidadDescription> = emptyList(),

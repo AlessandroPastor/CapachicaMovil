@@ -109,53 +109,6 @@ class LangPageViewModel (
         }
     }
 
-    fun loadEmprendedores(
-        page: String? = 0.toString(),
-        name: String? = null,
-        category: String? = null
-    ) {
-        viewModelScope.launch {
-            _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
-
-            try {
-                val response = apiServiceEmprendedorService.getEmprendedor(
-                    page = page,
-                    size = 10,
-                    name = name,
-                    category = category
-                )
-
-                println("🛰️ [Emprendedores] Página actual: ${response.currentPage} / ${response.totalPages}")
-                println("📦 Total Emprendedores en esta página: ${response.content.size}")
-                response.content.forEach { emprendedor ->
-                    println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razon_social}")
-                }
-
-                _stateEmprendedor.value = _stateEmprendedor.value.copy(
-                    items = response.content,
-                    currentPage = response.currentPage,
-                    totalPages = response.totalPages,
-                    totalElements = response.totalElements,
-                    isLoading = false,
-                    error = null
-                )
-
-            } catch (e: Exception) {
-                println("❌ [Emprendedores] Error al cargar emprendedores: ${e.message}")
-                _stateEmprendedor.value = _stateEmprendedor.value.copy(
-                    isLoading = false,
-                    error = e.message,
-                    notification = NotificationState(
-                        message = e.message ?: "Error al cargar los emprendedores",
-                        type = NotificationType.ERROR,
-                        isVisible = true
-                    )
-                )
-            }
-        }
-    }
-
-
     // Función para cargar las descripciones de la municipalidad
     fun loadMunicipalidadDescription(page: Int = 0, size: Int = 10, searchQuery: String? = null) {
         viewModelScope.launch {
@@ -209,6 +162,54 @@ class LangPageViewModel (
             }
         }
     }
+    fun loadEmprendedores(
+        page: String? = 0.toString(),
+        name: String? = null,
+        category: String? = null
+    ) {
+        viewModelScope.launch {
+            _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
+
+            try {
+                val response = apiServiceEmprendedorService.getEmprendedor(
+                    page = page,
+                    size = 10,
+                    name = name,
+                    category = category
+                )
+
+                println("🛰️ [Emprendedores] Página actual: ${response.currentPage} / ${response.totalPages}")
+                println("📦 Total Emprendedores en esta página: ${response.content.size}")
+                response.content.forEach { emprendedor ->
+                    println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razon_social}")
+                }
+
+                _stateEmprendedor.value = _stateEmprendedor.value.copy(
+                    items = response.content,
+                    currentPage = response.currentPage,
+                    totalPages = response.totalPages,
+                    totalElements = response.totalElements,
+                    isLoading = false,
+                    error = null
+                )
+
+            } catch (e: Exception) {
+                println("❌ [Emprendedores] Error al cargar emprendedores: ${e.message}")
+                _stateEmprendedor.value = _stateEmprendedor.value.copy(
+                    isLoading = false,
+                    error = e.message,
+                    notification = NotificationState(
+                        message = e.message ?: "Error al cargar los emprendedores",
+                        type = NotificationType.ERROR,
+                        isVisible = true
+                    )
+                )
+            }
+        }
+    }
+
+
+
 
 
 

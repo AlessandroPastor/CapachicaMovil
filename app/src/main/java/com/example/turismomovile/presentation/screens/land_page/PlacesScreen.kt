@@ -70,11 +70,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.MainTopAppBar
+import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.NotificationType
+import com.example.turismomovile.presentation.components.rememberNotificationState
+import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlacesScreen(
     onStartClick: () -> Unit,
@@ -83,6 +87,8 @@ fun PlacesScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+    // Estados
+    val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
     val currentSection by viewModel.currentSection
     val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
@@ -91,101 +97,154 @@ fun PlacesScreen(
     var selectedAsociacion by remember { mutableStateOf<Asociacion?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    val visible = remember { mutableStateOf(false) }
 
-    // ✅ Seteamos la sección PLACES al entrar
+    // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.PLACES)
-        viewModel.loadAsociaciones()
+        // Mostrar notificación de bienvenida después de que cargue el layout
+        delay(500)
+        notificationState.showNotification(
+            message = "¡Lugares EXPECTACULARES!",
+            type = NotificationType.SUCCESS,
+            duration = 3500
+        )
+
+        // Activar animaciones de contenido con timing escalonado
+        delay(1000)
+        visible.value = true
     }
 
+    // Manejo de notificaciones del estado
+    LaunchedEffect(stateAso.notification) {
+        if (stateAso.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateAso.notification.message,
+                type = stateAso.notification.type,
+                duration = stateAso.notification.duration
+            )
+        }
+    }
+
+    // Manejo de notificaciones para stateAso
+    LaunchedEffect(stateAso.notification) {
+        if (stateAso.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateAso.notification.message,
+                type = stateAso.notification.type,
+                duration = stateAso.notification.duration
+            )
+        }
+    }
+
+    // Controlar el estado de refresh con feedback
+    LaunchedEffect(stateAso.isLoading, stateAso.isLoading) {
+        if (!stateAso.isLoading && !stateAso.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
+            )
+        }
+    }
+
+    // UI
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = "Lugares Emblemáticos",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = { /* Podrías agregar búsqueda de asociaciones */ },
-                    onToggleSearch = { isSearchVisible = true },
-                    onCloseSearch = {
-                        isSearchVisible = false
-                        searchQuery = ""
-                    },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section)
-                    },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(16.dp)
-            ) {
-                when {
-                    stateAso.isLoading -> {
-                        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                    }
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = "Lugares Emblemáticos",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = {
+                            viewModel.loadAsociaciones(searchQuery = searchQuery)
+                        },
+                        onToggleSearch = { isSearchVisible = !isSearchVisible },
+                        onCloseSearch = {
+                            isSearchVisible = false
+                            searchQuery = ""
+                            viewModel.loadAsociaciones()
+                        },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                        },
+                        navController = navController
+                    )
+                }
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(16.dp)
+                ) {
+                    when {
+                        stateAso.isLoading -> {
+                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                        }
 
-                    stateAso.error != null -> {
-                        Text(
-                            text = "Error al cargar asociaciones: ${stateAso.error}",
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
+                        stateAso.error != null -> {
+                            Text(
+                                text = "Error al cargar asociaciones: ${stateAso.error}",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
 
-                    else -> {
-                        LazyVerticalGrid(
-                            columns = GridCells.Fixed(2),
-                            verticalArrangement = Arrangement.spacedBy(16.dp),
-                            horizontalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            items(stateAso.itemsAso) { asociacion ->
-                                val isFavorite = favoriteItems.contains(asociacion.id)
-                                AssociationCard(
-                                    asociacion = asociacion,
-                                    isFavorite = isFavorite,
-                                    onFavoriteClick = {
-                                        if (isFavorite) favoriteItems.remove(asociacion.id)
-                                        else asociacion.id?.let { favoriteItems.add(it) }
-                                    },
-                                    onClick = { selectedAsociacion = asociacion }
-                                )
+                        else -> {
+                            // Grilla de asociaciones
+                            LazyVerticalGrid(
+                                columns = GridCells.Fixed(2),
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                items(stateAso.itemsAso) { asociacion ->
+                                    val isFavorite = favoriteItems.contains(asociacion.id)
+                                    AssociationCard(
+                                        asociacion = asociacion,
+                                        isFavorite = isFavorite,
+                                        onFavoriteClick = {
+                                            if (isFavorite) favoriteItems.remove(asociacion.id)
+                                            else asociacion.id?.let { favoriteItems.add(it) }
+                                        },
+                                        onClick = { selectedAsociacion = asociacion }
+                                    )
+                                }
                             }
                         }
                     }
-                }
 
-                selectedAsociacion?.let { asociacion ->
-                    AssociationDetailDialog(
-                        association = asociacion,
-                        isFavorite = favoriteItems.contains(asociacion.id),
-                        onFavoriteClick = {
-                            if (favoriteItems.contains(asociacion.id)) {
-                                favoriteItems.remove(asociacion.id)
-                            } else {
-                                asociacion.id?.let { favoriteItems.add(it) }
-                            }
-                        },
-                        onDismiss = { selectedAsociacion = null }
-                    )
+                    selectedAsociacion?.let { asociacion ->
+                        AssociationDetailDialog(
+                            association = asociacion,
+                            isFavorite = favoriteItems.contains(asociacion.id),
+                            onFavoriteClick = {
+                                if (favoriteItems.contains(asociacion.id)) {
+                                    favoriteItems.remove(asociacion.id)
+                                } else {
+                                    asociacion.id?.let { favoriteItems.add(it) }
+                                }
+                            },
+                            onDismiss = { selectedAsociacion = null }
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 
 

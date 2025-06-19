@@ -3,11 +3,11 @@ package com.example.turismomovile.data.remote.api.configuracion
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
-import com.example.turismomovile.data.remote.dto.configuracion.ApiResponseWrapper
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadCreateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescription
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionResponse
+import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionResponseUpdate
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescriptionUpdateDto
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadResponse
 import io.ktor.client.HttpClient
@@ -50,14 +50,15 @@ class MunicipalidadDescriptionApiService (client: HttpClient,
         }.body()
     }*/
 
-    // 2. Modificar tu ApiService
-    suspend fun updateMunicipalidadDescription(id: String, municipalidad_id: MunicipalidadDescriptionUpdateDto): MunicipalidadDescription {
+    suspend fun updateMunicipalidadDescription(id: String, municipalidad_id: MunicipalidadDescriptionUpdateDto): MunicipalidadDescription? {
         return client.put(ApiConstants.Configuration.MUNICIPALIDAD_DESCRIPTIONBYID_PUT.replace("{id}", id)) {
             addAuthHeader()
             contentType(ContentType.Application.Json)
-            setBody(municipalidad_id)
-        }.body<ApiResponseWrapper<MunicipalidadDescription>>().data // ✅ Extraer solo el 'data'
+            setBody(municipalidad_id)  // Aquí enviamos el DTO
+        }.body<MunicipalidadDescriptionResponseUpdate?>()?.content  // Esperamos la respuesta y extraemos el contenido
     }
+
+
 
     suspend fun deleteMunicipalidad(id: String) {
         client.delete(ApiConstants.Configuration.MUNICIPALIDAD_DESCRIPTIONBYID_DELETE.replace("{id}", id)) {

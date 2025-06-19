@@ -31,8 +31,13 @@ import com.example.turismomovile.R
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.EventCard
 import com.example.turismomovile.presentation.components.MainTopAppBar
+import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.NotificationType
+import com.example.turismomovile.presentation.components.rememberNotificationState
+import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 @Composable
@@ -43,12 +48,16 @@ fun EventsScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+    val stateEmprendedor by viewModel.stateEmprendedor.collectAsState()
+    val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
     val currentSection by viewModel.currentSection
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val visible = remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
+    // Efectos
     LaunchedEffect(Unit) {
         viewModel.onSectionSelected(LangPageViewModel.Sections.EVENTS)
         visible.value = true
@@ -67,207 +76,264 @@ fun EventsScreen(
         "Carnaval de Capachica" to R.drawable.fondo,
     )
 
+    // Efecto para animaciones y notificaciones de bienvenida
+    LaunchedEffect(Unit) {
+        // Mostrar notificación de bienvenida después de que cargue el layout
+        delay(500)
+        notificationState.showNotification(
+            message = "¡Bienvenido a los Eventos",
+            type = NotificationType.SUCCESS,
+            duration = 3500
+        )
+
+        // Activar animaciones de contenido con timing escalonado
+        delay(1000)
+        visible.value = true
+    }
+
+    // Manejo de notificaciones del estado
+    LaunchedEffect(stateEmprendedor.notification) {
+        if (stateEmprendedor.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateEmprendedor.notification.message,
+                type = stateEmprendedor.notification.type,
+                duration = stateEmprendedor.notification.duration
+            )
+        }
+    }
+
+    // Manejo de notificaciones para stateAso
+    LaunchedEffect(stateEmprendedor.notification) {
+        if (stateEmprendedor.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateEmprendedor.notification.message,
+                type = stateEmprendedor.notification.type,
+                duration = stateEmprendedor.notification.duration
+            )
+        }
+    }
+
+    // Controlar el estado de refresh con feedback
+    LaunchedEffect(stateEmprendedor.isLoading, stateEmprendedor.isLoading) {
+        if (!stateEmprendedor.isLoading && !stateEmprendedor.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
+            )
+        }
+    }
+
+    // UI
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = "Eventos",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = { /* Implementar lógica de búsqueda */ },
-                    onToggleSearch = { isSearchVisible = true },
-                    onCloseSearch = {
-                        isSearchVisible = false
-                        searchQuery = ""
-                    },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { viewModel.onSectionSelected(it) },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            LazyColumn (
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = 16.dp),
-                contentPadding = PaddingValues(bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp)
-            ) {
-                item {
-                    AnimatedVisibility(
-                        visible = visible.value,
-                        enter = fadeIn() + slideInHorizontally()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 8.dp),
-                            shape = RoundedCornerShape(12.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = "Eventos",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = { /* Implementar lógica de búsqueda */ },
+                        onToggleSearch = { isSearchVisible = true },
+                        onCloseSearch = {
+                            isSearchVisible = false
+                            searchQuery = ""
+                        },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { viewModel.onSectionSelected(it) },
+                        navController = navController
+                    )
+                }
+            ) { innerPadding ->
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(bottom = 100.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    item {
+                        AnimatedVisibility(
+                            visible = visible.value,
+                            enter = fadeIn() + slideInHorizontally()
                         ) {
-                            Column(
+                            Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
+                                    .padding(vertical = 8.dp),
+                                shape = RoundedCornerShape(12.dp),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Box(
-                                        modifier = Modifier
-                                            .width(4.dp)
-                                            .height(28.dp)
-                                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(2.dp))
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(
-                                        text = "Eventos destacados",
-                                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                Text(
-                                    text = "Participa en ferias, carnavales y tradiciones que enriquecen la identidad de Capachica.",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        lineHeight = 22.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
-                                    )
-                                )
-                            }
-                        }
-                    }
-                }
-
-
-                item {
-                    AnimatedVisibility(visible = visible.value, enter = fadeIn()) {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            items(events) { (name, imageRes) ->
-                                Card(
-                                    modifier = Modifier
-                                        .width(260.dp)
-                                        .height(160.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    elevation = CardDefaults.cardElevation(6.dp)
-                                ) {
-                                    Box {
-                                        Image(
-                                            painter = painterResource(imageRes),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .background(
-                                                    Brush.verticalGradient(
-                                                        listOf(
-                                                            Color.Transparent,
-                                                            Color.Black.copy(alpha = 0.6f)
-                                                        )
-                                                    )
-                                                )
-                                        )
-                                        Text(
-                                            text = name,
-                                            style = MaterialTheme.typography.titleMedium.copy(
-                                                color = Color.White,
-                                                shadow = Shadow(
-                                                    color = Color.Black,
-                                                    offset = Offset(2f, 2f),
-                                                    blurRadius = 4f
-                                                )
-                                            ),
-                                            modifier = Modifier
-                                                .align(Alignment.BottomStart)
-                                                .padding(12.dp)
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    AnimatedVisibility (visible = visible.value, enter = fadeIn()) {
-                        Column {
-                            Text(
-                                text = "Próximos eventos",
-                                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
-                            )
-                            Spacer(modifier = Modifier.height(8.dp))
-                            upcomingEvents.forEach { (name, imageRes) ->
-                                Card(
+                                Column(
                                     modifier = Modifier
                                         .fillMaxWidth()
-                                        .height(120.dp),
-                                    shape = RoundedCornerShape(12.dp),
-                                    elevation = CardDefaults.cardElevation(4.dp)
+                                        .padding(16.dp)
                                 ) {
-                                    Row {
-                                        Image(
-                                            painter = painterResource(imageRes),
-                                            contentDescription = null,
-                                            contentScale = ContentScale.Crop,
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Box(
                                             modifier = Modifier
-                                                .fillMaxHeight()
-                                                .width(120.dp)
+                                                .width(4.dp)
+                                                .height(28.dp)
+                                                .background(
+                                                    MaterialTheme.colorScheme.primary,
+                                                    RoundedCornerShape(2.dp)
+                                                )
                                         )
-                                        Column(
-                                            modifier = Modifier
-                                                .padding(12.dp)
-                                                .fillMaxSize(),
-                                            verticalArrangement = Arrangement.Center
-                                        ) {
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(
+                                            text = "Eventos destacados",
+                                            style = MaterialTheme.typography.titleLarge.copy(
+                                                fontWeight = FontWeight.Bold
+                                            ),
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Text(
+                                        text = "Participa en ferias, carnavales y tradiciones que enriquecen la identidad de Capachica.",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            lineHeight = 22.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        AnimatedVisibility(visible = visible.value, enter = fadeIn()) {
+                            LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                items(events) { (name, imageRes) ->
+                                    Card(
+                                        modifier = Modifier
+                                            .width(260.dp)
+                                            .height(160.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        elevation = CardDefaults.cardElevation(6.dp)
+                                    ) {
+                                        Box {
+                                            Image(
+                                                painter = painterResource(imageRes),
+                                                contentDescription = null,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier.fillMaxSize()
+                                            )
+                                            Box(
+                                                modifier = Modifier
+                                                    .fillMaxSize()
+                                                    .background(
+                                                        Brush.verticalGradient(
+                                                            listOf(
+                                                                Color.Transparent,
+                                                                Color.Black.copy(alpha = 0.6f)
+                                                            )
+                                                        )
+                                                    )
+                                            )
                                             Text(
                                                 text = name,
                                                 style = MaterialTheme.typography.titleMedium.copy(
-                                                    fontWeight = FontWeight.SemiBold
-                                                )
-                                            )
-                                            Text(
-                                                text = "¡No te lo pierdas!",
-                                                style = MaterialTheme.typography.bodyMedium.copy(
-                                                    color = MaterialTheme.colorScheme.primary
-                                                )
+                                                    color = Color.White,
+                                                    shadow = Shadow(
+                                                        color = Color.Black,
+                                                        offset = Offset(2f, 2f),
+                                                        blurRadius = 4f
+                                                    )
+                                                ),
+                                                modifier = Modifier
+                                                    .align(Alignment.BottomStart)
+                                                    .padding(12.dp)
                                             )
                                         }
                                     }
                                 }
-                                Spacer(modifier = Modifier.height(12.dp))
                             }
                         }
                     }
-                }
 
-                item {
-                    Button(
-                        onClick = { /* Navegar a lista completa */ },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("Ver todos los eventos")
+                    item {
+                        AnimatedVisibility(visible = visible.value, enter = fadeIn()) {
+                            Column {
+                                Text(
+                                    text = "Próximos eventos",
+                                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold)
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                upcomingEvents.forEach { (name, imageRes) ->
+                                    Card(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(120.dp),
+                                        shape = RoundedCornerShape(12.dp),
+                                        elevation = CardDefaults.cardElevation(4.dp)
+                                    ) {
+                                        Row {
+                                            Image(
+                                                painter = painterResource(imageRes),
+                                                contentDescription = null,
+                                                contentScale = ContentScale.Crop,
+                                                modifier = Modifier
+                                                    .fillMaxHeight()
+                                                    .width(120.dp)
+                                            )
+                                            Column(
+                                                modifier = Modifier
+                                                    .padding(12.dp)
+                                                    .fillMaxSize(),
+                                                verticalArrangement = Arrangement.Center
+                                            ) {
+                                                Text(
+                                                    text = name,
+                                                    style = MaterialTheme.typography.titleMedium.copy(
+                                                        fontWeight = FontWeight.SemiBold
+                                                    )
+                                                )
+                                                Text(
+                                                    text = "¡No te lo pierdas!",
+                                                    style = MaterialTheme.typography.bodyMedium.copy(
+                                                        color = MaterialTheme.colorScheme.primary
+                                                    )
+                                                )
+                                            }
+                                        }
+                                    }
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        Button(
+                            onClick = { /* Navegar a lista completa */ },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text("Ver todos los eventos")
+                        }
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun EventsHorizontalList() {

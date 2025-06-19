@@ -78,20 +78,25 @@ class MunicipalidadDescriptionViewModel(
                 )
 
                 try {
-                    // 🔥 CAMBIO AQUÍ: No esperamos respuesta de deserialización
-                    apiServiceMunicipalidadDescription.updateMunicipalidadDescription(id, updateDto)
+                    // 🔥 CAMBIO AQUÍ: Esperamos la respuesta con el objeto actualizado
+                    val updatedMunicipalidad = apiServiceMunicipalidadDescription.updateMunicipalidadDescription(id, updateDto)
 
                     // ✅ Asumimos éxito si no hay excepción
                     println("✅ Descripción de la municipalidad actualizada correctamente: ID=${municipalidadDescription.id}")
-                    loadMunicipalidadDescription() // Recargamos las descripciones
+
+                    // Puedes actualizar el objeto en tu UI o en el estado
+                    loadMunicipalidadDescription() // Recargamos las descripciones si es necesario
+
+                    // Actualiza el estado para indicar que la operación fue exitosa
                     _state.value = _state.value.copy(
                         isLoading = false,
                         notification = NotificationState(
                             message = "Descripción de la municipalidad actualizada exitosamente",
                             type = NotificationType.SUCCESS,
                             isVisible = true
-                        )
+                        ),
                     )
+
                 } catch (error: Exception) {
                     println("❌ Error al actualizar la descripción de la municipalidad ID=${municipalidadDescription.id}: ${error.message}")
                     _state.value = _state.value.copy(
@@ -106,4 +111,5 @@ class MunicipalidadDescriptionViewModel(
             }
         }
     }
+
 }

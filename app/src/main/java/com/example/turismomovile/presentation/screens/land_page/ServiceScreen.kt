@@ -89,9 +89,12 @@ import com.example.turismomovile.presentation.components.EmptyState
 import com.example.turismomovile.presentation.components.ErrorState
 import com.example.turismomovile.presentation.components.LoadingOverlay
 import com.example.turismomovile.presentation.components.MainTopAppBar
+import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 @Composable
@@ -108,105 +111,135 @@ fun ServiceScreen(
         initialValue = false,
         lifecycle = LocalLifecycleOwner.current.lifecycle
     )
+    val visible = remember { mutableStateOf(false) }
     val stateService by viewModel.stateService.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
-    val lazyListState = rememberLazyListState()
     val currentSection by viewModel.currentSection
 
-    // Efectos
+    // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.SERVICES)
-        viewModel.loadService()
+        // Mostrar notificación de bienvenida después de que cargue el layout
+        delay(500)
+        notificationState.showNotification(
+            message = "¡Bienvenido a los servicios",
+            type = NotificationType.SUCCESS,
+            duration = 3500
+        )
+
+        // Activar animaciones de contenido con timing escalonado
+        delay(1000)
+        visible.value = true
     }
 
-    LaunchedEffect(stateService.isLoading) {
-        if (!stateService.isLoading) {
-            isRefreshing = false
+    // Manejo de notificaciones del estado
+    LaunchedEffect(stateService.notification) {
+        if (stateService.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateService.notification.message,
+                type = stateService.notification.type,
+                duration = stateService.notification.duration
+            )
         }
     }
 
+    // Manejo de notificaciones para stateAso
     LaunchedEffect(stateService.notification) {
-        stateService.notification.takeIf { it.isVisible }?.let { notification ->
+        if (stateService.notification.isVisible) {
             notificationState.showNotification(
-                message = notification.message,
-                type = notification.type,
-                duration = notification.duration
+                message = stateService.notification.message,
+                type = stateService.notification.type,
+                duration = stateService.notification.duration
+            )
+        }
+    }
+
+    // Controlar el estado de refresh con feedback
+    LaunchedEffect(stateService.isLoading, stateService.isLoading) {
+        if (!stateService.isLoading && !stateService.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
             )
         }
     }
 
     // UI
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = "Servicios Turísticos",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {
-                        viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
-                    },
-                    onToggleSearch = { isSearchVisible = !isSearchVisible },
-                    onCloseSearch = {
-                        isSearchVisible = false
-                        searchQuery = ""
-                        viewModel.loadService()
-                    },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section)
-                    },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
-                            )
-                        )
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = "Servicios Turísticos",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = {
+                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
+                        },
+                        onToggleSearch = { isSearchVisible = !isSearchVisible },
+                        onCloseSearch = {
+                            isSearchVisible = false
+                            searchQuery = ""
+                            viewModel.loadService()
+                        },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
                     )
-                    .padding(innerPadding)
-            ) {
-                // Contenido principal
-                PullToRefreshComponent(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
-                    }
-                ) {
-                    ServiceContent(
-                        modifier = Modifier.fillMaxSize(),
-                        viewModel = viewModel,
-                        onExploreClick = onClickExplorer
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                        },
+                        navController = navController
                     )
                 }
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                )
+                            )
+                        )
+                        .padding(innerPadding)
+                ) {
+                    // Contenido principal con Pull to Refresh
+                    PullToRefreshComponent(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
+                        }
+                    ) {
+                        ServiceContent(
+                            modifier = Modifier.fillMaxSize(),
+                            viewModel = viewModel,
+                            onExploreClick = onClickExplorer
+                        )
+                    }
 
-                // Loading overlay
-                if (stateService.isLoading && stateService.items.isEmpty()) {
-                    LoadingOverlay()
+                    // Capa de carga
+                    if (stateService.isLoading && stateService.items.isEmpty()) {
+                        LoadingOverlay()
+                    }
                 }
             }
         }
     }
 }
+
 
 
 @Composable

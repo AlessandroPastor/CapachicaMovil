@@ -3,6 +3,7 @@ package com.example.turismomovile.presentation.screens.land_page
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -88,6 +89,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -100,6 +102,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.SliderMuni
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.NotificationType
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -112,7 +115,6 @@ fun WelcomeScreen(
     themeViewModel: ThemeViewModel = koinInject(),
     navController: NavController
 ) {
-
     val visible = remember { mutableStateOf(false) }
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
@@ -124,17 +126,27 @@ fun WelcomeScreen(
     val coroutineScope = rememberCoroutineScope()
     val municipalidadDescriptionState by viewModel.municipalidadDescriptionState.collectAsState()
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
-    val isRefreshing = remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val sliderImages by viewModel.sliderImagesState.collectAsState()
 
+    // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        delay(300)
+        // Mostrar notificación de bienvenida después de que cargue el layout
+        delay(500)
+        notificationState.showNotification(
+            message = "¡Bienvenido a ${state.items.firstOrNull()?.distrito ?: "Turismo Movile"}!",
+            type = NotificationType.SUCCESS,
+            duration = 3500
+        )
+
+        // Activar animaciones de contenido con timing escalonado
+        delay(1000)
         visible.value = true
     }
 
+    // Manejo de notificaciones del estado
     LaunchedEffect(state.notification) {
         if (state.notification.isVisible) {
             notificationState.showNotification(
@@ -145,20 +157,27 @@ fun WelcomeScreen(
         }
     }
 
-    LaunchedEffect(stateAso.notification) {
-        if (stateAso.notification.isVisible) {
+    // Manejo de notificaciones para stateAso
+    LaunchedEffect(municipalidadDescriptionState.notification) {
+        if (municipalidadDescriptionState.notification.isVisible) {
             notificationState.showNotification(
-                message = stateAso.notification.message,
-                type = stateAso.notification.type,
-                duration = stateAso.notification.duration
+                message = municipalidadDescriptionState.notification.message,
+                type = municipalidadDescriptionState.notification.type,
+                duration = municipalidadDescriptionState.notification.duration
             )
         }
     }
 
-    fun handleRefresh() {
-        isRefreshing.value = true
-        viewModel.refreshMunicipalidades()
-        isRefreshing.value = false
+    // Controlar el estado de refresh con feedback
+    LaunchedEffect(state.isLoading, municipalidadDescriptionState.isLoading) {
+        if (!state.isLoading && !municipalidadDescriptionState.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
+            )
+        }
     }
 
     AppTheme(darkTheme = isDarkMode) {
@@ -207,9 +226,23 @@ fun WelcomeScreen(
                         .padding(innerPadding)
                 ) {
                     PullToRefreshComponent(
-                        isRefreshing = isRefreshing.value,
-                        onRefresh = { handleRefresh() },
-                        modifier = Modifier.fillMaxSize()
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            coroutineScope.launch {
+                                try {
+                                    viewModel.loadMunicipalidad()
+                                    viewModel.loadMunicipalidadDescription()
+                                } catch (e: Exception) {
+                                    notificationState.showNotification(
+                                        message = "Error: ${e.message ?: "Intente nuevamente"}",
+                                        type = NotificationType.ERROR,
+                                        duration = 3000
+                                    )
+                                    isRefreshing = false
+                                }
+                            }
+                        }
                     ) {
                         LazyColumn(
                             state = lazyListState,
@@ -221,10 +254,12 @@ fun WelcomeScreen(
                             item {
                                 Spacer(modifier = Modifier.height(16.dp))
 
-                                // Hero Section con información del alcalde destacada
+                                // Hero Section con animación mejorada
                                 AnimatedVisibility(
                                     visible = visible.value,
-                                    enter = fadeIn() + scaleIn(initialScale = 0.9f)
+                                    enter = fadeIn(animationSpec = tween(500)) +
+                                            scaleIn(initialScale = 0.9f, animationSpec = tween(500)) +
+                                            slideInVertically(animationSpec = tween(500), initialOffsetY = { it / 2 })
                                 ) {
                                     MunicipalidadHeroSection(
                                         municipalidad = state.items.firstOrNull(),
@@ -237,17 +272,26 @@ fun WelcomeScreen(
                             item {
                                 Spacer(modifier = Modifier.height(24.dp))
 
-                                // Información detallada de la municipalidad
+                                // Información detallada con animación escalonada
                                 AnimatedVisibility(
                                     visible = visible.value,
-                                    enter = fadeIn() + slideInHorizontally { it * 2 }
+                                    enter = fadeIn(animationSpec = tween(delayMillis = 200)) +
+                                            slideInHorizontally(animationSpec = tween(400), initialOffsetX = { it * 2 })
                                 ) {
                                     if (municipalidadDescriptionState.descriptions.isNotEmpty()) {
-                                        municipalidadDescriptionState.descriptions.forEach { description ->
-                                            MunicipalidadDetailedInfo(
-                                                municipalidad = state.items.firstOrNull(),
-                                                description = description
-                                            )
+                                        municipalidadDescriptionState.descriptions.forEachIndexed { index, description ->
+                                            key(description.id) {
+                                                MunicipalidadDetailedInfo(
+                                                    municipalidad = state.items.firstOrNull(),
+                                                    description = description,
+                                                    modifier = Modifier.animateEnterExit(
+                                                        enter = slideInVertically(
+                                                            animationSpec = tween(delayMillis = 100 * index),
+                                                            initialOffsetY = { it / 2 }
+                                                        ) + fadeIn(animationSpec = tween(delayMillis = 100 * index))
+                                                    )
+                                                )
+                                            }
                                         }
                                     } else {
                                         EmptyMunicipalidadInfo()
@@ -258,21 +302,24 @@ fun WelcomeScreen(
                             item {
                                 Spacer(modifier = Modifier.height(24.dp))
 
-                                // Sección de contacto y servicios
+                                // Sección de contacto con animación mejorada
                                 AnimatedVisibility(
                                     visible = visible.value,
-                                    enter = fadeIn() + slideInVertically { it }
+                                    enter = fadeIn() + slideInVertically { it } + scaleIn(initialScale = 0.95f)
                                 ) {
                                     municipalidadDescriptionState.descriptions.firstOrNull()?.let { description ->
                                         ContactAndServicesSection(description = description)
                                     }
                                 }
                             }
+
                             item {
                                 Spacer(modifier = Modifier.height(24.dp))
+
+                                // Sección de estadísticas con animación mejorada
                                 AnimatedVisibility(
                                     visible = visible.value,
-                                    enter = fadeIn() + slideInHorizontally { -it }
+                                    enter = fadeIn() + slideInHorizontally { -it } + scaleIn(initialScale = 0.9f)
                                 ) {
                                     state.items.firstOrNull()?.let { municipalidad ->
                                         MunicipalidadStatsSection(municipalidad = municipalidad)
@@ -280,6 +327,7 @@ fun WelcomeScreen(
                                 }
                             }
                         }
+
                     }
                 }
             }

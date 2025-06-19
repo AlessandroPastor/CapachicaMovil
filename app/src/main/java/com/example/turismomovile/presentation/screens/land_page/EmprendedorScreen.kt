@@ -62,14 +62,23 @@ fun EmprendedoresScreen(
     LaunchedEffect(Unit) {
         viewModel.onSectionSelected(LangPageViewModel.Sections.PRODUCTS)
         viewModel.loadEmprendedores()
+
+        // Mostrar notificación de bienvenida
+        notificationState.showNotification(
+            message = "Productos y Servicios de las familias",
+            type = NotificationType.SUCCESS,
+            duration = 3500 // Duración de la notificación
+        )
     }
 
+    // Manejo de estado de carga
     LaunchedEffect(stateEmprendedor.isLoading) {
         if (!stateEmprendedor.isLoading) {
             isRefreshing = false
         }
     }
 
+    // Manejo de notificaciones
     LaunchedEffect(stateEmprendedor.notification) {
         stateEmprendedor.notification.takeIf { it.isVisible }?.let { notification ->
             notificationState.showNotification(
@@ -82,87 +91,90 @@ fun EmprendedoresScreen(
 
     // UI
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = "Emprendedores",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {
-                        viewModel.loadEmprendedores(name = searchQuery)
-                    },
-                    onToggleSearch = { isSearchVisible = !isSearchVisible },
-                    onCloseSearch = {
-                        isSearchVisible = false
-                        searchQuery = ""
-                        viewModel.loadEmprendedores()
-                    },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section)
-                    },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = "Emprendedores",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = {
+                            viewModel.loadEmprendedores(name = searchQuery)
+                        },
+                        onToggleSearch = { isSearchVisible = !isSearchVisible },
+                        onCloseSearch = {
+                            isSearchVisible = false
+                            searchQuery = ""
+                            viewModel.loadEmprendedores()
+                        },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                        },
+                        navController = navController
+                    )
+                }
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                )
                             )
                         )
-                    )
-                    .padding(innerPadding)
-            ) {
-                // Contenido principal
-                PullToRefreshComponent(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.loadEmprendedores()
-                    }
+                        .padding(innerPadding)
                 ) {
-                    EmprendedoresListContent(
-                        stateEmprendedor = stateEmprendedor,
-                        lazyListState = lazyListState,
-                        onEmprendedorClick = { emprendedor ->
-                            selectedEmprendedor = emprendedor
+                    // Contenido principal con Pull-to-refresh
+                    PullToRefreshComponent(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            viewModel.loadEmprendedores()
                         }
-                    )
-                }
+                    ) {
+                        EmprendedoresListContent(
+                            stateEmprendedor = stateEmprendedor,
+                            lazyListState = lazyListState,
+                            onEmprendedorClick = { emprendedor ->
+                                selectedEmprendedor = emprendedor
+                            }
+                        )
+                    }
 
-                // Loading overlay
-                if (stateEmprendedor.isLoading && stateEmprendedor.items.isEmpty()) {
-                    LoadingOverlay()
-                }
+                    // Overlay de carga
+                    if (stateEmprendedor.isLoading && stateEmprendedor.items.isEmpty()) {
+                        LoadingOverlay()
+                    }
 
-                // Detalle del emprendedor (modal)
-                selectedEmprendedor?.let { emprendedor ->
-                    EmprendedorDetailModal(
-                        emprendedor = emprendedor,
-                        onDismiss = { selectedEmprendedor = null },
-                        onContactClick = {
-                            // Abrir contacto con el emprendedor
-                        }
-                    )
+                    // Modal con detalles del emprendedor
+                    selectedEmprendedor?.let { emprendedor ->
+                        EmprendedorDetailModal(
+                            emprendedor = emprendedor,
+                            onDismiss = { selectedEmprendedor = null },
+                            onContactClick = {
+                                // Lógica para abrir contacto con el emprendedor
+                            }
+                        )
+                    }
                 }
             }
         }
     }
 }
+
 
 @Composable
 private fun EmprendedoresListContent(

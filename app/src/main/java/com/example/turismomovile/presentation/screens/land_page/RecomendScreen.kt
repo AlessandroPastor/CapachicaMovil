@@ -36,11 +36,14 @@ import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.LoadingOverlay
 import com.example.turismomovile.presentation.components.MainTopAppBar
+import com.example.turismomovile.presentation.components.NotificationHost
+import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
+import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
 
@@ -58,99 +61,133 @@ fun RecommendationsScreen(
         initialValue = false,
         lifecycle = LocalLifecycleOwner.current.lifecycle
     )
+
     val stateRecommendations by viewModel.stateEmprendedor.collectAsState()  // ⚠️ Asumiendo que este estado existe
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val lazyListState = rememberLazyListState()
     val currentSection by viewModel.currentSection
+    val visible = remember { mutableStateOf(false) }
 
-    // Efectos
+    // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        viewModel.onSectionSelected(LangPageViewModel.Sections.RECOMMENDATIONS)
-        viewModel.loadEmprendedores()  // ⚠️ Asumiendo que tienes este método en el ViewModel
+        // Mostrar notificación de bienvenida después de que cargue el layout
+        delay(500)
+        notificationState.showNotification(
+            message = "¡Recomendados!",
+            type = NotificationType.SUCCESS,
+            duration = 3500
+        )
+
+        // Activar animaciones de contenido con timing escalonado
+        delay(1000)
+        visible.value = true
     }
 
-    LaunchedEffect(stateRecommendations.isLoading) {
-        if (!stateRecommendations.isLoading) {
-            isRefreshing = false
+    // Manejo de notificaciones del estado
+    LaunchedEffect(stateRecommendations.notification) {
+        if (stateRecommendations.notification.isVisible) {
+            notificationState.showNotification(
+                message = stateRecommendations.notification.message,
+                type = stateRecommendations.notification.type,
+                duration = stateRecommendations.notification.duration
+            )
         }
     }
 
+    // Manejo de notificaciones para stateAso
     LaunchedEffect(stateRecommendations.notification) {
-        stateRecommendations.notification.takeIf { it.isVisible }?.let { notification ->
+        if (stateRecommendations.notification.isVisible) {
             notificationState.showNotification(
-                message = notification.message,
-                type = notification.type,
-                duration = notification.duration
+                message = stateRecommendations.notification.message,
+                type = stateRecommendations.notification.type,
+                duration = stateRecommendations.notification.duration
+            )
+        }
+    }
+
+    // Controlar el estado de refresh con feedback
+    LaunchedEffect(stateRecommendations.isLoading, stateRecommendations.isLoading) {
+        if (!stateRecommendations.isLoading && !stateRecommendations.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
             )
         }
     }
 
     // UI
     AppTheme(darkTheme = isDarkMode) {
-        Scaffold(
-            topBar = {
-                MainTopAppBar(
-                    title = "Recomendaciones",
-                    isSearchVisible = isSearchVisible,
-                    searchQuery = searchQuery,
-                    onQueryChange = { searchQuery = it },
-                    onSearch = {
-                        viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() })
-                    },
-                    onToggleSearch = { isSearchVisible = !isSearchVisible },
-                    onCloseSearch = {
-                        isSearchVisible = false
-                        searchQuery = ""
-                        viewModel.loadEmprendedores()
-                    },
-                    onClickExplorer = onClickExplorer,
-                    onStartClick = onStartClick,
-                    isDarkMode = isDarkMode,
-                    onToggleTheme = { themeViewModel.toggleTheme() }
-                )
-            },
-            bottomBar = {
-                BottomNavigationBar(
-                    currentSection = currentSection,
-                    onSectionSelected = { section ->
-                        viewModel.onSectionSelected(section)
-                    },
-                    navController = navController
-                )
-            }
-        ) { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.background,
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    MainTopAppBar(
+                        title = "Recomendaciones",
+                        isSearchVisible = isSearchVisible,
+                        searchQuery = searchQuery,
+                        onQueryChange = { searchQuery = it },
+                        onSearch = {
+                            viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() })
+                        },
+                        onToggleSearch = { isSearchVisible = !isSearchVisible },
+                        onCloseSearch = {
+                            isSearchVisible = false
+                            searchQuery = ""
+                            viewModel.loadEmprendedores()
+                        },
+                        onClickExplorer = onClickExplorer,
+                        onStartClick = onStartClick,
+                        isDarkMode = isDarkMode,
+                        onToggleTheme = { themeViewModel.toggleTheme() }
+                    )
+                },
+                bottomBar = {
+                    BottomNavigationBar(
+                        currentSection = currentSection,
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                        },
+                        navController = navController
+                    )
+                }
+            ) { innerPadding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.background,
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                )
                             )
                         )
-                    )
-                    .padding(innerPadding)
-            ) {
-                PullToRefreshComponent(
-                    isRefreshing = isRefreshing,
-                    onRefresh = {
-                        isRefreshing = true
-                        viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() })
-                    }
+                        .padding(innerPadding)
                 ) {
-                    RecommendationsGrid()
-                }
+                    // Componente de Pull to Refresh para actualizar los emprendedores
+                    PullToRefreshComponent(
+                        isRefreshing = isRefreshing,
+                        onRefresh = {
+                            isRefreshing = true
+                            viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() })
+                        }
+                    ) {
+                        RecommendationsGrid()  // ⚠️ Este método debería mostrar las recomendaciones en una grilla o lista
+                    }
 
-                if (stateRecommendations.isLoading && stateRecommendations.items.isEmpty()) {
-                    LoadingOverlay()
+                    // Muestra un overlay de carga cuando los datos están siendo cargados
+                    if (stateRecommendations.isLoading && stateRecommendations.items.isEmpty()) {
+                        LoadingOverlay()
+                    }
                 }
             }
         }
     }
 }
+
 
 
 
