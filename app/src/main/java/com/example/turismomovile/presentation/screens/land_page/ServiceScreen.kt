@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChairAlt
 import androidx.compose.material.icons.filled.Contacts
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Explore
@@ -118,6 +119,8 @@ fun ServiceScreen(
     var isSearchVisible by remember { mutableStateOf(false) }
     val currentSection by viewModel.currentSection
 
+
+
     // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
         // Mostrar notificación de bienvenida después de que cargue el layout
@@ -176,15 +179,16 @@ fun ServiceScreen(
                         title = "Servicios Turísticos",
                         isSearchVisible = isSearchVisible,
                         searchQuery = searchQuery,
-                        onQueryChange = { searchQuery = it },
+                        onQueryChange = { searchQuery = it }, // Actualiza el texto de búsqueda
                         onSearch = {
+                            // Llamada a la función de búsqueda, pasamos searchQuery
                             viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
                         },
                         onToggleSearch = { isSearchVisible = !isSearchVisible },
                         onCloseSearch = {
                             isSearchVisible = false
-                            searchQuery = ""
-                            viewModel.loadService()
+                            searchQuery = "" // Limpiamos el query
+                            viewModel.loadService() // Llamamos a loadService sin filtros
                         },
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
@@ -220,7 +224,7 @@ fun ServiceScreen(
                         isRefreshing = isRefreshing,
                         onRefresh = {
                             isRefreshing = true
-                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
+                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() }) // Refresca con el filtro
                         }
                     ) {
                         ServiceContent(
@@ -229,7 +233,6 @@ fun ServiceScreen(
                             onExploreClick = onClickExplorer
                         )
                     }
-
                     // Capa de carga
                     if (stateService.isLoading && stateService.items.isEmpty()) {
                         LoadingOverlay()
@@ -281,10 +284,6 @@ fun ServiceContent(
                     viewModel = viewModel,
                     title = "Servicios Destacados"
                 )
-
-                // Motivational section
-                MotivationalSection()
-
                 // Categories section
                 if (stateService.items.isNotEmpty()) {
                     CategoriesSection(
@@ -344,7 +343,7 @@ private fun ServiceHeader(serviceCount: Int) {
                 )
             }
             Icon(
-                imageVector = Icons.Default.Star,
+                imageVector = Icons.Default.ChairAlt,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
@@ -526,49 +525,12 @@ private fun ServiceImage(service: Service) {
 }
 
 @Composable
-private fun MotivationalSection() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer
-        )
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = "🌄",
-                style = MaterialTheme.typography.headlineLarge
-            )
-            Text(
-                text = "Explora, vive y redescubre",
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onTertiaryContainer,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = "Capachica",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.ExtraBold,
-                color = MaterialTheme.colorScheme.primary,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
 private fun CategoriesSection(
     services: List<Service>,
     onExploreClick: () -> Unit
 ) {
     val categories = services.groupBy { it.category }.keys.take(4)
+
 
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)

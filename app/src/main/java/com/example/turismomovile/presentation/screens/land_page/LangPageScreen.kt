@@ -103,6 +103,7 @@ import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
+import com.example.turismomovile.presentation.components.StatCard
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -356,7 +357,6 @@ fun MunicipalidadHeroSection(
                     modifier = Modifier.fillMaxSize()
                 )
             }
-
             // Gradiente overlay
             Box(
                 modifier = Modifier
@@ -400,7 +400,7 @@ fun MunicipalidadHeroSection(
 
                     Column {
                         Text(
-                            text = "Municipalidad de",
+                            text = "Municipalidad Distrital de",
                             style = MaterialTheme.typography.bodyMedium,
                             color = Color.White.copy(alpha = 0.8f)
                         )
@@ -492,7 +492,7 @@ fun MunicipalidadDetailedInfo(
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = elevation),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = MaterialTheme.colorScheme.surface // Cambiado a surface
         )
     ) {
         Column(
@@ -532,6 +532,7 @@ fun MunicipalidadDetailedInfo(
                     modifier = Modifier.padding(top = 2.dp)
                 )
             }
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Descripción con animación de aparición
             AnimatedVisibility(
@@ -557,7 +558,7 @@ fun MunicipalidadDetailedInfo(
                                 lineHeight = 26.sp,
                                 fontStyle = FontStyle.Italic
                             ),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = MaterialTheme.colorScheme.onSurface, // Cambiado a onSurface
                             modifier = Modifier.padding(16.dp)
                         )
                     }
@@ -647,6 +648,7 @@ fun MunicipalidadDetailedInfo(
     }
 }
 
+
 @Composable
 private fun InfoCardItem(
     icon: ImageVector,
@@ -700,7 +702,7 @@ fun ContactAndServicesSection(
         shape = RoundedCornerShape(16.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = MaterialTheme.colorScheme.surface // Cambiado a surface
         )
     ) {
         Column(
@@ -738,6 +740,7 @@ fun ContactAndServicesSection(
         }
     }
 }
+
 
 @Composable
 fun MunicipalidadStatsSection(
@@ -783,51 +786,6 @@ fun MunicipalidadStatsSection(
                     modifier = Modifier.weight(1f)
                 )
             }
-        }
-    }
-}
-
-@Composable
-fun InfoCardItem(
-    icon: ImageVector,
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-        ),
-        shape = RoundedCornerShape(10.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
-            ) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = label,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(16.dp)
-                )
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = FontWeight.Medium
-                ),
-                color = MaterialTheme.colorScheme.onSurface
-            )
         }
     }
 }
@@ -886,50 +844,7 @@ fun ContactItem(
     }
 }
 
-@Composable
-fun StatCard(
-    title: String,
-    value: String,
-    icon: ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = MaterialTheme.colorScheme.tertiary,
-                modifier = Modifier.size(32.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontWeight = FontWeight.Bold
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
+
 
 @Composable
 fun EmptyMunicipalidadInfo() {

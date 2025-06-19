@@ -209,46 +209,47 @@ class LangPageViewModel (
     }
 
 
-
-
-
-
-    fun loadService(page: String? = 0.toString(), searchQuery: String? = null, category: String? = null) {
+    fun loadService(page: String? = 0.toString(), search: String? = null, category: String? = null) {
         viewModelScope.launch {
+            // Iniciamos el estado de carga
             _stateService.value = _stateService.value.copy(isLoading = true)
-
             try {
+                // Realizamos la solicitud de servicios con los filtros pasados
                 val response = apiserviceService.getService(
                     page = page,
-                    name = searchQuery,
+                    search = search,
+                    category = category
                 )
 
+                // Actualizamos el estado con los resultados de la respuesta
                 _stateService.value = _stateService.value.copy(
-                    items = response.content,
-                    currentPage = response.currentPage,
-                    totalPages = response.totalPages,
-                    totalElements = response.totalElements,
-                    isLoading = false,
-                    error = null
+                    items = response.content,  // Asignamos los servicios recibidos
+                    currentPage = response.currentPage,  // Página actual
+                    totalPages = response.totalPages,  // Total de páginas
+                    totalElements = response.totalElements,  // Total de elementos
+                    isLoading = false,  // Finalizamos el estado de carga
+                    error = null  // Limpiamos cualquier error previo
                 )
 
-                // 🚀 Aquí extraes categorías automáticamente
+                // 🚀 Extraemos las categorías automáticamente después de cargar los servicios
                 extractCategories()
 
             } catch (e: Exception) {
+                // En caso de error, mostramos el mensaje y actualizamos el estado
                 println("❌ [API Service] Error al cargar servicios: ${e.message}")
                 _stateService.value = _stateService.value.copy(
-                    isLoading = false,
-                    error = e.message,
+                    isLoading = false,  // Finalizamos el estado de carga
+                    error = e.message,  // Asignamos el mensaje de error
                     notification = NotificationState(
-                        message = e.message ?: "Error al cargar servicios",
+                        message = e.message ?: "Error al cargar servicios",  // Notificación de error
                         type = NotificationType.ERROR,
-                        isVisible = true
+                        isVisible = true  // Mostramos la notificación
                     )
                 )
             }
         }
     }
+
 
 
 
