@@ -83,7 +83,7 @@ fun ShowLoadingDialog(isLoading: Boolean) {
                             modifier = Modifier.fillMaxSize()
                         )
                         Icon(
-                            imageVector = Icons.Default.LockOpen,
+                            imageVector = Icons.Default.Lock,
                             contentDescription = "Candado de verificación",
                             tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(26.dp)

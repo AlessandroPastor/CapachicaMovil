@@ -29,7 +29,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.R
 import com.example.turismomovile.presentation.components.BottomNavigationBar
-import com.example.turismomovile.presentation.components.EventCard
 import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
@@ -63,30 +62,28 @@ fun EventsScreen(
         visible.value = true
     }
 
-    val events = listOf(
-        "Festival de la Vendimia" to R.drawable.fondo,
-        "Carnaval Capachiqueño" to R.drawable.fondo2,
-        "Feria Artesanal" to R.drawable.capachica,
-        "Semana Turística" to R.drawable.fondo
+    // Eventos de Capachica (Puedes agregar más actividades o cambiar las imágenes según sea necesario)
+    val capachicaEvents = listOf(
+        "Fiesta de San Sebastián" to R.drawable.sansebastian, // Coloca tu propia imagen aquí
+        "Fiesta de Santiago Apóstol" to R.drawable.postol, // Coloca tu propia imagen aquí
+        "Carnaval de Capachica" to R.drawable.carnaval, // Coloca tu propia imagen aquí
+        "Fiesta del Niño San Salvador" to R.drawable.sansalvador // Coloca tu propia imagen aquí
     )
 
     val upcomingEvents = listOf(
-        "Festival del Lago Titicaca" to R.drawable.fondo2,
-        "Encuentro de Danzas Andinas" to R.drawable.capachica,
-        "Carnaval de Capachica" to R.drawable.fondo,
+        "Festival del Lago Titicaca" to R.drawable.festilavallago,
+        "Encuentro de Danzas Andinas" to R.drawable.danzas,
+        "Año Nuevo Andino" to R.drawable.anioandino,
     )
 
     // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        // Mostrar notificación de bienvenida después de que cargue el layout
         delay(500)
         notificationState.showNotification(
-            message = "¡Bienvenido a los Eventos",
+            message = "¡Bienvenido a los Eventos de Capachica!",
             type = NotificationType.SUCCESS,
             duration = 3500
         )
-
-        // Activar animaciones de contenido con timing escalonado
         delay(1000)
         visible.value = true
     }
@@ -102,36 +99,13 @@ fun EventsScreen(
         }
     }
 
-    // Manejo de notificaciones para stateAso
-    LaunchedEffect(stateEmprendedor.notification) {
-        if (stateEmprendedor.notification.isVisible) {
-            notificationState.showNotification(
-                message = stateEmprendedor.notification.message,
-                type = stateEmprendedor.notification.type,
-                duration = stateEmprendedor.notification.duration
-            )
-        }
-    }
-
-    // Controlar el estado de refresh con feedback
-    LaunchedEffect(stateEmprendedor.isLoading, stateEmprendedor.isLoading) {
-        if (!stateEmprendedor.isLoading && !stateEmprendedor.isLoading && isRefreshing) {
-            isRefreshing = false
-            notificationState.showNotification(
-                message = "Datos actualizados correctamente",
-                type = NotificationType.SUCCESS,
-                duration = 2000
-            )
-        }
-    }
-
     // UI
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
             Scaffold(
                 topBar = {
                     MainTopAppBar(
-                        title = "Eventos",
+                        title = "Eventos de Capachica",
                         isSearchVisible = isSearchVisible,
                         searchQuery = searchQuery,
                         onQueryChange = { searchQuery = it },
@@ -220,7 +194,8 @@ fun EventsScreen(
                     item {
                         AnimatedVisibility(visible = visible.value, enter = fadeIn()) {
                             LazyRow(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                                items(events) { (name, imageRes) ->
+                                items(capachicaEvents) { (name, imageRes) ->
+                                    // Card para cada evento de Capachica
                                     Card(
                                         modifier = Modifier
                                             .width(260.dp)
@@ -277,6 +252,7 @@ fun EventsScreen(
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                                 upcomingEvents.forEach { (name, imageRes) ->
+                                    // Card para cada evento próximo
                                     Card(
                                         modifier = Modifier
                                             .fillMaxWidth()
@@ -322,7 +298,7 @@ fun EventsScreen(
 
                     item {
                         Button(
-                            onClick = { /* Navegar a lista completa */ },
+                            onClick = { /* Navegar a lista completa de eventos */ },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             Text("Ver todos los eventos")
@@ -330,26 +306,6 @@ fun EventsScreen(
                     }
                 }
             }
-        }
-    }
-}
-
-
-@Composable
-fun EventsHorizontalList() {
-    val events = listOf(
-        "Festival de la Vendimia" to R.drawable.fondo,
-        "Carnaval Capachiqueño" to R.drawable.fondo2,
-        "Feria Artesanal" to R.drawable.capachica,
-        "Semana Turística" to R.drawable.fondo
-    )
-
-    LazyRow(
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        contentPadding = PaddingValues(horizontal = 16.dp)
-    ) {
-        items(events) { (name, imageRes) ->
-            EventCard(name = name, imageRes = imageRes)
         }
     }
 }

@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.land_page
+import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -38,7 +38,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,13 +58,10 @@ import coil.compose.rememberAsyncImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.presentation.components.InfoRow
 import org.koin.compose.koinInject
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
@@ -77,7 +73,6 @@ import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.delay
-import org.koin.compose.koinInject
 
 @Composable
 fun PlacesScreen(
@@ -177,9 +172,7 @@ fun PlacesScreen(
                 bottomBar = {
                     BottomNavigationBar(
                         currentSection = currentSection,
-                        onSectionSelected = { section ->
-                            viewModel.onSectionSelected(section)
-                        },
+                        onSectionSelected = { section -> viewModel.onSectionSelected(section) },
                         navController = navController
                     )
                 }
@@ -198,28 +191,39 @@ fun PlacesScreen(
                         stateAso.error != null -> {
                             Text(
                                 text = "Error al cargar asociaciones: ${stateAso.error}",
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyMedium
                             )
                         }
 
                         else -> {
-                            // Grilla de asociaciones
-                            LazyVerticalGrid(
-                                columns = GridCells.Fixed(2),
-                                verticalArrangement = Arrangement.spacedBy(16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(16.dp)
-                            ) {
-                                items(stateAso.itemsAso) { asociacion ->
-                                    val isFavorite = favoriteItems.contains(asociacion.id)
-                                    AssociationCard(
-                                        asociacion = asociacion,
-                                        isFavorite = isFavorite,
-                                        onFavoriteClick = {
-                                            if (isFavorite) favoriteItems.remove(asociacion.id)
-                                            else asociacion.id?.let { favoriteItems.add(it) }
-                                        },
-                                        onClick = { selectedAsociacion = asociacion }
-                                    )
+                            Column(modifier = Modifier.fillMaxSize()) {
+                                // Título de la lista de asociaciones
+                                Text(
+                                    text = "Asociaciones Disponibles",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.Bold
+                                    ),
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                LazyVerticalGrid(
+                                    columns = GridCells.Fixed(2),
+                                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    items(stateAso.itemsAso) { asociacion ->
+                                        val isFavorite = favoriteItems.contains(asociacion.id)
+                                        AssociationCard(
+                                            asociacion = asociacion,
+                                            isFavorite = isFavorite,
+                                            onFavoriteClick = {
+                                                if (isFavorite) favoriteItems.remove(asociacion.id)
+                                                else asociacion.id?.let { favoriteItems.add(it) }
+                                            },
+                                            onClick = { selectedAsociacion = asociacion }
+                                        )
+                                    }
                                 }
                             }
                         }

@@ -22,32 +22,6 @@ import com.google.accompanist.swiperefresh.SwipeRefreshState
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
-fun MyCustomSwipeRefresh(
-    isRefreshing: Boolean,
-    onRefresh: () -> Unit,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit
-) {
-    val state = rememberSwipeRefreshState(isRefreshing)
-
-    SwipeRefresh(
-        state = state,
-        onRefresh = onRefresh,
-        modifier = modifier.fillMaxSize(),
-        indicator = { refreshState, trigger ->
-            DynamicRefreshIndicator(
-                state = refreshState,
-                refreshTrigger = trigger
-            )
-        }
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            content()
-        }
-    }
-}
-
-@Composable
 private fun DynamicRefreshIndicator(
     state: SwipeRefreshState,
     refreshTrigger: Dp,

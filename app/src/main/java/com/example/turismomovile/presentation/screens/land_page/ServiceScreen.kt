@@ -7,9 +7,11 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -34,11 +37,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChairAlt
 import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Phone
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -54,19 +54,21 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -112,61 +114,64 @@ fun ServiceScreen(
         initialValue = false,
         lifecycle = LocalLifecycleOwner.current.lifecycle
     )
-    val visible = remember { mutableStateOf(false) }
     val stateService by viewModel.stateService.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val currentSection by viewModel.currentSection
+    var selectedCategory by remember { mutableStateOf<String?>(null) }
+    val lazyListState = rememberLazyListState()
+    var currentPage by remember { mutableStateOf(0) }
 
-
-
-    // Efecto para animaciones y notificaciones de bienvenida
+    // Efecto para cargar inicialmente
     LaunchedEffect(Unit) {
-        // Mostrar notificación de bienvenida después de que cargue el layout
+        viewModel.loadService()
         delay(500)
         notificationState.showNotification(
-            message = "¡Bienvenido a los servicios",
+            message = "¡Bienvenido a los servicios turísticos!",
             type = NotificationType.SUCCESS,
             duration = 3500
         )
-
-        // Activar animaciones de contenido con timing escalonado
-        delay(1000)
-        visible.value = true
     }
 
-    // Manejo de notificaciones del estado
+    // Efecto para manejar notificaciones
     LaunchedEffect(stateService.notification) {
-        if (stateService.notification.isVisible) {
+        stateService.notification.takeIf { it.isVisible }?.let { notif ->
             notificationState.showNotification(
-                message = stateService.notification.message,
-                type = stateService.notification.type,
-                duration = stateService.notification.duration
+                message = notif.message,
+                type = notif.type,
+                duration = notif.duration
             )
         }
     }
 
-    // Manejo de notificaciones para stateAso
-    LaunchedEffect(stateService.notification) {
-        if (stateService.notification.isVisible) {
-            notificationState.showNotification(
-                message = stateService.notification.message,
-                type = stateService.notification.type,
-                duration = stateService.notification.duration
-            )
-        }
+    // Efecto para paginación infinita
+    LaunchedEffect(lazyListState) {
+        snapshotFlow { lazyListState.layoutInfo.visibleItemsInfo }
+            .collect { visibleItems ->
+                if (visibleItems.isNotEmpty() &&
+                    visibleItems.last().index >= stateService.items.size - 5 &&
+                    !stateService.isLoading &&
+                    currentPage < stateService.totalPages - 1) {
+                    currentPage++
+                    viewModel.loadService(
+                        page = currentPage.toString(),
+                        search = searchQuery.takeIf { it.isNotEmpty() },
+                        category = selectedCategory
+                    )
+                }
+            }
     }
 
-    // Controlar el estado de refresh con feedback
-    LaunchedEffect(stateService.isLoading, stateService.isLoading) {
-        if (!stateService.isLoading && !stateService.isLoading && isRefreshing) {
+    // Efecto para refrescar datos
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            currentPage = 0
+            viewModel.loadService(
+                search = searchQuery.takeIf { it.isNotEmpty() },
+                category = selectedCategory
+            )
             isRefreshing = false
-            notificationState.showNotification(
-                message = "Datos actualizados correctamente",
-                type = NotificationType.SUCCESS,
-                duration = 2000
-            )
         }
     }
 
@@ -179,16 +184,21 @@ fun ServiceScreen(
                         title = "Servicios Turísticos",
                         isSearchVisible = isSearchVisible,
                         searchQuery = searchQuery,
-                        onQueryChange = { searchQuery = it }, // Actualiza el texto de búsqueda
+                        onQueryChange = { searchQuery = it },
                         onSearch = {
-                            // Llamada a la función de búsqueda, pasamos searchQuery
-                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() })
+                            currentPage = 0
+                            viewModel.loadService(
+                                search = searchQuery.takeIf { it.isNotEmpty() },
+                                category = selectedCategory
+                            )
                         },
                         onToggleSearch = { isSearchVisible = !isSearchVisible },
                         onCloseSearch = {
                             isSearchVisible = false
-                            searchQuery = "" // Limpiamos el query
-                            viewModel.loadService() // Llamamos a loadService sin filtros
+                            searchQuery = ""
+                            selectedCategory = null
+                            currentPage = 0
+                            viewModel.loadService()
                         },
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
@@ -219,23 +229,52 @@ fun ServiceScreen(
                         )
                         .padding(innerPadding)
                 ) {
-                    // Contenido principal con Pull to Refresh
-                    PullToRefreshComponent(
-                        isRefreshing = isRefreshing,
-                        onRefresh = {
-                            isRefreshing = true
-                            viewModel.loadService(searchQuery.takeIf { it.isNotEmpty() }) // Refresca con el filtro
-                        }
-                    ) {
-                        ServiceContent(
-                            modifier = Modifier.fillMaxSize(),
-                            viewModel = viewModel,
-                            onExploreClick = onClickExplorer
-                        )
-                    }
-                    // Capa de carga
                     if (stateService.isLoading && stateService.items.isEmpty()) {
                         LoadingOverlay()
+                    }
+
+                    LazyColumn(
+                        state = lazyListState,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        item {
+                            PullToRefreshComponent(
+                                isRefreshing = isRefreshing,
+                                onRefresh = { isRefreshing = true }
+                            ) {
+                                ServiceContent(
+                                    services = stateService.items,
+                                    categories = viewModel.categories,
+                                    selectedCategory = selectedCategory,
+                                    onCategorySelected = { category ->
+                                        selectedCategory = if (selectedCategory == category) null else category
+                                        currentPage = 0
+                                        viewModel.loadService(
+                                            search = searchQuery.takeIf { it.isNotEmpty() },
+                                            category = selectedCategory
+                                        )
+                                    },
+                                    viewModel = viewModel,
+                                    onExploreClick = onClickExplorer,
+                                    isLoading = stateService.isLoading,
+                                    error = stateService.error,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        if (stateService.isLoading && stateService.items.isNotEmpty()) {
+                            item {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(16.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    CircularProgressIndicator()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -243,68 +282,51 @@ fun ServiceScreen(
     }
 }
 
-
-
 @Composable
 fun ServiceContent(
-    modifier: Modifier = Modifier,
+    services: List<Service>,
+    categories: State<List<String>>,
+    selectedCategory: String?,
+    onCategorySelected: (String) -> Unit,
     viewModel: LangPageViewModel,
-    onExploreClick: () -> Unit
+    onExploreClick: () -> Unit,
+    isLoading: Boolean,
+    error: String?,
+    modifier: Modifier = Modifier
 ) {
-    val stateService by viewModel.stateService.collectAsStateWithLifecycle()
-    val scrollState = rememberScrollState()
+    var searchQuery by remember { mutableStateOf("") }
+    val stateService by viewModel.stateService.collectAsState()
 
     Column(
-        modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(vertical = 8.dp),
+        modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         when {
-            stateService.isLoading && stateService.items.isEmpty() -> {
-                LoadingState()
-            }
-            stateService.error != null && stateService.items.isEmpty() -> {
-                ErrorState(
-                    error = stateService.error!!,
-                    onRetry = { viewModel.loadService() }
-                )
-            }
-            stateService.items.isEmpty() -> {
-                EmptyState(onExploreClick = onExploreClick)
-            }
+            isLoading && services.isEmpty() -> LoadingState()
+            error != null && services.isEmpty() -> ErrorState(
+                error = error,
+                onRetry = {
+                    viewModel.loadService(
+                        search = searchQuery.takeIf { it.isNotEmpty() },
+                        category = selectedCategory
+                    )
+                }
+            )
+            services.isEmpty() -> EmptyState(onExploreClick = onExploreClick)
             else -> {
-                // Header with stats
-                ServiceHeader(serviceCount = stateService.items.size)
-
-                // Featured services carousel
-                ServiceCarousel(
-                    services = stateService.items,
-                    viewModel = viewModel,
-                    title = "Servicios Destacados"
+                ServiceHeader(
+                    serviceCount = stateService.totalElements,
+                    showingCount = services.size
                 )
-                // Categories section
-                if (stateService.items.isNotEmpty()) {
-                    CategoriesSection(
-                        services = stateService.items,
-                        onExploreClick = onExploreClick
-                    )
-                }
 
-                // Recommended services
-                if (stateService.items.size > 3) {
-                    ServiceCarousel(
-                        services = stateService.items.shuffled().take(5),
-                        viewModel = viewModel,
-                        title = "Recomendados para ti"
-                    )
-                }
+                ServicesFilterSection()
 
-                // Business invitation
-                BusinessInvitationCard()
+                ServiceCarousel(
+                    services = services,
+                    viewModel = viewModel,
+                    title = selectedCategory?.let { "Servicios en $it" } ?: "Todos los servicios"
+                )
 
-                // Footer
                 FooterSection()
             }
         }
@@ -312,7 +334,7 @@ fun ServiceContent(
 }
 
 @Composable
-private fun ServiceHeader(serviceCount: Int) {
+private fun ServiceHeader(serviceCount: Int, showingCount: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -337,7 +359,7 @@ private fun ServiceHeader(serviceCount: Int) {
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 Text(
-                    text = "$serviceCount servicios encontrados",
+                    text = "Mostrando $showingCount de $serviceCount servicios",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
@@ -348,6 +370,115 @@ private fun ServiceHeader(serviceCount: Int) {
                 tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(32.dp)
             )
+        }
+    }
+}
+@Composable
+private fun ServicesFilterSection(
+    viewModel: LangPageViewModel = koinInject()
+) {
+    var selectedService by remember { mutableStateOf("Todos") }
+    val services by viewModel.services
+    val scrollState = rememberScrollState()
+
+    // Colores más vibrantes y alegres
+    val chipColors = mapOf(
+        "Todos" to Color(0xFF6A1B9A).copy(alpha = 0.2f),  // Púrpura vibrante
+        "Consultoría" to Color(0xFF00C853).copy(alpha = 0.2f),  // Verde esmeralda
+        "Diseño" to Color(0xFFFF4081).copy(alpha = 0.2f),  // Rosa fucsia
+        "Desarrollo" to Color(0xFF2962FF).copy(alpha = 0.2f),  // Azul brillante
+        "Marketing" to Color(0xFFFF6D00).copy(alpha = 0.2f),  // Naranja intenso
+        "Soporte" to Color(0xFF00B8D4).copy(alpha = 0.2f)   // Turquesa
+    )
+
+    // Colores para el borde cuando está seleccionado (versiones más saturadas)
+    val borderColors = mapOf(
+        "Todos" to Color(0xFF6A1B9A),
+        "Consultoría" to Color(0xFF00C853),
+        "Diseño" to Color(0xFFFF4081),
+        "Desarrollo" to Color(0xFF2962FF),
+        "Marketing" to Color(0xFFFF6D00),
+        "Soporte" to Color(0xFF00B8D4)
+    )
+
+    Column(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(
+            text = "Explora por servicio",
+            style = MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.padding(start = 16.dp, bottom = 12.dp)
+        )
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(scrollState)
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            services.forEach { service ->  // Cambié 'category' a 'service'
+                val isSelected = service == selectedService
+
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(
+                            color = if (isSelected)
+                                chipColors[service] ?: MaterialTheme.colorScheme.surface
+                            else
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                        )
+                        .border(
+                            width = if (isSelected) 1.5.dp else 0.5.dp,
+                            color = if (isSelected)
+                                borderColors[service] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        .clickable {
+                            selectedService = service
+                            val value = if (service == "Todos") null else service
+                            viewModel.loadService(category = value)  // Cambié 'loadEmprendedores' a 'loadServices'
+                        }
+                        .padding(horizontal = 16.dp, vertical = 10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = when (service) {
+                                "Todos" -> R.drawable.all
+                                "Hospedaje" -> R.drawable.hotel
+                                "Artesanías" -> R.drawable.artesania
+                                "Turismo" -> R.drawable.torus
+                                "Gastronomía" -> R.drawable.gastronia
+                                "Transporte" -> R.drawable.velero
+                                else -> R.drawable.categoria
+                            }),
+                            contentDescription = null,
+                            tint = if (isSelected)
+                                borderColors[service] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(18.dp)
+                        )
+
+                        Spacer(modifier = Modifier.width(8.dp))
+
+                        Text(
+                            text = service,  // Cambié 'category' a 'service'
+                            style = MaterialTheme.typography.labelMedium.copy(
+                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Medium
+                            ),
+                            color = if (isSelected)
+                                borderColors[service] ?: MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -525,132 +656,6 @@ private fun ServiceImage(service: Service) {
 }
 
 @Composable
-private fun CategoriesSection(
-    services: List<Service>,
-    onExploreClick: () -> Unit
-) {
-    val categories = services.groupBy { it.category }.keys.take(4)
-
-
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp)
-    ) {
-        Text(
-            text = "Categorías Populares",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        LazyRow(
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(categories.toList()) { category ->
-                CategoryChip(
-                    category = category,
-                    onClick = { /* Filter by category */ }
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = onExploreClick,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = MaterialTheme.colorScheme.primary
-            )
-        ) {
-            Icon(
-                imageVector = Icons.Default.Explore,
-                contentDescription = null,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Explorar todos los lugares")
-        }
-    }
-}
-
-@Composable
-private fun CategoryChip(
-    category: String,
-    onClick: () -> Unit
-) {
-    OutlinedButton(
-        onClick = onClick,
-        shape = RoundedCornerShape(20.dp),
-        colors = ButtonDefaults.outlinedButtonColors(
-            contentColor = MaterialTheme.colorScheme.primary
-        )
-    ) {
-        Text(text = category)
-    }
-}
-
-@Composable
-private fun BusinessInvitationCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-    ) {
-        Column(
-            modifier = Modifier.padding(20.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Star,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(28.dp)
-                )
-                Text(
-                    text = "¿Eres emprendedor?",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            }
-
-            Text(
-                text = "Únete a nuestra plataforma y haz visible tu servicio turístico para cientos de visitantes que llegan a Capachica cada día.",
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                lineHeight = MaterialTheme.typography.bodyLarge.lineHeight
-            )
-
-            Button(
-                onClick = { /* Navigation to registration */ },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Text(
-                    text = "Registrar mi servicio",
-                    style = MaterialTheme.typography.titleMedium
-                )
-            }
-        }
-    }
-}
-
-@Composable
 private fun FooterSection() {
     Column(
         modifier = Modifier
@@ -711,9 +716,6 @@ fun LoadingState() {
 
 
 
-
-
-// Service Details Components (kept the same as original)
 @Composable
 fun ServiceDetails(service: Service) {
     Column(
@@ -728,7 +730,6 @@ fun ServiceDetails(service: Service) {
             Spacer(modifier = Modifier.height(16.dp))
         }
 
-        // Main information
         ServiceHeader(service)
         Spacer(modifier = Modifier.height(16.dp))
 

@@ -57,6 +57,9 @@ class LangPageViewModel (
     private val _categories = mutableStateOf<List<String>>(emptyList())
     val categories: State<List<String>> get() = _categories
 
+    val services: State<List<String>> get() = _categories
+
+
     init {
         loadMunicipalidad()
         loadAsociaciones()

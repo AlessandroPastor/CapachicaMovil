@@ -155,7 +155,9 @@ fun MunicipalidadScreen(
                                                     ruc = "",
                                                     correo = "",
                                                     nombre_alcalde = "",
-                                                    anio_gestion = ""
+                                                    anio_gestion = "",
+                                                    hora_de_atencion = "",
+                                                    telefono = "",
                                                 )
                                             }
                                         )
