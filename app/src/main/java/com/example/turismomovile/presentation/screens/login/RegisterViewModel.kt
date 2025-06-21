@@ -74,6 +74,9 @@ class RegisterViewModel(
             }
         }
     }
+    fun resetState() {
+        _registerState.value = RegisterState.Initial
+    }
 
     // Estados posibles del registro
     sealed class RegisterState {

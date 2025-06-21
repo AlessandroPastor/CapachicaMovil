@@ -70,6 +70,10 @@ class LoginViewModel(
             }
         }
     }
+
+    fun resetState() {
+        _loginState.value = LoginState.Initial
+    }
 }
 
 // Clases de estado para manejar el flujo de la UI

@@ -1,6 +1,7 @@
 package com.example.turismomovile.presentation.screens.navigation
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -13,9 +14,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
@@ -41,79 +44,121 @@ fun SplashScreen(
     val colorScheme = MaterialTheme.colorScheme
     val dimens = LocalAppDimens.current
 
-    // Estados de animación mejorados
+    // Estados de animación mejorados con transiciones más fluidas
     var animationPhase by remember { mutableIntStateOf(0) }
 
-    // Animaciones más elaboradas
+    // Animación de entrada del logo con efecto de rebote y rotación
     val logoScale by animateFloatAsState(
         targetValue = when (animationPhase) {
-            0 -> 0.7f
-            1 -> 1.1f  // Pequeño overshoot para efecto más dinámico
+            0 -> 0.5f
+            1 -> 1.15f  // Overshoot para efecto más dinámico
             else -> 1f
         },
         animationSpec = when (animationPhase) {
             0 -> spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
-                stiffness = Spring.StiffnessLow
+                stiffness = Spring.StiffnessMedium
             )
-            else -> tween(durationMillis = 500, easing = FastOutSlowInEasing)
+            else -> tween(durationMillis = 400, easing = FastOutSlowInEasing)
         },
         label = "logoScale"
     )
 
-    val logoRotation by animateFloatAsState(
-        targetValue = if (animationPhase >= 1) 0f else -15f,
-        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
-        label = "logoRotation"
+    // Rotación 3D más pronunciada al inicio
+    val logoRotationX by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 0f else 45f,
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+        label = "logoRotationX"
     )
 
+    val logoRotationZ by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 0f else -25f,
+        animationSpec = tween(durationMillis = 1000, easing = FastOutSlowInEasing),
+        label = "logoRotationZ"
+    )
+
+    // Efecto de profundidad (perspectiva)
+    val logoCameraDistance by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 8f else 16f,
+        animationSpec = tween(durationMillis = 800, easing = FastOutSlowInEasing),
+        label = "logoCameraDistance"
+    )
+
+    // Animación de opacidad con efecto de fundido más suave
     val logoAlpha by animateFloatAsState(
         targetValue = if (animationPhase >= 1) 1f else 0f,
-        animationSpec = tween(durationMillis = 800, easing = LinearOutSlowInEasing),
+        animationSpec = tween(durationMillis = 600, easing = LinearOutSlowInEasing),
         label = "logoAlpha"
     )
 
-    // Animación de texto escalonada
+    // Animaciones escalonadas para el texto con efectos de deslizamiento
+    val titleTranslationY by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 0f else 40f,
+        animationSpec = tween(durationMillis = 600, delayMillis = 200, easing = FastOutSlowInEasing),
+        label = "titleTranslationY"
+    )
+
     val titleAlpha by animateFloatAsState(
         targetValue = if (animationPhase >= 1) 1f else 0f,
-        animationSpec = tween(durationMillis = 600, delayMillis = 300, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 500, delayMillis = 300, easing = FastOutSlowInEasing),
         label = "titleAlpha"
+    )
+
+    val subtitleTranslationY by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 0f else 30f,
+        animationSpec = tween(durationMillis = 500, delayMillis = 400, easing = FastOutSlowInEasing),
+        label = "subtitleTranslationY"
     )
 
     val subtitleAlpha by animateFloatAsState(
         targetValue = if (animationPhase >= 1) 1f else 0f,
-        animationSpec = tween(durationMillis = 600, delayMillis = 500, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 500, delayMillis = 500, easing = FastOutSlowInEasing),
         label = "subtitleAlpha"
+    )
+
+    val sloganTranslationY by animateFloatAsState(
+        targetValue = if (animationPhase >= 1) 0f else 20f,
+        animationSpec = tween(durationMillis = 500, delayMillis = 600, easing = FastOutSlowInEasing),
+        label = "sloganTranslationY"
     )
 
     val sloganAlpha by animateFloatAsState(
         targetValue = if (animationPhase >= 1) 1f else 0f,
-        animationSpec = tween(durationMillis = 600, delayMillis = 700, easing = FastOutSlowInEasing),
+        animationSpec = tween(durationMillis = 500, delayMillis = 700, easing = FastOutSlowInEasing),
         label = "sloganAlpha"
     )
 
-    // Animación de progreso con efecto de carga
+    // Animación de progreso con efecto de carga más dinámico
     val progress by animateFloatAsState(
         targetValue = if (animationPhase >= 2) 1f else 0f,
-        animationSpec = keyframes {
-            durationMillis = 1200
-            0.0f at 0 with LinearEasing
-            0.3f at 300 with FastOutSlowInEasing
-            0.7f at 700 with LinearEasing
-            1.0f at 1200 with FastOutSlowInEasing
-        },
+        animationSpec = spring(
+            dampingRatio = Spring.DampingRatioLowBouncy,
+            stiffness = Spring.StiffnessLow
+        ),
         label = "progress"
     )
 
     // Efecto de pulsación para el logo cuando termina
-    val pulseScale by animateFloatAsState(
-        targetValue = if (animationPhase >= 2) 1.05f else 1f,
-        animationSpec = repeatable(
-            iterations = 2,
-            animation = tween(durationMillis = 300, easing = FastOutSlowInEasing),
+    val infiniteTransition = rememberInfiniteTransition()
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.03f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
         ),
         label = "pulseScale"
+    )
+
+    // Efecto de brillo intermitente en el logo
+    val logoShine by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "logoShine"
     )
 
     // Control de secuencia mejorado
@@ -121,10 +166,10 @@ fun SplashScreen(
         delay(INITIAL_DELAY)
         animationPhase = 1  // Mostrar logo y texto con animaciones
 
-        delay(1200L)
+        delay(1000L)
         animationPhase = 2  // Iniciar barra de progreso y efectos finales
 
-        delay(1300L)
+        delay(1000L)
         onSplashFinished()  // Finalizar
     }
 
@@ -149,35 +194,64 @@ fun SplashScreen(
             modifier = Modifier.padding(horizontal = dimens.spacing_32.dp)
         ) {
             // Logo con animaciones mejoradas
-            Surface(
+            Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .size(150.dp)
-                    .scale(logoScale * pulseScale)
-                    .graphicsLayer {
-                        rotationZ = logoRotation
-                        alpha = logoAlpha
-                    }
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = CircleShape,
-                        ambientColor = colorScheme.onPrimary.copy(alpha = 0.1f)
-                    ),
-                shape = CircleShape,
-                color = Color.Transparent
             ) {
-                Image(
-                    painter = painterResource(R.drawable.capachica),
-                    contentDescription = "Logo Capachica",
-                    contentScale = ContentScale.Crop,
+                // Efecto de brillo
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    if (animationPhase >= 1) {
+                        val radius = size.minDimension * 0.6f * logoShine
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.3f * logoShine),
+                                    Color.Transparent
+                                ),
+                                radius = radius
+                            ),
+                            radius = radius,
+                            center = center,
+                            blendMode = BlendMode.Overlay
+                        )
+                    }
+                }
+
+                Surface(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .clip(CircleShape)
-                )
+                        .size(150.dp)
+                        .scale(logoScale * if (animationPhase >= 2) pulseScale else 1f)
+                        .graphicsLayer {
+                            rotationX = logoRotationX
+                            rotationZ = logoRotationZ
+                            cameraDistance = logoCameraDistance
+                            alpha = logoAlpha
+                        }
+                        .shadow(
+                            elevation = 12.dp,
+                            shape = CircleShape,
+                            spotColor = colorScheme.onPrimary.copy(alpha = 0.2f),
+                            ambientColor = colorScheme.onPrimary.copy(alpha = 0.1f)
+                        ),
+                    shape = CircleShape,
+                    color = Color.Transparent,
+                    shadowElevation = 8.dp
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.capachica),
+                        contentDescription = "Logo Capachica",
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .clip(CircleShape)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Textos con animaciones escalonadas
+            // Textos con animaciones escalonadas y efectos de deslizamiento
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -187,7 +261,9 @@ fun SplashScreen(
                     fontSize = 26.sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
-                    modifier = Modifier.alpha(titleAlpha),
+                    modifier = Modifier
+                        .alpha(titleAlpha)
+                        .graphicsLayer { translationY = titleTranslationY },
                     letterSpacing = 1.sp
                 )
 
@@ -198,7 +274,9 @@ fun SplashScreen(
                     color = colorScheme.onPrimary.copy(alpha = 0.9f),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.alpha(subtitleAlpha),
+                    modifier = Modifier
+                        .alpha(subtitleAlpha)
+                        .graphicsLayer { translationY = subtitleTranslationY },
                     letterSpacing = 0.5.sp
                 )
 
@@ -209,7 +287,9 @@ fun SplashScreen(
                     color = colorScheme.onPrimary.copy(alpha = 0.8f),
                     fontSize = 16.sp,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
-                    modifier = Modifier.alpha(sloganAlpha),
+                    modifier = Modifier
+                        .alpha(sloganAlpha)
+                        .graphicsLayer { translationY = sloganTranslationY },
                     letterSpacing = 0.5.sp
                 )
             }
@@ -221,12 +301,12 @@ fun SplashScreen(
                 progress = { progress },
                 modifier = Modifier
                     .width(220.dp)
-                    .height(4.dp)
-                    .clip(RoundedCornerShape(4.dp))
+                    .height(6.dp)
+                    .clip(RoundedCornerShape(3.dp))
                     .shadow(
-                        elevation = 2.dp,
-                        shape = RoundedCornerShape(4.dp),
-                        ambientColor = colorScheme.primary
+                        elevation = 4.dp,
+                        shape = RoundedCornerShape(3.dp),
+                        spotColor = colorScheme.primary.copy(alpha = 0.3f)
                     ),
                 color = colorScheme.onPrimary,
                 trackColor = colorScheme.onPrimary.copy(alpha = 0.2f),
@@ -235,8 +315,3 @@ fun SplashScreen(
         }
     }
 }
-
-// Extensión para simplificar el alpha
-private fun Modifier.alpha(alpha: Float): Modifier = this.then(
-    Modifier.graphicsLayer { this.alpha = alpha }
-)

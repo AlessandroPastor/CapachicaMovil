@@ -1,16 +1,37 @@
 package com.example.turismomovile.presentation.screens.login
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -30,21 +51,26 @@ import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import com.example.turismomovile.presentation.components.RotatingBackgroundLoginScreen
 import com.example.turismomovile.presentation.components.AppCard
+import com.example.turismomovile.presentation.components.FloatingBubblesBackground
+import com.example.turismomovile.presentation.theme.AppColors
 import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun RegisterScreen(
     onRegisterSuccess: (User) -> Unit,
     navController: NavHostController,
     onBackPressed: () -> Unit,
-    viewModel: RegisterViewModel = koinInject()
+    viewModel: RegisterViewModel = koinViewModel()
 ) {
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val registerState by viewModel.registerState.collectAsStateWithLifecycle()
-
+    LaunchedEffect(Unit) {
+        viewModel.resetState()
+    }
     var name by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
@@ -94,42 +120,79 @@ fun RegisterScreen(
             }
         }
     }
+    // Animación de Glow para el logo
+    val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
+        initialValue = 1f,
+        targetValue = 1.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ), label = "glow animation"
+    )
+
+// Animación de entrada del logo
+    val logoVisibility = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(500)
+        logoVisibility.value = true
+    }
+
 
     AppTheme(darkTheme = isDarkMode) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    if (isDarkMode)
+                        MaterialTheme.colorScheme.background
+                    else
+                        Color.Transparent
+                )
         ) {
+            // Fondo animado con elementos de turismo
+            FloatingBubblesBackground(
+                modifier = Modifier.fillMaxSize()
+            )
+
+            // Contenido principal centrado perfectamente
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
                 contentAlignment = Alignment.Center
             ) {
-                // Fondo animado de imágenes
-                val images = listOf(
-                    R.drawable.escallani,
-                    R.drawable.festilavallago,
-                    R.drawable.chifron,
-                )
-                RotatingBackgroundLoginScreen(images = images)
-
-                // Tarjeta contenedora del formulario
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(24.dp)
-                        .widthIn(max = 500.dp),
-                    shape = MaterialTheme.shapes.extraLarge,
+                        .wrapContentHeight()
+                        .shadow(
+                            elevation = 16.dp,
+                            shape = RoundedCornerShape(28.dp),
+                            ambientColor = Color.Black.copy(alpha = 0.3f),
+                            spotColor = Color.Black.copy(alpha = 0.3f)
+                        ),
+                    shape = RoundedCornerShape(28.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.9f)
+                        containerColor = if (isDarkMode)
+                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                        else
+                            Color.White.copy(alpha = 0.92f)
                     ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    border = BorderStroke(
+                        width = 1.5.dp,
+                        color = if (isDarkMode)
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                        else
+                            Color.Black.copy(alpha = 0.15f)
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
                 ) {
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
+                            .padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Título con icono
                         Row(
@@ -139,30 +202,50 @@ fun RegisterScreen(
                             Icon(
                                 imageVector = Icons.Default.PersonAdd,
                                 contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary
+                                tint = if (isDarkMode)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "Registro",
                                 style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    color = MaterialTheme.colorScheme.primary
-                                )
+                                    fontWeight = FontWeight.Bold
+                                ),
+                                color = if (isDarkMode)
+                                    MaterialTheme.colorScheme.primary
+                                else
+                                    MaterialTheme.colorScheme.primary
                             )
                         }
 
                         Text(
                             text = "Turismo Capachica",
                             style = MaterialTheme.typography.titleMedium.copy(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                fontWeight = FontWeight.ExtraBold
                             ),
+                            color = if (isDarkMode)
+                                MaterialTheme.colorScheme.onSurface
+                            else
+                                Color.Black,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-// Campos de entrada
+
+                        // Campos de entrada
                         AppTextFieldWithKeyboard(
                             value = name,
                             onValueChange = { name = it },
                             label = "Nombre",
-                            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = if (isDarkMode)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -170,7 +253,16 @@ fun RegisterScreen(
                             value = lastName,
                             onValueChange = { lastName = it },
                             label = "Apellido",
-                            leadingIcon = { Icon(Icons.Default.Person, contentDescription = null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = if (isDarkMode)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -178,7 +270,16 @@ fun RegisterScreen(
                             value = username,
                             onValueChange = { username = it },
                             label = "Usuario",
-                            leadingIcon = { Icon(Icons.Default.AccountCircle, contentDescription = null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.AccountCircle,
+                                    contentDescription = null,
+                                    tint = if (isDarkMode)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -189,7 +290,16 @@ fun RegisterScreen(
                                 if (isEmailError) validateEmail()
                             },
                             label = "Correo electrónico",
-                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Email,
+                                    contentDescription = null,
+                                    tint = if (isDarkMode)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            },
                             isError = isEmailError,
                             errorMessage = if (isEmailError) "Correo no válido" else null,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
@@ -203,7 +313,16 @@ fun RegisterScreen(
                                 if (isPasswordError) validatePassword()
                             },
                             label = "Contraseña",
-                            leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null) },
+                            leadingIcon = {
+                                Icon(
+                                    Icons.Default.Lock,
+                                    contentDescription = null,
+                                    tint = if (isDarkMode)
+                                        MaterialTheme.colorScheme.onSurface
+                                    else
+                                        MaterialTheme.colorScheme.primary
+                                )
+                            },
                             trailingIcon = {
                                 IconButton(
                                     onClick = { isPasswordVisible = !isPasswordVisible },
@@ -212,7 +331,10 @@ fun RegisterScreen(
                                     Icon(
                                         imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                                         contentDescription = "Mostrar/Ocultar Contraseña",
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = if (isDarkMode)
+                                            MaterialTheme.colorScheme.onSurface
+                                        else
+                                            MaterialTheme.colorScheme.primary
                                     )
                                 }
                             },
@@ -222,7 +344,6 @@ fun RegisterScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                             modifier = Modifier.fillMaxWidth()
                         )
-
 
                         Spacer(modifier = Modifier.height(8.dp))
 
@@ -249,7 +370,7 @@ fun RegisterScreen(
                                 Text(
                                     text = "REGISTRARSE",
                                     style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.ExtraBold
                                     )
                                 )
                             }
@@ -271,48 +392,37 @@ fun RegisterScreen(
                                 )
                             }
                         }
-
-                        // Enlaces inferiores
-                        Column(
+                        // Botón de regreso a la pantalla principal
+                        OutlinedButton(
+                            onClick = { onBackPressed() },
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(
+                                1.dp,
+                                if (isDarkMode)
+                                    MaterialTheme.colorScheme.outline
+                                else
+                                    MaterialTheme.colorScheme.primary
+                            ),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = if (isDarkMode)
+                                    MaterialTheme.colorScheme.onSurface
+                                else
+                                    MaterialTheme.colorScheme.primary
+                            )
                         ) {
-                            TextButton(
-                                onClick = { navController.navigate(Routes.LOGIN) },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = "¿Ya tienes cuenta? Inicia sesión",
-                                    style = MaterialTheme.typography.bodyMedium.copy(
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                )
-                            }
-
-                            OutlinedButton(
-                                onClick = { onBackPressed() },
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.ArrowBack,
-                                    contentDescription = "Volver",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text("Volver al inicio")
-                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "¿Ya tienes una cuenta? Inicia sesión",
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                     }
                 }
+            }
 
-                // Mostrar el indicador de carga
-                if (registerState is RegisterViewModel.RegisterState.Loading) {
-                    ShowLoadingDialog(isLoading = true)
-                }
+            if (registerState is RegisterViewModel.RegisterState.Loading) {
+                ShowLoadingDialog(isLoading = true)
             }
         }
     }

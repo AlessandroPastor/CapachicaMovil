@@ -51,6 +51,7 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
+import org.koin.androidx.viewmodel.dsl.viewModel
 
 val appModule = module {
 
@@ -129,7 +130,7 @@ val appModule = module {
     // ViewModels
     // =====================================
     single { ThemeViewModel(get()) }
-    single { LoginViewModel(get(), get()) }
+    viewModel { LoginViewModel(get(), get()) }
     single { HomeViewModel(get(), get()) }
     single { LangPageViewModel(get(), get(), get(),get(),get()) }
     single { RoleViewModel(get(), get(), get()) }
@@ -138,6 +139,6 @@ val appModule = module {
     single { MunicipalidadDescriptionViewModel(get()) }
     single { MunicipalidadViewModel(get()) }
     single { AsociacionesViewModel(get(), get(), get()) }
-    single { RegisterViewModel(get(),get()) }
+    viewModel { RegisterViewModel(get(),get()) }
 
 }
