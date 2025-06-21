@@ -8,7 +8,9 @@ import com.example.turismomovile.domain.model.User
 
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.dto.LoginDTO
+import com.example.turismomovile.data.remote.dto.LoginInput
 import com.example.turismomovile.data.remote.dto.LoginResponse
+import com.example.turismomovile.data.remote.dto.RegisterResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
@@ -43,12 +45,68 @@ class AuthApiService(
         return loginResponse
     }
 
+    suspend fun register(registerInput: LoginInput): RegisterResponse {
+        val response = client.post(ApiConstants.Configuration.REGISTER_ENDPOINT) {
+            contentType(ContentType.Application.Json)
+            setBody(registerInput)
+        }
+
+        val registerResponse = response.body<RegisterResponse>()
+
+        // Verificar si ya existe un token antes de guardarlo
+        sessionManager.getAuthToken()?.let {
+            if (it != registerResponse.data.token) {
+                sessionManager.saveAuthToken(registerResponse.data.token)
+            }
+        } ?: sessionManager.saveAuthToken(registerResponse.data.token)
+
+        sessionManager.saveUser(
+            User(
+                id = registerResponse.data.user.id.toString(),
+                name = registerResponse.data.user.username,
+                email = registerResponse.data.user.email,
+                token = registerResponse.data.token
+            )
+        )
+
+        return registerResponse
+    }
+
+
+    suspend fun logout() {
+        try {
+            // Llamar al backend para invalidar el token
+            val token = sessionManager.getAuthToken()  // Esto está dentro de una corrutina
+            val response = client.post(ApiConstants.Configuration.LOGOUT_ENDPOINT) {
+                contentType(ContentType.Application.Json)
+                headers {
+                    append(HttpHeaders.Authorization, "Bearer $token")
+                }
+            }
+
+            // Si la respuesta es exitosa, limpiamos la sesión local
+            if (response.status == HttpStatusCode.OK) {
+                sessionManager.clearSession()  // Limpiar la sesión local
+                println("Sesión cerrada exitosamente")
+            } else {
+                println("Error al cerrar sesión: ${response.status.description}")
+            }
+        } catch (e: Exception) {
+            // Manejar cualquier excepción de la llamada a la API
+            println("Error al intentar cerrar sesión: ${e.message}")
+        }
+    }
+
+
+
+
+
     override suspend fun loadAuthTokenFromStorage() {
+        // Cargar el token desde el SessionManager
         sessionManager.getUser()?.token?.let {
             updateAuthToken(it)
         }
     }
-
 
 }
 

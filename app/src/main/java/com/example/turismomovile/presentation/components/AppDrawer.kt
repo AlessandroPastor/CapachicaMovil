@@ -173,10 +173,10 @@ private fun LogoutButton(viewModel: HomeViewModel, onLogout: () -> Unit) {
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
             .clickable {
-                viewModel.logout()
-                onLogout()
+                viewModel.logout()  // 🔹 Limpia la sesión
+                onLogout()  // 🔹 Realiza cualquier acción adicional después de cerrar sesión
             }
-            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.08f)), // 🔥 Fondo más intuitivo
+            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.08f)),
     ) {
         ListItem(
             headlineContent = {
@@ -193,6 +193,7 @@ private fun LogoutButton(viewModel: HomeViewModel, onLogout: () -> Unit) {
         )
     }
 }
+
 
 
 

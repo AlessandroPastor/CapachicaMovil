@@ -37,10 +37,34 @@ data class Username(
     val imagen_url: String? = null
 )
 
+@Serializable
+data class LoginInput(
+    val name: String,
+    val last_name: String,
+    val username: String,
+    val email: String,
+    val password: String
+)
 
 @Serializable
-data class RefreshTokenDTO(
-    val refresh_token: String
+data class RegisterResponse(
+    val status: Boolean,
+    val message: String,
+    val data: ResponseData
+)
+
+@Serializable
+data class ResponseData(
+    val token: String,
+    val user: UserResponse,
+    val roles: List<String>
+)
+
+@Serializable
+data class UserResponse(
+    val id: Int,
+    val username: String,
+    val email: String
 )
 
 @Serializable
@@ -71,7 +95,6 @@ fun decodeToken(token: String): User? {
             println("Token inválido: No tiene 3 partes.")
             return null
         }
-
         // Decodificar la segunda parte (payload) del token desde base64
         val payloadJson = parts[1].decodeBase64String()
 

@@ -72,16 +72,17 @@ fun NotificationHost(
             }
         }
 
+        // Cambiar la posición a la parte superior y ajustar la animación
         AnimatedVisibility(
             visible = currentState.isVisible,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
+            enter = slideInVertically(initialOffsetY = { -it }) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut(),
             modifier = Modifier
-                .align(Alignment.BottomCenter)
+                .align(Alignment.TopCenter) // Cambié la alineación aquí para que sea la parte superior
                 .padding(
                     start = 16.dp,
                     end = 16.dp,
-                    bottom = 16.dp + navigationBarHeight
+                    top = 16.dp // Cambié el bottom a top
                 )
                 .imePadding()
                 .systemBarsPadding()
@@ -94,6 +95,7 @@ fun NotificationHost(
         }
     }
 }
+
 
 @Composable
 private fun AppNotification(

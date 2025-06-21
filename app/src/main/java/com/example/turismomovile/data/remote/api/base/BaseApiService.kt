@@ -25,6 +25,9 @@ open class BaseApiService(
     fun updateAuthToken(token: String) {  // Cambia el nombre
         this.authToken = token
     }
+    fun clearAuthToken() {
+        this.authToken = null
+    }
 
 
     open suspend fun loadAuthTokenFromStorage() {

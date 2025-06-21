@@ -2,13 +2,11 @@ package com.example.turismomovile.data.remote.api
 
 object ApiConstants {
     //const val BASE_URL = "http://172.22.8.17:8000"
-    const val BASE_URL = "http://192.168.1.5:8000" //PC PASTOR
+    const val BASE_URL = "http://172.22.8.12:8000" //PC PASTOR
     //const val BASE_URL = "http://192.172.2.101:8000" //PC JAMIL
     //const val BASE_URL = "http://192.177.1.13:8000" //PC CRISTIAN
 
     //const val BASE_URL = "AQUI SI SE SUBE ALA NUBE"
-
-    const val REGISTER_ENDPOINT = "$BASE_URL/register"
     const val DETAILS_ENDPOINT = "$BASE_URL/details"
 
     object Configuration {
@@ -39,7 +37,7 @@ object ApiConstants {
         const val LOGIN_ENDPOINT = "$BASE_URL/login"
         const val REGISTER_ENDPOINT = "$BASE_URL/register"
         const val REFRESH_ENDPOINT = "$BASE_URL/auth/refresh"
-        const val LOGOUT_ENDPOINT = "$BASE_URL/auth/logout"
+        const val LOGOUT_ENDPOINT = "$BASE_URL/logout"
         const val GET_AUTH_VALID = "$BASE_URL/auth/valid"
         const val GET_AUTH_ROLES = "$BASE_URL/auth/roles"
 

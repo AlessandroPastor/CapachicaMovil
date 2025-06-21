@@ -132,6 +132,7 @@ class HomeViewModel(
         viewModelScope.launch {
             sessionManager.clearSession() // 🔹 Borrar la sesión en almacenamiento
             // 🔹 Limpiar completamente el estado UIState y asegurarnos de que no haya usuario
+            authRepository.logout()
             _uiState.value = HomeUiState(
                 user = null, // ✅ Aseguramos que el usuario sea `null`
                 menuItems = emptyList(),
@@ -141,6 +142,10 @@ class HomeViewModel(
             )
         }
     }
+
+
+
+
 
     fun loadUserAndMenu() {
         viewModelScope.launch {

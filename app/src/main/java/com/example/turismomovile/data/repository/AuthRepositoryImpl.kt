@@ -59,6 +59,12 @@ class AuthRepositoryImpl(
         }
     }
 
+
+    override suspend fun logout() {
+        sessionManager.clearSession()
+        authApiService.clearAuthToken()
+        menuApiService.clearAuthToken()
+    }
     override suspend fun loadAuthToken() {
         authApiService.loadAuthTokenFromStorage()
     }

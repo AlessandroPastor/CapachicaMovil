@@ -18,17 +18,19 @@ import kotlinx.coroutines.launch
 fun App() {
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
-        initialValue = false, // Valor inicial
-        lifecycle = LocalLifecycleOwner.current.lifecycle // Contexto de lifecycle
+        initialValue = false,
+        lifecycle = LocalLifecycleOwner.current.lifecycle
     )
 
     AppTheme(darkTheme = isDarkMode) {
+        // Mueve todo dentro del KoinContext
         KoinContext {
-            val navController = rememberNavController()
+            val navController = rememberNavController() // ✅ aquí adentro
             val sessionManager: SessionManager = koinInject()
             val scope = rememberCoroutineScope()
 
             ProvideHomeViewModel {
+                // ✅ Ahora sí el navController está conectado al NavHost
                 NavigationGraph(
                     navController = navController,
                     onLogout = {
@@ -44,3 +46,4 @@ fun App() {
         }
     }
 }
+

@@ -45,7 +45,9 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
 import com.example.turismomovile.R
+import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppCard
@@ -54,6 +56,7 @@ import com.example.turismomovile.presentation.components.RotatingBackgroundLogin
 import com.example.turismomovile.presentation.components.ShowLoadingDialog
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
+import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
@@ -61,9 +64,10 @@ import org.koin.compose.koinInject
 @Composable
 fun LoginScreen(
     onLoginSuccess: (User) -> Unit,
-    onBackPressed: () -> Unit, // Agregar el parámetro onBackPressed
-// Agregar el NavController
-    viewModel: LoginViewModel = koinInject()
+    navController: NavHostController,
+    onBackPressed: () -> Unit,
+    viewModel: LoginViewModel = koinInject(),
+    sessionManager: SessionManager = koinInject()  // Asegúrate de que tienes acceso al SessionManager
 ) {
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
@@ -74,7 +78,6 @@ fun LoginScreen(
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isEmailError by remember { mutableStateOf(false) }
     var isPasswordError by remember { mutableStateOf(false) }
-
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
@@ -132,9 +135,9 @@ fun LoginScreen(
         ) {
             //Rotación de imágenes de fondo
             val images = listOf(
-                R.drawable.fondo,
-                R.drawable.fondo,
-                R.drawable.fondo2,
+                R.drawable.escallani,
+                R.drawable.anioandino,
+                R.drawable.isla_tikonata,
             )
             RotatingBackgroundLoginScreen(images = images)
 
@@ -288,7 +291,7 @@ fun LoginScreen(
                                 Text("¿Olvidaste tu contraseña?", color = MaterialTheme.colorScheme.primary)
                             }
 
-                            TextButton(onClick = { /* Implementar creación de cuenta */ }) {
+                            TextButton(onClick = { navController.navigate(Routes.REGISTER) }) {
                                 Text("¿Crear cuenta?", color = MaterialTheme.colorScheme.primary)
                             }
                         }

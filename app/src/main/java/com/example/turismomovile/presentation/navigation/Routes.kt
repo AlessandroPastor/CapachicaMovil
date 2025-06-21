@@ -4,6 +4,7 @@ object Routes {
     // Rutas base
     const val SPLASH = "splash"
     const val LOGIN = "login"
+    const val REGISTER = "register"
     const val HOME = "home"
     const val ONBOARDING = "onboarding"
     const val DEVICE_INFO = "device_info"

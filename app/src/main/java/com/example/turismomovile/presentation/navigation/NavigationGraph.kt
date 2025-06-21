@@ -22,6 +22,7 @@ import PlacesScreen
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
+import com.example.turismomovile.presentation.screens.login.RegisterScreen
 import com.example.turismomovile.presentation.screens.navigation.BaseScreenLayout
 import com.example.turismomovile.presentation.screens.navigation.DefaultScreen
 import com.example.turismomovile.presentation.screens.navigation.OnboardingScreen
@@ -46,6 +47,7 @@ fun NavigationGraph(
         Routes.LAND_PAGE,
         Routes.LOGIN,
         Routes.EXPLORATE,
+        Routes.REGISTER
     )
 
     LaunchedEffect(navController) {
@@ -53,16 +55,28 @@ fun NavigationGraph(
             .collect { backStackEntry ->
                 val route = backStackEntry?.destination?.route
                 val token = sessionManager.getUser()?.token
-                println("🧠 Token: $token | Ruta actual: $route")
 
+                println("Token: $token | Ruta actual: $route")
+
+                // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
+                if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                }
+
+                // Si no tiene token y la ruta no está en las rutas públicas, cierra sesión y redirige a la página de inicio
                 if (token.isNullOrEmpty() && route !in publicRoutes) {
                     onLogout()
                     navController.navigate(Routes.LAND_PAGE) {
-                        popUpTo(0)
+                        popUpTo(0) // Aseguramos que todas las pantallas previas se borren
                     }
                 }
             }
     }
+
+
+
 
     NavHost(
         navController = navController,
@@ -89,19 +103,40 @@ fun NavigationGraph(
             )
         }
 
-        // Onboarding Screen
-        composable(Routes.ONBOARDING) {
-            OnboardingScreen(
-                onComplete = {
-                    scope.launch {
-                        sessionManager.setOnboardingCompleted(true)
-                        navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(Routes.ONBOARDING) { inclusive = true }
-                        }
+        composable(Routes.REGISTER) {
+            RegisterScreen(
+                navController = navController,  // Aquí se pasa el navController
+                onRegisterSuccess = { user ->
+                    // Si el registro es exitoso, navega a la pantalla de inicio (HOME)
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.REGISTER) { inclusive = true } // Eliminamos la pantalla de registro del back stack
+                    }
+                },
+                onBackPressed = {
+                    // Acción de retroceso, regresamos al login
+                    navController.popBackStack()
+                }
+            )
+        }
+
+        composable(Routes.LOGIN) {
+            LoginScreen(
+                navController = navController,
+                onLoginSuccess = { user ->
+                    // Después de un login exitoso, redirigir al HOME
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true } // Elimina la pantalla de login del stack
+                    }
+                },
+                onBackPressed = {
+                    // Acción de retroceso, regresamos a la pantalla de inicio
+                    navController.navigate(Routes.LAND_PAGE) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
             )
         }
+
 
         // Welcome / Land Page
         composable(Routes.LAND_PAGE) {
@@ -124,35 +159,17 @@ fun NavigationGraph(
             )
         }
 
-        // Login Screen
-        composable(Routes.LOGIN) {
-            LoginScreen(
-                onLoginSuccess = { user ->
-                    scope.launch {
-                        sessionManager.saveUser(user)
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.LOGIN) { inclusive = true }
-                        }
-                    }
-                },
-                onBackPressed = {
-                    navController.navigate(Routes.LAND_PAGE) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                }
-            )
-        }
 
-        // Home Screen (privado)
+
         composable(Routes.HOME) {
             BaseScreenLayout(
                 navController = navController,
                 title = "Inicio",
                 onLogout = {
                     scope.launch {
-                        sessionManager.clearSession()
+                        sessionManager.clearSession()  // Limpiar la sesión del usuario
                         navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(0) { inclusive = true }  // Limpiar todas las pantallas previas
                         }
                     }
                 }
@@ -166,6 +183,7 @@ fun NavigationGraph(
                 )
             }
         }
+
 
         // Productos -> EmprendedoresScreen
         composable(Routes.PRODUCTS) {

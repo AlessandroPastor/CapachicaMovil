@@ -8,4 +8,6 @@ interface AuthRepository {
     suspend fun getUserDetails(): Result<User>
     suspend fun getMenuItems(): Result<List<MenuItem>>
     suspend fun loadAuthToken()
+    suspend fun logout()
+
 }
