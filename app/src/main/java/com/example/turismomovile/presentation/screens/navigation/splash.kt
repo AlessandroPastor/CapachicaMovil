@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -43,6 +44,15 @@ fun SplashScreen(
 ) {
     val colorScheme = MaterialTheme.colorScheme
     val dimens = LocalAppDimens.current
+    val configuration = LocalConfiguration.current
+
+    // Obtener dimensiones de la pantalla
+    val screenHeight = configuration.screenHeightDp.dp
+    val screenWidth = configuration.screenWidthDp.dp
+
+    // Calcular tamaños responsivos
+    val logoSize = minOf(screenWidth, screenHeight) * 0.2f
+    val horizontalPadding = screenWidth * 0.08f
 
     // Estados de animación mejorados con transiciones más fluidas
     var animationPhase by remember { mutableIntStateOf(0) }
@@ -176,6 +186,7 @@ fun SplashScreen(
     Box(
         modifier = modifier
             .fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBars) // Ocupa toda la pantalla incluyendo área de status bar
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
@@ -191,18 +202,22 @@ fun SplashScreen(
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(horizontal = dimens.spacing_32.dp)
+            verticalArrangement = Arrangement.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = horizontalPadding)
+                .padding(vertical = 32.dp)
         ) {
             // Logo con animaciones mejoradas
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(logoSize)
             ) {
                 // Efecto de brillo
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     if (animationPhase >= 1) {
-                        val radius = size.minDimension * 0.6f * logoShine
+                        val radius = (size.minDimension * 0.6f * logoShine).coerceAtLeast(1f)
                         drawCircle(
                             brush = Brush.radialGradient(
                                 colors = listOf(
@@ -218,9 +233,10 @@ fun SplashScreen(
                     }
                 }
 
+
                 Surface(
                     modifier = Modifier
-                        .size(150.dp)
+                        .size(logoSize)
                         .scale(logoScale * if (animationPhase >= 2) pulseScale else 1f)
                         .graphicsLayer {
                             rotationX = logoRotationX
@@ -249,7 +265,7 @@ fun SplashScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(screenHeight * 0.04f))
 
             // Textos con animaciones escalonadas y efectos de deslizamiento
             Column(
@@ -258,7 +274,7 @@ fun SplashScreen(
                 Text(
                     text = "Capachica Turismo",
                     color = colorScheme.onPrimary,
-                    fontSize = 26.sp,
+                    fontSize = (screenWidth.value * 0.065f).sp,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     modifier = Modifier
@@ -272,7 +288,7 @@ fun SplashScreen(
                 Text(
                     text = "Gestión 2023 - 2026",
                     color = colorScheme.onPrimary.copy(alpha = 0.9f),
-                    fontSize = 14.sp,
+                    fontSize = (screenWidth.value * 0.035f).sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .alpha(subtitleAlpha)
@@ -285,7 +301,7 @@ fun SplashScreen(
                 Text(
                     text = "Descubre la belleza natural",
                     color = colorScheme.onPrimary.copy(alpha = 0.8f),
-                    fontSize = 16.sp,
+                    fontSize = (screenWidth.value * 0.04f).sp,
                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                     modifier = Modifier
                         .alpha(sloganAlpha)
@@ -294,13 +310,13 @@ fun SplashScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(48.dp))
+            Spacer(modifier = Modifier.height(screenHeight * 0.06f))
 
             // Barra de progreso con animación mejorada
             LinearProgressIndicator(
                 progress = { progress },
                 modifier = Modifier
-                    .width(220.dp)
+                    .width(screenWidth * 0.6f)
                     .height(6.dp)
                     .clip(RoundedCornerShape(3.dp))
                     .shadow(

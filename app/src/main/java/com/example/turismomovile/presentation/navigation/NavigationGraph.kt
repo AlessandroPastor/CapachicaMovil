@@ -19,6 +19,8 @@ import com.example.turismomovile.presentation.screens.land_page.EventsScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import PlacesScreen
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
@@ -55,16 +57,12 @@ fun NavigationGraph(
             .collect { backStackEntry ->
                 val route = backStackEntry?.destination?.route
                 val token = sessionManager.getUser()?.token
-
-                println("Token: $token | Ruta actual: $route")
-
                 // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
                 if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
-
                 // Si no tiene token y la ruta no está en las rutas públicas, cierra sesión y redirige a la página de inicio
                 if (token.isNullOrEmpty() && route !in publicRoutes) {
                     onLogout()
@@ -83,7 +81,7 @@ fun NavigationGraph(
         startDestination = Routes.SPLASH
     ) {
 
-        // Splash Screen
+        // En tu NavGraph o donde tengas la navegación
         composable(Routes.SPLASH) {
             SplashScreen(
                 onSplashFinished = {
@@ -99,37 +97,48 @@ fun NavigationGraph(
                             }
                         }
                     }
+                },
+                modifier = Modifier.fillMaxSize() // Asegura que ocupe toda la pantalla
+            )
+        }
+        // Onboarding Screen
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(
+                onComplete = {
+                    scope.launch {
+                        sessionManager.setOnboardingCompleted(true)
+                        navController.navigate(Routes.LAND_PAGE) {
+                            popUpTo(Routes.ONBOARDING) { inclusive = true }
+                        }
+                    }
                 }
             )
         }
-
+        // Register
         composable(Routes.REGISTER) {
             RegisterScreen(
-                navController = navController,  // Aquí se pasa el navController
+                navController = navController,
                 onRegisterSuccess = { user ->
-                    // Si el registro es exitoso, navega a la pantalla de inicio (HOME)
                     navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.REGISTER) { inclusive = true } // Eliminamos la pantalla de registro del back stack
+                        popUpTo(Routes.REGISTER) { inclusive = true }
                     }
                 },
                 onBackPressed = {
-                    // Acción de retroceso, regresamos al login
                     navController.popBackStack()
                 }
             )
         }
 
+        // Login
         composable(Routes.LOGIN) {
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = { user ->
-                    // Después de un login exitoso, redirigir al HOME
                     navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true } // Elimina la pantalla de login del stack
+                        popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 },
                 onBackPressed = {
-                    // Acción de retroceso, regresamos a la pantalla de inicio
                     navController.navigate(Routes.LAND_PAGE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
@@ -137,14 +146,13 @@ fun NavigationGraph(
             )
         }
 
-
         // Welcome / Land Page
         composable(Routes.LAND_PAGE) {
             WelcomeScreen(
                 navController = navController,
                 onStartClick = {
                     navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                        popUpTo(Routes.LAND_PAGE) { inclusive = false }
                     }
                 },
                 onClickExplorer = {
@@ -160,16 +168,16 @@ fun NavigationGraph(
         }
 
 
-
+        // Home / Menu
         composable(Routes.HOME) {
             BaseScreenLayout(
                 navController = navController,
                 title = "Inicio",
                 onLogout = {
                     scope.launch {
-                        sessionManager.clearSession()  // Limpiar la sesión del usuario
+                        sessionManager.clearSession()
                         navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(0) { inclusive = true }  // Limpiar todas las pantallas previas
+                            popUpTo(0) { inclusive = true }
                         }
                     }
                 }
@@ -184,6 +192,7 @@ fun NavigationGraph(
             }
         }
 
+        // BottomNavigation INFERIOR
 
         // Productos -> EmprendedoresScreen
         composable(Routes.PRODUCTS) {
@@ -200,8 +209,7 @@ fun NavigationGraph(
             )
         }
 
-        // Agregamos ahora los demás screens del BottomNavigation 🔥
-
+        // Services -> ServiceScreen
         composable(Routes.SERVICES) {
             ServiceScreen(navController = navController,
                 onStartClick = {
@@ -214,6 +222,7 @@ fun NavigationGraph(
                 })
         }
 
+        // Places -> PlacesScreen
         composable(Routes.PLACES) {
             PlacesScreen(navController = navController,
                 onStartClick = {
@@ -226,6 +235,7 @@ fun NavigationGraph(
                 })
         }
 
+        // Events -> EventsScreen
         composable(Routes.EVENTS) {
             EventsScreen(navController = navController,
                 onStartClick = {
@@ -238,6 +248,7 @@ fun NavigationGraph(
                 })
         }
 
+        // Recommendations -> RecommendationsScreen
         composable(Routes.RECOMMENDATIONS) {
             RecommendationsScreen(navController = navController,
                 onStartClick = {
@@ -251,12 +262,12 @@ fun NavigationGraph(
         }
 
 
-        // Tourist Info (solo si lo necesitas)
+        // Tourist Info
         composable(Routes.DEVICE_INFO) {
             TouristInfoScreen(navController)
         }
 
-        // Finalmente, mantenemos la navegación privada de configuración
+        // Navegacion Privada
         setupMenuRoutes(
             navGraphBuilder = this,
             navController = navController,

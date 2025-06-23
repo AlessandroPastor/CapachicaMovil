@@ -7,6 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,7 +43,7 @@ fun ShowLoadingDialog(isLoading: Boolean) {
     // Ocultar después de un tiempo determinado
     LaunchedEffect(isLoading) {
         if (isLoading) {
-            delay(30_000)
+            delay(80_000)
             showDialog = false
         }
     }
@@ -113,3 +114,93 @@ fun ShowLoadingDialog(isLoading: Boolean) {
 }
 
 
+@Composable
+fun ShowRegisterLoadingDialog(isLoading: Boolean) {
+    val dimens = LocalAppDimens.current
+
+    val scaleAnim by animateFloatAsState(
+        targetValue = if (isLoading) 1.05f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1600, easing = EaseInOut),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "registerScaleAnim"
+    )
+
+    var showDialog by remember { mutableStateOf(isLoading) }
+
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            delay(80_000)
+            showDialog = false
+        }
+    }
+
+    if (showDialog) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background.copy(alpha = 0.6f)),
+            contentAlignment = Alignment.Center
+        ) {
+            Card(
+                modifier = Modifier
+                    .scale(scaleAnim)
+                    .width(280.dp)
+                    .height(220.dp)
+                    .padding(dimens.spacing_16.dp),
+                shape = RoundedCornerShape(20.dp),
+                elevation = CardDefaults.cardElevation(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Círculo con el icono + animación
+                    Box(
+                        modifier = Modifier
+                            .size(56.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            color = MaterialTheme.colorScheme.primary,
+                            strokeWidth = 4.dp,
+                            modifier = Modifier.fillMaxSize()
+                        )
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = "Creando cuenta",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
+
+                    // Texto principal
+                    Text(
+                        text = "Creando tu cuenta...",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+
+                    // Texto secundario
+                    Text(
+                        text = "Por favor, espera un momento.",
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        }
+    }
+}

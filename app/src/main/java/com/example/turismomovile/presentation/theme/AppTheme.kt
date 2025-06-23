@@ -9,41 +9,92 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
-// Colores personalizados
+// Colores personalizados mejorados para turismo
 object AppColors {
-    // Light Theme Colors
-    val Primary = Color(0xFF2196F3)
-    val PrimaryDark = Color(0xFF1976D2)
-    val Secondary = Color(0xFF03DAC6)
-    val Background = Color(0xFFFAFAFA)
-    val Surface = Color(0xFFFFFFFF)
-    val Error = Color(0xFFB00020)
+    // Light Theme Colors - Paleta turística moderna
+    val Primary = Color(0xFF1E88E5)        // Azul océano vibrante
+    val PrimaryVariant = Color(0xFF1565C0) // Azul más profundo
+    val Secondary = Color(0xFF26A69A)      // Verde turquesa tropical
+    val SecondaryVariant = Color(0xFF00695C) // Verde esmeralda
+    val Tertiary = Color(0xFFFF7043)       // Naranja atardecer
+    val Background = Color(0xFFF8FFFE)     // Blanco nieve con tinte azul
+    val Surface = Color(0xFFFFFFFF)        // Blanco puro
+    val SurfaceVariant = Color(0xFFF5F5F5) // Gris muy claro
+    val Error = Color(0xFFE53935)          // Rojo coral
+    val OnPrimary = Color(0xFFFFFFFF)      // Blanco
+    val OnSecondary = Color(0xFFFFFFFF)    // Blanco
+    val OnBackground = Color(0xFF1A1A1A)   // Negro suave
+    val OnSurface = Color(0xFF212121)      // Gris muy oscuro
+    val OnError = Color(0xFFFFFFFF)        // Blanco
 
-    // Notification Colors Light
-    val SuccessLight = Color(0xFFDCF7DC)  // Verde claro
-    val SuccessTextLight = Color(0xFF1B5E20)  // Verde oscuro
-    val ErrorLight = Color(0xFFFFEBEE)  // Rojo claro
-    val ErrorTextLight = Color(0xFFB00020)  // Rojo oscuro
-    val WarningLight = Color(0xFFFFF3E0)  // Naranja claro
-    val WarningTextLight = Color(0xFFE65100)  // Naranja oscuro
-    val InfoLight = Color(0xFFE3F2FD)  // Azul claro
-    val InfoTextLight = Color(0xFF0D47A1)  // Azul oscuro
+    // Colores accent para elementos especiales
+    val AccentGold = Color(0xFFFFB300)     // Dorado para premiums
+    val AccentCoral = Color(0xFFFF6B6B)    // Coral para destacados
+    val AccentLavender = Color(0xFF9C27B0) // Lavanda para categorías
 
-    // Dark Theme Colors
-    val PrimaryDark_Dark = Color(0xFF64B5F6)
-    val SecondaryDark = Color(0xFF03DAC6)
-    val BackgroundDark = Color(0xFF121212)
-    val SurfaceDark = Color(0xFF242424)
-    val ErrorDark = Color(0xFF7F0000)  // Rojo oscuro
+    // Notification Colors Light - Más suaves y modernos
+    val SuccessLight = Color(0xFFE8F5E8)   // Verde menta claro
+    val SuccessTextLight = Color(0xFF2E7D32) // Verde bosque
+    val ErrorLight = Color(0xFFFFEBEE)     // Rosa claro
+    val ErrorTextLight = Color(0xFFD32F2F) // Rojo moderno
+    val WarningLight = Color(0xFFFFF8E1)   // Amarillo crema
+    val WarningTextLight = Color(0xFFF57C00) // Naranja dorado
+    val InfoLight = Color(0xFFE1F5FE)      // Azul cielo claro
+    val InfoTextLight = Color(0xFF0277BD)  // Azul información
 
-    // Notification Colors Dark
-    val SuccessDark = Color(0xFF1B5E20)  // Verde oscuro
-    val SuccessTextDark = Color(0xFFDCF7DC)  // Verde claro
-    val ErrorTextDark = Color(0xFFFFEBEE)  // Rojo claro
-    val WarningDark = Color(0xFF7F4100)  // Naranja oscuro
-    val WarningTextDark = Color(0xFFFFF3E0)  // Naranja claro
-    val InfoDark = Color(0xFF0D47A1)  // Azul oscuro
-    val InfoTextDark = Color(0xFFE3F2FD)  // Azul claro
+    // Dark Theme Colors - Más elegantes y con mejor contraste
+    val PrimaryDark = Color(0xFF42A5F5)    // Azul brillante
+    val PrimaryVariantDark = Color(0xFF1976D2) // Azul profundo
+    val SecondaryDark = Color(0xFF4DB6AC)  // Turquesa brillante
+    val SecondaryVariantDark = Color(0xFF00897B) // Verde mar
+    val TertiaryDark = Color(0xFFFFAB40)   // Naranja dorado
+    val BackgroundDark = Color(0xFF0A0E13) // Azul noche profundo
+    val SurfaceDark = Color(0xFF1A1D23)    // Gris azulado oscuro
+    val SurfaceVariantDark = Color(0xFF2A2D33) // Gris medio
+    val OnPrimaryDark = Color(0xFF000000)  // Negro
+    val OnSecondaryDark = Color(0xFF000000) // Negro
+    val OnBackgroundDark = Color(0xFFE0E0E0) // Gris claro
+    val OnSurfaceDark = Color(0xFFE0E0E0)  // Gris claro
+    val OnErrorDark = Color(0xFF000000)    // Negro
+
+    // Colores accent dark
+    val AccentGoldDark = Color(0xFFFFD54F) // Dorado claro
+    val AccentCoralDark = Color(0xFFFF8A80) // Coral claro
+    val AccentLavenderDark = Color(0xFFBA68C8) // Lavanda claro
+
+    // Notification Colors Dark - Mejor visibilidad
+    val SuccessDark = Color(0xFF2E7D32)    // Verde oscuro
+    val SuccessTextDark = Color(0xFFA5D6A7) // Verde claro
+    val ErrorDark = Color(0xFFD32F2F)      // Rojo oscuro
+    val ErrorTextDark = Color(0xFFFFCDD2)  // Rosa claro
+    val WarningDark = Color(0xFFFFA000)    // Naranja oscuro
+    val WarningTextDark = Color(0xFFFFE082) // Amarillo claro
+    val InfoDark = Color(0xFF1976D2)       // Azul oscuro
+    val InfoTextDark = Color(0xFF81D4FA)   // Azul claro
+
+    // Gradientes para elementos especiales
+    val GradientPrimary = listOf(
+        Color(0xFF1E88E5),
+        Color(0xFF26A69A)
+    )
+
+    val GradientSunset = listOf(
+        Color(0xFFFF7043),
+        Color(0xFFFFB300)
+    )
+
+    val GradientNight = listOf(
+        Color(0xFF1A1D23),
+        Color(0xFF0A0E13)
+    )
+
+    // Colores semánticos para turismo
+    val BeachBlue = Color(0xFF03A9F4)      // Azul playa
+    val MountainGreen = Color(0xFF4CAF50)  // Verde montaña
+    val DesertSand = Color(0xFFFFE0B2)     // Arena del desierto
+    val ForestGreen = Color(0xFF388E3C)    // Verde bosque
+    val SkyBlue = Color(0xFF87CEEB)        // Azul cielo
+    val SunsetOrange = Color(0xFFFF8A65)   // Naranja atardecer
 }
 
 // Dimensiones personalizadas ampliadas y organizadas
@@ -146,25 +197,60 @@ object AppDimensions {
     val desktopBreakpoint = 1200
 }
 
-// Definir los esquemas de color para tema claro y oscuro
+// Definir los esquemas de color mejorados
 private val LightColorScheme = lightColorScheme(
     primary = AppColors.Primary,
+    onPrimary = AppColors.OnPrimary,
+    primaryContainer = AppColors.PrimaryVariant,
+    onPrimaryContainer = AppColors.OnPrimary,
     secondary = AppColors.Secondary,
+    onSecondary = AppColors.OnSecondary,
+    secondaryContainer = AppColors.SecondaryVariant,
+    onSecondaryContainer = AppColors.OnSecondary,
+    tertiary = AppColors.Tertiary,
+    onTertiary = Color.White,
     background = AppColors.Background,
+    onBackground = AppColors.OnBackground,
     surface = AppColors.Surface,
-    error = AppColors.Error
+    onSurface = AppColors.OnSurface,
+    surfaceVariant = AppColors.SurfaceVariant,
+    onSurfaceVariant = AppColors.OnSurface,
+    error = AppColors.Error,
+    onError = AppColors.OnError,
+    errorContainer = AppColors.ErrorLight,
+    onErrorContainer = AppColors.ErrorTextLight,
+    outline = Color(0xFFBDBDBD),
+    outlineVariant = Color(0xFFE0E0E0)
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AppColors.PrimaryDark_Dark,
+    primary = AppColors.PrimaryDark,
+    onPrimary = AppColors.OnPrimaryDark,
+    primaryContainer = AppColors.PrimaryVariantDark,
+    onPrimaryContainer = AppColors.OnPrimaryDark,
     secondary = AppColors.SecondaryDark,
+    onSecondary = AppColors.OnSecondaryDark,
+    secondaryContainer = AppColors.SecondaryVariantDark,
+    onSecondaryContainer = AppColors.OnSecondaryDark,
+    tertiary = AppColors.TertiaryDark,
+    onTertiary = Color.Black,
     background = AppColors.BackgroundDark,
+    onBackground = AppColors.OnBackgroundDark,
     surface = AppColors.SurfaceDark,
-    error = AppColors.ErrorDark
+    onSurface = AppColors.OnSurfaceDark,
+    surfaceVariant = AppColors.SurfaceVariantDark,
+    onSurfaceVariant = AppColors.OnSurfaceDark,
+    error = AppColors.ErrorDark,
+    onError = AppColors.OnErrorDark,
+    errorContainer = AppColors.ErrorDark,
+    onErrorContainer = AppColors.ErrorTextDark,
+    outline = Color(0xFF616161),
+    outlineVariant = Color(0xFF424242)
 )
 
 // Local composition para el tema
 val LocalAppDimens = staticCompositionLocalOf { AppDimensions }
+val LocalAppColors = staticCompositionLocalOf { AppColors }
 
 @Composable
 fun AppTheme(
@@ -174,7 +260,8 @@ fun AppTheme(
     val colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
 
     CompositionLocalProvider(
-        LocalAppDimens provides AppDimensions
+        LocalAppDimens provides AppDimensions,
+        LocalAppColors provides AppColors
     ) {
         MaterialTheme(
             colorScheme = colorScheme,

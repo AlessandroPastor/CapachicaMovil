@@ -14,9 +14,11 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
@@ -52,6 +54,7 @@ import com.example.turismomovile.presentation.theme.ThemeViewModel
 import com.example.turismomovile.presentation.components.RotatingBackgroundLoginScreen
 import com.example.turismomovile.presentation.components.AppCard
 import com.example.turismomovile.presentation.components.FloatingBubblesBackground
+import com.example.turismomovile.presentation.components.ShowRegisterLoadingDialog
 import com.example.turismomovile.presentation.theme.AppColors
 import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
@@ -136,6 +139,7 @@ fun RegisterScreen(
         delay(500)
         logoVisibility.value = true
     }
+    val scrollState = rememberScrollState()
 
 
     AppTheme(darkTheme = isDarkMode) {
@@ -190,6 +194,7 @@ fun RegisterScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .verticalScroll(scrollState) // ⬅️ Habilita scroll vertical
                             .padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -422,7 +427,7 @@ fun RegisterScreen(
             }
 
             if (registerState is RegisterViewModel.RegisterState.Loading) {
-                ShowLoadingDialog(isLoading = true)
+                ShowRegisterLoadingDialog(isLoading = true)
             }
         }
     }

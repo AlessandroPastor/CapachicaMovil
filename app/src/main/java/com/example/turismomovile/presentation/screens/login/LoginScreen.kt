@@ -23,10 +23,12 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -106,6 +108,7 @@ fun LoginScreen(
             viewModel.login(email, password)
         }
     }
+    val scrollState = rememberScrollState()
 
     // Animación de Glow para el logo
     val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
@@ -176,9 +179,10 @@ fun LoginScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
+                            .verticalScroll(scrollState) // ⬅️ Habilita scroll vertical
                             .padding(32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(20.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         // Título animado
                         AnimatedVisibility(
@@ -296,7 +300,7 @@ fun LoginScreen(
                             horizontalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
                             OutlinedButton(
-                                onClick = { /* Implementar recuperación */ },
+                                onClick = {},
                                 modifier = Modifier.weight(1f),
                                 border = BorderStroke(
                                     1.dp,
@@ -312,13 +316,14 @@ fun LoginScreen(
                                     else
                                         MaterialTheme.colorScheme.primary
                                 )
-                            ) {
+                            )  {
                                 Text(
                                     text = "¿Olvidaste tu contraseña?",
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp
+                                    fontSize = 8.sp, // Puedes ajustarlo según necesidad
                                 )
                             }
+
 
                             OutlinedButton(
                                 onClick = { navController.navigate(Routes.REGISTER) },
@@ -341,7 +346,7 @@ fun LoginScreen(
                                 Text(
                                     text = "¿Crear cuenta?",
                                     fontWeight = FontWeight.SemiBold,
-                                    fontSize = 12.sp
+                                    fontSize = 8.sp,
                                 )
                             }
                         }

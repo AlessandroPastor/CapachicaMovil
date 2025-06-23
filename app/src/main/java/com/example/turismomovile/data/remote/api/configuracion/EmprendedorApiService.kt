@@ -19,6 +19,7 @@ import io.ktor.client.request.parameter
 import io.ktor.client.request.post
 import io.ktor.client.request.put
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.ContentType
 import io.ktor.http.contentType
 
@@ -27,15 +28,27 @@ class EmprendedorApiService(
     sessionManager: SessionManager
 ) : BaseApiService(client, sessionManager) {
 
-    // Obtener lista paginada de emprendedores con filtro por name
-    suspend fun getEmprendedor(page: String? = 0.toString(), size: Int = 10, category: String? = null,name: String? = null): EmprendedorResponse {
-        return client.get(ApiConstants.Configuration.EMPRENDEDORES_GET) {
-            parameter("page", page)
-            parameter("size", size)
-            name?.let { parameter("name", it) }
-            category?.let { parameter("category", it) }
-        }.body()
+    suspend fun getEmprendedor(
+        page: String? = 0.toString(),
+        size: Int = 10,
+        category: String? = null,
+        name: String? = null
+    ): EmprendedorResponse {
+        try {
+            val response = client.get(ApiConstants.Configuration.EMPRENDEDORES_GET) {
+                parameter("page", page)
+                parameter("size", size)
+                name?.let { parameter("name", it) }
+                category?.let { parameter("category", it) }
+            }
+            val rawJson = response.bodyAsText()
+            return response.body()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
     }
+
 
     // Obtener un emprendedor por ID
     suspend fun getEmprendedorById(id: String): Emprendedor {
