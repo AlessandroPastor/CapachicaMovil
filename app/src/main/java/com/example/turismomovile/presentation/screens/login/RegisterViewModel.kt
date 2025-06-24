@@ -35,28 +35,28 @@ class RegisterViewModel(
                 if (result.isSuccess) {
                     val response = result.getOrNull()!!
 
-                    // Si el registro es exitoso, guardar los datos del usuario y el token
-                    Log.d("RegisterViewModel", "Registro exitoso: ${response.data.user.username}")
-
-                    // Guardar el usuario en el SessionManager
-                    sessionManager.saveUser(
-                        User(
-                            id = response.data.user.id.toString(),
-                            name = response.data.user.username,
-                            email = response.data.user.email,
-                            token = response.data.token
+                    response.data?.let { data ->
+                        // Si el registro es exitoso, guardar los datos del usuario y el token
+                        Log.d("RegisterViewModel", "Registro exitoso: ${data.user.username}")
+                        sessionManager.saveUser(
+                            User(
+                                id = data.user.id.toString(),
+                                name = data.user.username,
+                                email = data.user.email,
+                                token = data.token
+                            )
                         )
-                    )
-
-                    // Sincronizar el token con el SessionManager
-                    sessionManager.saveAuthToken(response.data.token)
+                        // Sincronizar el token con el SessionManager
+                        sessionManager.saveAuthToken(data.token)
+                    }
 
                     // Actualizar el estado a Success
                     _registerState.value = RegisterState.Success(response)
                 } else {
                     // Si no fue exitoso, mostrar el error
-                    Log.e("RegisterViewModel", "Error en registro: ${result.exceptionOrNull()?.message}")
-                    _registerState.value = RegisterState.Error("Error al registrar el usuario. Inténtalo de nuevo.")
+                    val errorMsg = result.exceptionOrNull()?.message ?: "Error al registrar el usuario. Inténtalo de nuevo."
+                    Log.e("RegisterViewModel", "Error en registro: $errorMsg")
+                    _registerState.value = RegisterState.Error(errorMsg)
                 }
 
             } catch (e: IOException) {

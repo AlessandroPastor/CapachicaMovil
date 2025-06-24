@@ -89,6 +89,7 @@ import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.RocketLaunch
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.draw.alpha
@@ -104,6 +105,9 @@ import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.StatCard
+import com.example.turismomovile.presentation.components.TourismMessageType
+import com.example.turismomovile.presentation.components.TourismWhatsAppButton
+import com.example.turismomovile.presentation.components.WhatsAppFloatingButton
 import kotlinx.coroutines.launch
 import kotlin.math.absoluteValue
 
@@ -132,6 +136,17 @@ fun WelcomeScreen(
     var isSearchVisible by remember { mutableStateOf(false) }
     val sliderImages by viewModel.sliderImagesState.collectAsState()
 
+    // Estado para controlar la visibilidad del botón WhatsApp
+    val showWhatsAppButton = remember { mutableStateOf(false) }
+
+// Detectar si el usuario ha hecho scroll para mostrar/ocultar el botón
+    val isScrolled = remember {
+        derivedStateOf {
+            lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 100
+        }
+    }
+
+
     // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
         // Mostrar notificación de bienvenida después de que cargue el layout
@@ -145,7 +160,12 @@ fun WelcomeScreen(
         // Activar animaciones de contenido con timing escalonado
         delay(1000)
         visible.value = true
+
+        // Mostrar botón WhatsApp después de las animaciones principales
+        delay(1500)
+        showWhatsAppButton.value = true // Cambiado a .value
     }
+
 
     // Manejo de notificaciones del estado
     LaunchedEffect(state.notification) {
@@ -328,8 +348,46 @@ fun WelcomeScreen(
                                 }
                             }
                         }
-
                     }
+                    Spacer(modifier = Modifier.height(48.dp))  // Aquí aumentamos la altura para dar más espacio al botón
+
+// BOTÓN FLOTANTE DE WHATSAPP
+                    // BOTÓN FLOTANTE DE WHATSAPP
+                    TourismWhatsAppButton(
+                        phoneNumber = "+51963378995", // Cambia por tu número
+                        tourType = TourismMessageType.GENERAL,
+                        isVisible = showWhatsAppButton.value, // Acceso correcto al valor con .value
+                        showLabel = isScrolled.value, // Acceso correcto al valor de isScrolled
+                        modifier = Modifier
+                            .align(Alignment.CenterStart)
+                            .padding(
+                                end = 16.dp,
+                                bottom = 32.dp // Ajusta este valor para mover más el botón hacia abajo
+                            )
+                    )
+
+
+
+                    // OPCIONAL: Botón adicional para servicios específicos
+// (Descomenta si quieres múltiples botones)
+                    /*
+                    AnimatedVisibility(
+                        visible = showWhatsAppButton.value && isScrolled.value,  // Acceder a los valores con .value
+                        enter = slideInVertically { it } + fadeIn(),
+                        exit = slideOutVertically { it } + fadeOut(),
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(
+                                end = 16.dp,
+                                bottom = 96.dp // Espacio para el botón principal
+                            )
+                    ) {
+                        WhatsAppFloatingButton(
+                            phoneNumber = "+51963378995",
+                            message = "Hola, quiero reservar un tour",
+                            modifier = Modifier.size(48.dp) // Más pequeño
+                        )
+                    }*/
                 }
             }
         }

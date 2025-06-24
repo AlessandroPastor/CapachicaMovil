@@ -50,7 +50,7 @@ data class LoginInput(
 data class RegisterResponse(
     val status: Boolean,
     val message: String,
-    val data: ResponseData
+    val data: ResponseData? = null   // allow absence of 'data'
 )
 
 @Serializable

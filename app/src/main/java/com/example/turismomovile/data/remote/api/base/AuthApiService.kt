@@ -53,21 +53,24 @@ class AuthApiService(
 
         val registerResponse = response.body<RegisterResponse>()
 
-        // Verificar si ya existe un token antes de guardarlo
-        sessionManager.getAuthToken()?.let {
-            if (it != registerResponse.data.token) {
-                sessionManager.saveAuthToken(registerResponse.data.token)
-            }
-        } ?: sessionManager.saveAuthToken(registerResponse.data.token)
+        // Solo guardar datos de sesión si la respuesta contiene información
+        registerResponse.data?.let { data ->
+            // Verificar si ya existe un token antes de guardarlo
+            sessionManager.getAuthToken()?.let {
+                if (it != data.token) {
+                    sessionManager.saveAuthToken(data.token)
+                }
+            } ?: sessionManager.saveAuthToken(data.token)
 
-        sessionManager.saveUser(
-            User(
-                id = registerResponse.data.user.id.toString(),
-                name = registerResponse.data.user.username,
-                email = registerResponse.data.user.email,
-                token = registerResponse.data.token
+            sessionManager.saveUser(
+                User(
+                    id = data.user.id.toString(),
+                    name = data.user.username,
+                    email = data.user.email,
+                    token = data.token
+                )
             )
-        )
+        }
 
         return registerResponse
     }

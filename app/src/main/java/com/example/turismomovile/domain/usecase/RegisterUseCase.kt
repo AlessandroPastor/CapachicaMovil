@@ -18,21 +18,23 @@ class RegisterUseCase(
 
             // Realiza el registro llamando al servicio
             val response = authApiService.register(registerInput)
+            if (response.status && response.data != null) {
+                // Acceder a los datos de la respuesta: `data.user` y `data.token`
+                val userResponse = response.data.user
+                val token = response.data.token
 
-            // Acceder a los datos de la respuesta: `data.user` y `data.token`
-            val userResponse = response.data.user
-            val token = response.data.token
+                // Convertir UserResponse a User
+                val user = userResponse.toUser(token)
 
-            // Convertir UserResponse a User
-            val user = userResponse.toUser(token)  // Pasamos el token a la función
+                // Guardar el token en la sesión
+                sessionManager.saveAuthToken(token)
 
-            // Guardar el token en la sesión (puedes guardar más detalles si lo necesitas)
-            sessionManager.saveAuthToken(token)
-
-            // Guardar el usuario en la sesión
-            sessionManager.saveUser(user)  // Guardar el usuario convertido
-
-            Result.success(response)  // Devuelve la respuesta exitosa
+                // Guardar el usuario en la sesión
+                sessionManager.saveUser(user)
+                Result.success(response)
+            } else {
+                Result.failure(Exception(response.message))
+            }
         } catch (e: Exception) {
             // Captura cualquier excepción y devuelve un resultado con el error
             Result.failure(e)

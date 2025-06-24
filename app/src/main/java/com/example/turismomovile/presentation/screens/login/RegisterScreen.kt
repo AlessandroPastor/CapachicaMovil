@@ -106,20 +106,21 @@ fun RegisterScreen(
 
     LaunchedEffect(registerState) {
         if (registerState is RegisterViewModel.RegisterState.Success) {
-            val userResponse = (registerState as RegisterViewModel.RegisterState.Success).response.data.user
-            val user = User(
-                id = userResponse.id.toString(),
-                email = userResponse.email,
-                name = userResponse.username,
-                token = (registerState as RegisterViewModel.RegisterState.Success).response.data.token
-            )
+            (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
+                val userResponse = data.user
+                val user = User(
+                    id = userResponse.id.toString(),
+                    email = userResponse.email,
+                    name = userResponse.username,
+                    token = data.token
+                )
 
-            // Llamamos al éxito del registro
-            onRegisterSuccess(user)
-
-            // Redirigir al HOME después de crear la cuenta
-            navController.navigate(Routes.HOME) {
-                popUpTo("login") { inclusive = true }
+                // Llamamos al éxito del registro
+                onRegisterSuccess(user)
+                    // Redirigir al HOME después de crear la cuenta
+                navController.navigate(Routes.HOME) {
+                    popUpTo("login") { inclusive = true }
+                }
             }
         }
     }
@@ -434,14 +435,16 @@ fun RegisterScreen(
 
     LaunchedEffect(registerState) {
         if (registerState is RegisterViewModel.RegisterState.Success) {
-            val userResponse = (registerState as RegisterViewModel.RegisterState.Success).response.data.user
-            val user = User(
-                id = userResponse.id.toString(),
-                email = userResponse.email,
-                name = userResponse.username,
-                token = (registerState as RegisterViewModel.RegisterState.Success).response.data.token
-            )
-            onRegisterSuccess(user)
+            (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
+                val userResponse = data.user
+                val user = User(
+                    id = userResponse.id.toString(),
+                    email = userResponse.email,
+                    name = userResponse.username,
+                    token = data.token
+                )
+                onRegisterSuccess(user)
+            }
         }
     }
 }
