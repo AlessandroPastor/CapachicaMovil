@@ -96,7 +96,6 @@ fun LoginScreen(
 
     val validateEmail = {
         isEmailError = !email.contains("") || !email.contains("")
-        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
         !isEmailError
     }
 
@@ -219,7 +218,7 @@ fun LoginScreen(
                             label = "Usuario",
                             leadingIcon = {
                                 Icon(
-                                    Icons.Default.Email,
+                                    Icons.Default.Person,
                                     contentDescription = null,
                                     tint = if (isDarkMode)
                                         MaterialTheme.colorScheme.onSurface
@@ -401,3 +400,5 @@ fun LoginScreen(
         }
     }
 }
+
+

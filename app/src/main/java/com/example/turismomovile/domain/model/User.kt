@@ -7,14 +7,14 @@ data class User(
     val id: String,
     val email: String,
     val name: String,
-    val lastName: String,
+    val last_name: String,
     val fullName: String?,
     val username: String,
     val code: String?,
     val imagenUrl: String?,
     val roles: List<String>,
     val permissions: List<String>,
-    val createdAt: String?,
+    val created_at: String?,
     val token: String,
 )
 
@@ -26,14 +26,14 @@ fun UserResponse.toUser(token: String): User? {
         id = this.id.toString(),
         email = decoded?.email ?: this.email,
         name = it,
-        lastName = decoded?.lastName ?: "",
+            last_name = decoded?.last_name ?: "",
         fullName = decoded?.fullName,
         username = decoded?.username ?: this.username,
         code = decoded?.code,
         imagenUrl = decoded?.imagenUrl,
         roles = decoded?.roles ?: emptyList(),
         permissions = decoded?.permissions ?: emptyList(),
-        createdAt = decoded?.createdAt,
+            created_at = decoded?.created_at,
         token = token
     )
     }

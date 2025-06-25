@@ -30,14 +30,14 @@ class AuthRepositoryImpl(
                         id = u.id.toString(),
                         email = u.email ?: "",
                         name = u.name,
-                        lastName = u.lastName,
-                        fullName = "${u.name} ${u.lastName}",
+                        last_name = u.last_name,
+                        fullName = "${u.name} ${u.last_name}",
                         username = u.username,
                         code = null,
                         imagenUrl = null,
                         roles = loginResponse.data.roles,
                         permissions = loginResponse.data.permissions,
-                        createdAt = null,
+                        created_at = null,
                         token = loginResponse.data.token
                     )
                 }

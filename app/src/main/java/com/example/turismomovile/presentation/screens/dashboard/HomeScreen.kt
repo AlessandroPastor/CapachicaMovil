@@ -1,5 +1,7 @@
 package com.example.turismomovile.presentation.screens.dashboard
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
@@ -25,6 +27,7 @@ import com.example.turismomovile.presentation.components.AppDrawer
 import com.example.turismomovile.presentation.screens.viewmodel.LocalHomeViewModel
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(

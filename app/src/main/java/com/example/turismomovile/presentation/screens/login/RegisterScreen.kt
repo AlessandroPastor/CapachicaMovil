@@ -116,14 +116,14 @@ fun RegisterScreen(
                     id = userResponse.id.toString(),
                     email = userResponse.email,
                     name = userResponse.username,
-                    lastName = decoded?.lastName ?: "",
+                    last_name = decoded?.last_name ?: "",
                     fullName = decoded?.fullName,
                     username = decoded?.username ?: userResponse.username,
                     code = decoded?.code,
                     imagenUrl = decoded?.imagenUrl,
                     roles = decoded?.roles ?: emptyList(),
                     permissions = decoded?.permissions ?: emptyList(),
-                    createdAt = decoded?.createdAt,
+                    created_at = decoded?.created_at,
                     token = data.token
                 )
 
@@ -459,14 +459,14 @@ fun RegisterScreen(
                     id = userResponse.id.toString(),
                     email = userResponse.email,
                     name = userResponse.username,
-                    lastName = decoded?.lastName ?: "",
+                    last_name = decoded?.last_name ?: "",
                     fullName = decoded?.fullName,
                     username = decoded?.username ?: userResponse.username,
                     code = decoded?.code,
                     imagenUrl = decoded?.imagenUrl,
                     roles = decoded?.roles ?: emptyList(),
                     permissions = decoded?.permissions ?: emptyList(),
-                    createdAt = decoded?.createdAt,
+                    created_at = decoded?.created_at,
                     token = data.token
                 )
 

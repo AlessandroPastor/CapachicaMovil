@@ -32,14 +32,14 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs[KEY_USER_ID] = user.id
             prefs[KEY_USER_EMAIL] = user.email
             prefs[KEY_USER_NAME] = user.name ?: ""
-            prefs[KEY_USER_LAST_NAME] = user.lastName
+            prefs[KEY_USER_LAST_NAME] = user.last_name
             prefs[KEY_USER_FULL_NAME] = user.fullName ?: ""
             prefs[KEY_USER_USERNAME] = user.username
             prefs[KEY_USER_CODE] = user.code ?: ""
             prefs[KEY_USER_IMAGEN_URL] = user.imagenUrl ?: ""
             prefs[KEY_USER_ROLES] = user.roles.joinToString(",")
             prefs[KEY_USER_PERMISSIONS] = user.permissions.joinToString(",")
-            prefs[KEY_USER_CREATED_AT] = user.createdAt ?: ""
+            prefs[KEY_USER_CREATED_AT] = user.created_at ?: ""
             prefs[KEY_ACCESS_TOKEN] = user.token
             prefs[KEY_IS_LOGGED_IN] = true
         }
@@ -60,21 +60,21 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
         val imagenUrl = prefs[KEY_USER_IMAGEN_URL]
         val roles = prefs[KEY_USER_ROLES]?.split(",") ?: emptyList()
         val permissions = prefs[KEY_USER_PERMISSIONS]?.split(",") ?: emptyList()
-        val createdAt = prefs[KEY_USER_CREATED_AT]
+        val created_at = prefs[KEY_USER_CREATED_AT]
 
         return name?.let {
             User(
                 id = id,
                 email = email,
                 name = it,
-                lastName = lastName,
+                last_name = lastName,
                 fullName = fullName,
                 username = username,
                 code = code,
                 imagenUrl = imagenUrl,
                 roles = roles,
                 permissions = permissions,
-                createdAt = createdAt,
+                created_at = created_at,
                 token = token
             )
         }

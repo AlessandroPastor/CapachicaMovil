@@ -2,7 +2,7 @@ package com.example.turismomovile.data.remote.api
 
 object ApiConstants {
     //const val BASE_URL = "http://172.22.8.17:8000"
-    const val BASE_URL = "http://192.168.100.16:8000" //PC PASTOR
+    const val BASE_URL = "http://192.168.1.6:8000" //PC PASTOR
     //const val BASE_URL = "http://192.172.2.101:8000" //PC JAMIL
     //const val BASE_URL = "http://192.177.1.13:8000" //PC CRISTIAN
 
@@ -47,7 +47,7 @@ object ApiConstants {
         const val MUNICIPALIDAD_PUT = "$BASE_URL/municipalidad/{id}"
         const val MUNICIPALIDAD_DELETE = "$BASE_URL/municipalidad/{id}"
 
-
+        // MUNICIPALIDAD DESCRIPTION
         const val MUNICIPALIDAD_DESCRIPTION = "$BASE_URL/municipalidad/descripcion"
         const val MUNICIPALIDAD_DESCRIPTIONBYID = "$BASE_URL/municipalidad/descripcion/{id}"
         const val MUNICIPALIDAD_DESCRIPTIONBYID_PUT = "$BASE_URL/municipalidad/descripcion/{id}"

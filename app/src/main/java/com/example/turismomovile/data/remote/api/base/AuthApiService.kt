@@ -43,14 +43,14 @@ class AuthApiService(
                 id = loginResponse.data.username.id.toString(),
                 email = it,
                 name = loginResponse.data.username.username,
-                lastName = decoded?.lastName ?: "",
+                last_name = decoded?.last_name ?: "",
                 fullName = decoded?.fullName,
                 username = decoded?.username ?: loginResponse.data.username.username,
                 code = decoded?.code,
                 imagenUrl = decoded?.imagenUrl,
                 roles = decoded?.roles ?: emptyList(),
                 permissions = decoded?.permissions ?: emptyList(),
-                createdAt = decoded?.createdAt,
+                created_at = decoded?.created_at,
                 token = token
             )
 
@@ -87,14 +87,14 @@ class AuthApiService(
                 id = data.user.id.toString(),
                 email = data.user.email,
                 name = data.user.username,
-                lastName = decoded?.lastName ?: "",
+                last_name = decoded?.last_name ?: "",
                 fullName = decoded?.fullName,
                 username = decoded?.username ?: data.user.username,
                 code = decoded?.code,
                 imagenUrl = decoded?.imagenUrl,
                 roles = decoded?.roles ?: emptyList(),
                 permissions = decoded?.permissions ?: emptyList(),
-                createdAt = decoded?.createdAt,
+                created_at = decoded?.created_at,
                 token = token
             )
 

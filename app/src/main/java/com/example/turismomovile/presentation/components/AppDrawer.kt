@@ -3,10 +3,14 @@ package com.example.turismomovile.presentation.components
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
@@ -16,23 +20,30 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.zIndex
 import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.MenuItem
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.model.hasProfileImage
+import com.example.turismomovile.domain.model.isAdmin
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
-@RequiresApi(Build.VERSION_CODES.O)
+// COMPONENTE PRINCIPAL DEL DRAWER REFACTORIZADO
 @Composable
 fun AppDrawer(
     drawerState: DrawerState,
@@ -49,150 +60,296 @@ fun AppDrawer(
     val coroutineScope = rememberCoroutineScope()
     val isLoading by remember { derivedStateOf { uiState.isLoading } }
 
-    ModalDrawerSheet(
-        modifier = Modifier.fillMaxHeight(),
-        drawerContainerColor = MaterialTheme.colorScheme.surface
+    // 🎨 Contenedor principal con zIndex para evitar superposiciones
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .zIndex(1f)
     ) {
-        uiState.user?.let { user ->
-            UserProfileSection(user)
+        // Drawer Sheet Principal
+        ModalDrawerSheet(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(320.dp), // Ancho fijo para consistencia
+            drawerContainerColor = MaterialTheme.colorScheme.surface,
+            drawerTonalElevation = 4.dp,
+            windowInsets = DrawerDefaults.windowInsets
+        ) {
+            // Estructura del Drawer
+            DrawerContent(
+                user = uiState.user,
+                menuItems = menuItems,
+                expandedMenuItems = expandedMenuItems,
+                currentRoute = currentRoute,
+                scrollState = scrollState,
+                onMenuItemExpand = onMenuItemExpand,
+                onNavigate = { route ->
+                    coroutineScope.launch {
+                        viewModel.setLoading(true)
+                        drawerState.close()
+                        onNavigate(route)
+                        delay(800)
+                        viewModel.setLoading(false)
+                    }
+                },
+                onLogout = {
+                    viewModel.logout()
+                    onLogout()
+                }
+            )
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        // 🔄 Overlay de carga con zIndex alto
+        if (isLoading) {
+            LoadingOverlay(
+                modifier = Modifier.zIndex(10f)
+            )
+        }
+    }
+}
 
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(scrollState)
-                .padding(horizontal = 8.dp)
-        ) {
-            menuItems.forEach { menuItem ->
-                MenuItemComponent(
-                    menuItem = menuItem,
-                    currentRoute = currentRoute,
-                    isExpanded = expandedMenuItems.contains(menuItem.id),
-                    onExpandToggle = { onMenuItemExpand(menuItem.id) },
-                    onNavigate = { route ->
-                        coroutineScope.launch {
-                            viewModel.setLoading(true) // 🔹 Activa el Loader antes de navegar
-                            drawerState.close()
-                            onNavigate(route)
-                            delay(1000) // 🔹 Simulación de carga
-                            viewModel.setLoading(false) // 🔹 Desactiva el Loader después de navegar
-                        }
-                    }
+@Composable
+private fun DrawerContent(
+    user: User?,
+    menuItems: List<MenuItem>,
+    expandedMenuItems: Set<String>,
+    currentRoute: String?,
+    scrollState: ScrollState,
+    onMenuItemExpand: (String) -> Unit,
+    onNavigate: (String) -> Unit,
+    onLogout: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.surface)
+    ) {
+        // 👤 Sección de perfil de usuario
+        user?.let { currentUser ->
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                shape = RoundedCornerShape(16.dp),
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shadowElevation = 2.dp
+            ) {
+                CompactUserProfileSection(
+                    user = currentUser,
+                    modifier = Modifier.padding(16.dp)
                 )
             }
         }
 
-        Divider(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
-        )
-
-        LogoutButton(viewModel, onLogout)
-
+        // 📏 Espaciador
         Spacer(modifier = Modifier.height(8.dp))
-    }
-    if (isLoading) {
-        LoadingOverlay()
+
+        // 🧭 Sección de navegación
+        Surface(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth(),
+            color = Color.Transparent
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(horizontal = 8.dp)
+            ) {
+                menuItems.forEach { menuItem ->
+                    MenuItemComponent(
+                        menuItem = menuItem,
+                        currentRoute = currentRoute,
+                        isExpanded = expandedMenuItems.contains(menuItem.id),
+                        onExpandToggle = { onMenuItemExpand(menuItem.id) },
+                        onNavigate = onNavigate,
+                        level = 0
+                    )
+                }
+
+                // Espaciador final para mejor scroll
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // 🔴 Sección de logout
+        Surface(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp),
+            color = MaterialTheme.colorScheme.surface,
+            shadowElevation = 8.dp
+        ) {
+            Column {
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                )
+
+                LogoutButton(
+                    onLogout = onLogout,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+            }
+        }
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun UserProfileSection(user: User) {
-    BoxWithConstraints(
-        modifier = Modifier
+private fun CompactUserProfileSection(
+    user: User,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
-            .padding(vertical = 16.dp)
+            .padding(8.dp), // Menos padding para un diseño más compacto
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
     ) {
-        val isLandscape = maxWidth > 600.dp
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+        // 🖼️ Avatar más pequeño y simplificado
+        Box(
+            modifier = Modifier.size(48.dp), // Avatar más pequeño
+            contentAlignment = Alignment.Center
         ) {
-            // Imagen del usuario si existe
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.05f)
+                            )
+                        ),
+                        shape = CircleShape
+                    )
+            )
+
+            // Mostrar imagen de perfil o ícono por defecto
             if (user.hasProfileImage()) {
                 AsyncImage(
                     model = user.imagenUrl,
                     contentDescription = "Foto del perfil",
                     modifier = Modifier
-                        .size(72.dp)
+                        .size(44.dp) // Avatar más pequeño
                         .clip(CircleShape)
-                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                        .border(
+                            width = 2.dp,
+                            color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f),
+                            shape = CircleShape
+                        ),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Surface(
-                    modifier = Modifier.size(72.dp),
+                    modifier = Modifier.size(44.dp),
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    border = BorderStroke(
+                        width = 2.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.6f)
+                    )
                 ) {
                     Icon(
                         imageVector = Icons.Default.Person,
                         contentDescription = "Perfil",
-                        modifier = Modifier.padding(16.dp).size(32.dp),
+                        modifier = Modifier
+                            .padding(8.dp) // Menos padding dentro del ícono
+                            .fillMaxSize(),
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
+        }
 
-            Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.width(8.dp)) // Menos espacio entre avatar y nombre
 
-            // Información principal del usuario
-            user.fullName?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            } ?: Text(
-                text = "${user.name.orEmpty()} ${user.lastName}",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+        // 📝 Información compacta del usuario
+        CompactUserInfo(user = user)
+    }
+}
 
+@Composable
+private fun CompactUserInfo(user: User) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 8.dp), // Menos espacio a la derecha
+        verticalArrangement = Arrangement.spacedBy(2.dp) // Menos espacio entre los elementos
+    ) {
+        // 1. Nombre completo
+        val displayName = user.fullName ?: "${user.name.orEmpty()} ${user.last_name}".trim()
+        if (displayName.isNotBlank()) {
             Text(
-                text = user.username,
+                text = displayName,
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.fillMaxWidth()
             )
+        }
 
+        // 2. Email
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text(
                 text = user.email,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f) // El texto ocupa el resto del espacio
             )
+        }
 
-            Spacer(modifier = Modifier.height(8.dp))
+        // 3. Roles (si existen) - versión compacta
+        if (user.roles.isNotEmpty()) {
+            CompactUserRolesSection(roles = user.roles)
+        }
+    }
+}
 
-            // Roles del usuario
-            if (user.roles.isNotEmpty()) {
+@Composable
+private fun CompactUserRolesSection(roles: List<String>) {
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(2.dp), // Menos espacio entre los roles
+        contentPadding = PaddingValues(horizontal = 4.dp)
+    ) {
+        items(roles.take(2)) { role ->
+            Surface(
+                shape = RoundedCornerShape(6.dp),
+                color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f)
+            ) {
                 Text(
-                    text = "Roles: ${user.roles.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
+                    text = role.take(6).uppercase(),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                 )
             }
-
-            // Fecha de creación formateada de manera segura
-            user.createdAt?.takeIf { it.isNotBlank() }?.let { dateString ->
-                val formattedDate = runCatching {
-                    ZonedDateTime.parse(dateString)
-                        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
-                }.getOrNull()
-
-                formattedDate?.let {
+        }
+        if (roles.size > 2) {
+            item {
+                Surface(
+                    shape = RoundedCornerShape(6.dp),
+                    color = MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                ) {
                     Text(
-                        text = "Registrado: $it",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.secondary
+                        text = "+${roles.size - 2}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
                     )
                 }
             }
@@ -202,43 +359,96 @@ private fun UserProfileSection(user: User) {
 
 
 
+// 📅 FECHA DE REGISTRO
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-private fun LogoutButton(viewModel: HomeViewModel, onLogout: () -> Unit) {
-    Surface(
-        modifier = Modifier
-            .padding(horizontal = 12.dp, vertical = 8.dp)
-            .fillMaxWidth()
-            .clip(MaterialTheme.shapes.medium)
-            .clickable {
-                viewModel.logout()  // 🔹 Limpia la sesión
-                onLogout()  // 🔹 Realiza cualquier acción adicional después de cerrar sesión
-            }
-            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.08f)),
-    ) {
-        ListItem(
-            headlineContent = {
-                Text(
-                    "Cerrar Sesión",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium
-                )
-            },
-            leadingContent = {
-                Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = MaterialTheme.colorScheme.error)
-            }
-        )
+private fun UserRegistrationDate(dateString: String) {
+    val formattedDate = remember(dateString) {
+        runCatching {
+            ZonedDateTime.parse(dateString)
+                .format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "ES")))
+        }.getOrNull()
+    }
+
+    formattedDate?.let { date ->
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarToday,
+                contentDescription = "Fecha",
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(12.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text(
+                text = "Registrado: $date",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.outline
+            )
+        }
     }
 }
 
-
-
-
+// 🔴 BOTÓN DE LOGOUT MEJORADO
 @Composable
-fun LoadingOverlay() {
-    var dotCount by remember { mutableStateOf(0) }
+private fun LogoutButton(
+    onLogout: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier
+            .padding(horizontal = 12.dp)
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onLogout() },
+        color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.1f),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
+        ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ExitToApp,
+                contentDescription = "Cerrar sesión",
+                tint = MaterialTheme.colorScheme.error,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(
+                text = "Cerrar Sesión",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
 
-    // Animación de puntos en "Cargando..."
+// 🔄 OVERLAY DE CARGA MEJORADO
+@Composable
+fun LoadingOverlay(
+    modifier: Modifier = Modifier
+) {
+    var dotCount by remember { mutableStateOf(0) }
+    val infiniteTransition = rememberInfiniteTransition(label = "loadingTransition")
+
+    // Animación de rotación
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000, easing = LinearEasing)
+        ),
+        label = "rotationAnimation"
+    )
+
+    // Animación de puntos
     LaunchedEffect(Unit) {
         while (true) {
             dotCount = (dotCount + 1) % 4
@@ -247,40 +457,61 @@ fun LoadingOverlay() {
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.6f)) // 🔹 Fondo semitransparente
-            .blur(7.dp), // 🔹 Agrega un desenfoque suave
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f))
+            .blur(4.dp),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
+        Surface(
             modifier = Modifier
-                .padding(24.dp)
-                .background(
-                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
-                    shape = MaterialTheme.shapes.medium
-                )
-                .padding(32.dp) // 🔹 Espaciado interno para que se vea mejor
+                .padding(32.dp)
+                .shadow(
+                    elevation = 8.dp,
+                    shape = RoundedCornerShape(20.dp)
+                ),
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(20.dp)
         ) {
-            CircularProgressIndicator(
-                modifier = Modifier.size(64.dp), // 🔹 Loader más grande
-                color = MaterialTheme.colorScheme.primary,
-                strokeWidth = 6.dp
-            )
-            Spacer(modifier = Modifier.height(16.dp))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(40.dp)
+            ) {
+                // Indicador de progreso animado
+                Box(
+                    modifier = Modifier.size(80.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.primary,
+                        strokeWidth = 6.dp
+                    )
+                }
 
-            // Texto con animación de puntos "Cargando..."
-            Text(
-                text = "Cargando" + ".".repeat(dotCount),
-                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Texto animado
+                Text(
+                    text = "Cargando" + ".".repeat(dotCount),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = "Por favor espera...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
 
-
+// 📱 COMPONENTE DE ITEM DE MENÚ MEJORADO
 @Composable
 private fun MenuItemComponent(
     menuItem: MenuItem,
@@ -291,62 +522,94 @@ private fun MenuItemComponent(
     level: Int = 0
 ) {
     val isSelected = currentRoute == menuItem.link
+
+    // Animaciones
     val backgroundColor by animateColorAsState(
         targetValue = when {
-            isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f)
-            isExpanded -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+            isSelected -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+            isExpanded -> MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
             else -> Color.Transparent
         },
+        animationSpec = tween(200),
         label = "backgroundColorAnimation"
+    )
+
+    val contentColor by animateColorAsState(
+        targetValue = if (isSelected) {
+            MaterialTheme.colorScheme.primary
+        } else {
+            MaterialTheme.colorScheme.onSurface
+        },
+        animationSpec = tween(200),
+        label = "contentColorAnimation"
     )
 
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = (level * 12).dp, top = 2.dp, bottom = 2.dp, end = 4.dp)
-            .clickable(
-                interactionSource = remember { MutableInteractionSource() },
-                indication = null
-            ) {
-                if (!menuItem.children.isNullOrEmpty()) {
-                    onExpandToggle()
-                } else if (menuItem.link.isNotEmpty() && menuItem.type == "basic") {
-                    onNavigate(menuItem.link)
-                }
-            },
+            .padding(
+                start = (level * 16).dp,
+                top = 2.dp,
+                bottom = 2.dp,
+                end = 8.dp
+            ),
         color = backgroundColor,
-        tonalElevation = if (isSelected) 1.dp else 0.dp
-    )
-    {
+        shape = RoundedCornerShape(12.dp),
+        tonalElevation = if (isSelected) 2.dp else 0.dp
+    ) {
         Column {
-            ListItem(
-                headlineContent = {
-                    menuItem.title?.let {
-                        Text(
-                            text = it,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
-                            ),
-                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.9f)
-                        )
-                    }
-                },
-                leadingContent = {
-                    menuItem.title?.let {
-                        getIconForTitle(it)?.let { icon ->
+            // Item principal
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(
+                        interactionSource = remember { MutableInteractionSource() },
+                        indication = LocalIndication.current
+                    ) {
+                        if (!menuItem.children.isNullOrEmpty()) {
+                            onExpandToggle()
+                        } else if (menuItem.link.isNotEmpty() && menuItem.type == "basic") {
+                            onNavigate(menuItem.link)
+                        }
+                    },
+                color = Color.Transparent
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // Icono
+                    menuItem.title?.let { title ->
+                        getIconForTitle(title)?.let { icon ->
                             Icon(
                                 imageVector = icon,
-                                contentDescription = menuItem.title,
-                                modifier = Modifier.size(22.dp),
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                contentDescription = title,
+                                modifier = Modifier.size(24.dp),
+                                tint = contentColor
                             )
                         }
                     }
-                },
-                trailingContent = if (!menuItem.children.isNullOrEmpty()) {
-                    {
+
+                    Spacer(modifier = Modifier.width(16.dp))
+
+                    // Texto
+                    Text(
+                        text = menuItem.title.orEmpty(),
+                        modifier = Modifier.weight(1f),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = if (isSelected) FontWeight.SemiBold else FontWeight.Normal
+                        ),
+                        color = contentColor.copy(alpha = 0.9f)
+                    )
+
+                    // Indicador de expansión
+                    if (!menuItem.children.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.width(8.dp))
                         Icon(
                             imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                             contentDescription = if (isExpanded) "Colapsar" else "Expandir",
@@ -354,16 +617,27 @@ private fun MenuItemComponent(
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                } else null
-            )
+                }
+            }
 
-            if (isExpanded && !menuItem.children.isNullOrEmpty()) {
+            // Subitems con animación
+            if (!menuItem.children.isNullOrEmpty()) {
                 AnimatedVisibility(
                     visible = isExpanded,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
+                    enter = expandVertically(
+                        animationSpec = tween(300, easing = EaseOutCubic)
+                    ) + fadeIn(
+                        animationSpec = tween(300, delayMillis = 100)
+                    ),
+                    exit = shrinkVertically(
+                        animationSpec = tween(200, easing = EaseInCubic)
+                    ) + fadeOut(
+                        animationSpec = tween(200)
+                    )
                 ) {
-                    Column {
+                    Column(
+                        modifier = Modifier.padding(start = 8.dp, top = 4.dp)
+                    ) {
                         menuItem.children.forEach { childItem ->
                             MenuItemComponent(
                                 menuItem = childItem,
@@ -381,10 +655,7 @@ private fun MenuItemComponent(
     }
 }
 
-
-
-
-
+// 🎨 FUNCIÓN PARA OBTENER ICONOS (Mantenida igual)
 private fun getIconForTitle(title: String): ImageVector {
     return when (title.lowercase()) {
         // Secciones principales
@@ -423,7 +694,7 @@ private fun getIconForTitle(title: String): ImageVector {
         "dinámica contable" -> Icons.Default.Sync
 
         // Clientes
-        "clientes y proveedores"->Icons.Default.Groups
+        "clientes y proveedores" -> Icons.Default.Groups
         "tipo de documento" -> Icons.Default.Badge
         "tipo de entidad" -> Icons.Default.CorporateFare
         "servicios" -> Icons.Default.RoomService
