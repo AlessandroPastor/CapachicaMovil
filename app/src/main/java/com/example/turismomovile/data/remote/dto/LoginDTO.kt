@@ -9,14 +9,13 @@ import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import android.util.Base64
 
-
+// LOGIN
 @Serializable
 data class LoginDTO(
     val username: String,
     val password: String,
 )
 @Serializable
-// Respuesta completa del login
 data class LoginResponse(
     val success: Boolean,
     val message: String,
@@ -40,9 +39,10 @@ data class UserDatas(
     val username: String,
     val email: String?
 )
+// FIN LOGIN
 
 
-
+// REGISTER
 @Serializable
 data class LoginInput(
     val name: String,
@@ -72,6 +72,9 @@ data class UserResponse(
     val username: String,
     val email: String
 )
+// FIN REGISTER
+
+
 
 @Serializable
 data class MenuItem(
