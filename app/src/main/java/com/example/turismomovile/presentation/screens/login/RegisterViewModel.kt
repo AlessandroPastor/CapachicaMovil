@@ -8,6 +8,7 @@ import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.usecase.RegisterUseCase
 import com.example.turismomovile.data.remote.dto.LoginInput
 import com.example.turismomovile.data.remote.dto.RegisterResponse
+import com.example.turismomovile.data.remote.dto.decodeToken
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -24,61 +25,62 @@ class RegisterViewModel(
 
     fun register(registerInput: LoginInput) {
         viewModelScope.launch {
-            // Cambiar el estado a Loading mientras el proceso de registro está en curso
             _registerState.value = RegisterState.Loading
 
             try {
-                // Llamamos al UseCase para registrar al usuario
                 val result = registerUseCase(registerInput)
 
-                // Verificar si el resultado fue exitoso
                 if (result.isSuccess) {
                     val response = result.getOrNull()!!
 
                     response.data?.let { data ->
-                        // Si el registro es exitoso, guardar los datos del usuario y el token
-                        Log.d("RegisterViewModel", "Registro exitoso: ${data.user.username}")
-                        sessionManager.saveUser(
-                            User(
-                                id = data.user.id.toString(),
-                                name = data.user.username,
-                                email = data.user.email,
-                                token = data.token
-                            )
+                        val decoded = decodeToken(data.token)
+
+                        val user = User(
+                            id = data.user.id.toString(),
+                            email = data.user.email,
+                            name = data.user.username,
+                            lastName = decoded?.lastName ?: "",
+                            fullName = decoded?.fullName,
+                            username = decoded?.username ?: data.user.username,
+                            code = decoded?.code,
+                            imagenUrl = decoded?.imagenUrl,
+                            roles = decoded?.roles ?: emptyList(),
+                            permissions = decoded?.permissions ?: emptyList(),
+                            createdAt = decoded?.createdAt,
+                            token = data.token
                         )
-                        // Sincronizar el token con el SessionManager
+
+                        sessionManager.saveUser(user)
                         sessionManager.saveAuthToken(data.token)
+
+                        Log.d("RegisterViewModel", "✅ Registro exitoso para: ${user.username}")
                     }
 
-                    // Actualizar el estado a Success
                     _registerState.value = RegisterState.Success(response)
                 } else {
-                    // Si no fue exitoso, mostrar el error
                     val errorMsg = result.exceptionOrNull()?.message ?: "Error al registrar el usuario. Inténtalo de nuevo."
-                    Log.e("RegisterViewModel", "Error en registro: $errorMsg")
+                    Log.e("RegisterViewModel", "❌ Error en registro: $errorMsg")
                     _registerState.value = RegisterState.Error(errorMsg)
                 }
 
             } catch (e: IOException) {
-                // Error de red
-                Log.e("RegisterViewModel", "IOException: ${e.message}")
+                Log.e("RegisterViewModel", "🌐 IOException: ${e.message}")
                 _registerState.value = RegisterState.Error("Problema de conexión. Verifica tu red.")
             } catch (e: TimeoutException) {
-                // Error de tiempo de espera
-                Log.e("RegisterViewModel", "TimeoutException: ${e.message}")
+                Log.e("RegisterViewModel", "⏳ TimeoutException: ${e.message}")
                 _registerState.value = RegisterState.Error("La solicitud ha tardado demasiado. Intenta más tarde.")
             } catch (e: Exception) {
-                // Manejo de excepción en caso de fallo inesperado
-                Log.e("RegisterViewModel", "Exception en el proceso de registro: ${e.message}")
+                Log.e("RegisterViewModel", "🔥 Exception inesperada: ${e.message}")
                 _registerState.value = RegisterState.Error("Error inesperado. Por favor, intenta más tarde.")
             }
         }
     }
+
     fun resetState() {
         _registerState.value = RegisterState.Initial
     }
 
-    // Estados posibles del registro
     sealed class RegisterState {
         object Initial : RegisterState()
         object Loading : RegisterState()

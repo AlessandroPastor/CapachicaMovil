@@ -19,12 +19,16 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.MenuItem
 import com.example.turismomovile.domain.model.User
+import com.example.turismomovile.domain.model.hasProfileImage
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun AppDrawer(
@@ -99,65 +103,90 @@ private fun UserProfileSection(user: User) {
             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f))
             .padding(vertical = 16.dp)
     ) {
-        val isLandscape = maxWidth > 600.dp // 🔹 Si el ancho es mayor a 600dp, consideramos "modo horizontal"
+        val isLandscape = maxWidth > 600.dp
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 24.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = if (isLandscape) Arrangement.SpaceBetween else Arrangement.Start
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 🔹 Si es modo horizontal, la info del usuario va primero
-            if (isLandscape) {
-                Column(
-                    horizontalAlignment = Alignment.Start
+            // Imagen del usuario si existe
+            if (user.hasProfileImage()) {
+                AsyncImage(
+                    model = user.imagenUrl,
+                    contentDescription = "Foto del perfil",
+                    modifier = Modifier
+                        .size(72.dp)
+                        .clip(CircleShape)
+                        .border(2.dp, MaterialTheme.colorScheme.primary, CircleShape)
+                )
+            } else {
+                Surface(
+                    modifier = Modifier.size(72.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
                 ) {
-                    Text(
-                        text = user.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = user.email,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    Icon(
+                        imageVector = Icons.Default.Person,
+                        contentDescription = "Perfil",
+                        modifier = Modifier.padding(16.dp).size(32.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            // 🔥 Icono del usuario con ajuste adaptativo
-            Surface(
-                modifier = Modifier.size(72.dp),
-                shape = CircleShape,
-                color = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                border = BorderStroke(2.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f))
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = "Perfil",
-                    modifier = Modifier.padding(16.dp).size(32.dp),
-                    tint = MaterialTheme.colorScheme.primary
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Información principal del usuario
+            user.fullName?.let {
+                Text(
+                    text = it,
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            } ?: Text(
+                text = "${user.name.orEmpty()} ${user.lastName}",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = user.username,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = user.email,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Roles del usuario
+            if (user.roles.isNotEmpty()) {
+                Text(
+                    text = "Roles: ${user.roles.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
                 )
             }
 
-            // 🔹 Si es vertical, la info del usuario se coloca debajo del icono
-            if (!isLandscape) {
-                Spacer(modifier = Modifier.width(16.dp))
-                Column {
-                    Text(
-                        text = user.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    Text(
-                        text = user.email,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+            // Fecha de creación formateada
+            user.createdAt?.let { dateString ->
+                val formattedDate = ZonedDateTime.parse(dateString)
+                    .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+
+                Text(
+                    text = "Registrado: $formattedDate",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
             }
         }
     }

@@ -30,7 +30,9 @@ class RegisterUseCase(
                 sessionManager.saveAuthToken(token)
 
                 // Guardar el usuario en la sesión
-                sessionManager.saveUser(user)
+                if (user != null) {
+                    sessionManager.saveUser(user)
+                }
                 Result.success(response)
             } else {
                 Result.failure(Exception(response.message))

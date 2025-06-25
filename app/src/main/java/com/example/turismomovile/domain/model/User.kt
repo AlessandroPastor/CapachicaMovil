@@ -1,11 +1,12 @@
 package com.example.turismomovile.domain.model
 
 import com.example.turismomovile.data.remote.dto.UserResponse
+import com.example.turismomovile.data.remote.dto.decodeToken
 
 data class User(
     val id: String,
     val email: String,
-    val name: String?,
+    val name: String,
     val lastName: String,
     val fullName: String?,
     val username: String,
@@ -18,21 +19,24 @@ data class User(
 )
 
 // Función para convertir UserResponse a User
-fun UserResponse.toUser(token: String): User {
-    return User(
+fun UserResponse.toUser(token: String): User? {
+    val decoded = decodeToken(token)
+    return decoded?.name?.let {
+        User(
         id = this.id.toString(),
-        email = this.email,
-        name = this.name,
-        lastName = this.lastName,
-        fullName = this.fullName,
-        username = this.username,
-        code = this.code,
-        imagenUrl = this.imagenUrl,
-        roles = this.roles ?: emptyList(),
-        permissions = this.permissions ?: emptyList(),
-        createdAt = this.createdAt,
+        email = decoded?.email ?: this.email,
+        name = it,
+        lastName = decoded?.lastName ?: "",
+        fullName = decoded?.fullName,
+        username = decoded?.username ?: this.username,
+        code = decoded?.code,
+        imagenUrl = decoded?.imagenUrl,
+        roles = decoded?.roles ?: emptyList(),
+        permissions = decoded?.permissions ?: emptyList(),
+        createdAt = decoded?.createdAt,
         token = token
     )
+    }
 }
 
 // Funciones de extensión para el modelo User
@@ -50,10 +54,6 @@ fun User.isAdmin(): Boolean {
 
 fun User.isUser(): Boolean {
     return hasRole("usuario")
-}
-
-fun User.getInitials(): String {
-    return "${name.firstOrNull()?.uppercaseChar() ?: ''}${lastName.firstOrNull()?.uppercaseChar() ?: ''}"
 }
 
 fun User.hasProfileImage(): Boolean {

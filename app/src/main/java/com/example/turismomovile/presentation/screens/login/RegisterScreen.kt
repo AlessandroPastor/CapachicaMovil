@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.LoginInput
+import com.example.turismomovile.data.remote.dto.decodeToken
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppTextFieldWithKeyboard
@@ -107,23 +108,36 @@ fun RegisterScreen(
     LaunchedEffect(registerState) {
         if (registerState is RegisterViewModel.RegisterState.Success) {
             (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
+                val decoded = decodeToken(data.token) // 🔹 Decodificar JWT para obtener más información
+
                 val userResponse = data.user
+
                 val user = User(
                     id = userResponse.id.toString(),
                     email = userResponse.email,
                     name = userResponse.username,
+                    lastName = decoded?.lastName ?: "",
+                    fullName = decoded?.fullName,
+                    username = decoded?.username ?: userResponse.username,
+                    code = decoded?.code,
+                    imagenUrl = decoded?.imagenUrl,
+                    roles = decoded?.roles ?: emptyList(),
+                    permissions = decoded?.permissions ?: emptyList(),
+                    createdAt = decoded?.createdAt,
                     token = data.token
                 )
 
-                // Llamamos al éxito del registro
+                // 🔹 Guardar usuario en sesión local
                 onRegisterSuccess(user)
-                    // Redirigir al HOME después de crear la cuenta
+
+                // 🔹 Navegar a HOME limpiando el stack de login y register
                 navController.navigate(Routes.HOME) {
-                    popUpTo("login") { inclusive = true }
+                    popUpTo(Routes.LOGIN) { inclusive = true }
                 }
             }
         }
     }
+
     // Animación de Glow para el logo
     val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 1f,
@@ -436,15 +450,30 @@ fun RegisterScreen(
     LaunchedEffect(registerState) {
         if (registerState is RegisterViewModel.RegisterState.Success) {
             (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
+                val decoded = decodeToken(data.token)  // 🔹 Decodificar JWT para más información
+
                 val userResponse = data.user
+
+                // 🔹 Construcción completa del modelo User con toda la información relevante
                 val user = User(
                     id = userResponse.id.toString(),
                     email = userResponse.email,
                     name = userResponse.username,
+                    lastName = decoded?.lastName ?: "",
+                    fullName = decoded?.fullName,
+                    username = decoded?.username ?: userResponse.username,
+                    code = decoded?.code,
+                    imagenUrl = decoded?.imagenUrl,
+                    roles = decoded?.roles ?: emptyList(),
+                    permissions = decoded?.permissions ?: emptyList(),
+                    createdAt = decoded?.createdAt,
                     token = data.token
                 )
+
+                // 🔹 Llamar a función externa para guardar el usuario correctamente
                 onRegisterSuccess(user)
             }
         }
     }
+
 }
