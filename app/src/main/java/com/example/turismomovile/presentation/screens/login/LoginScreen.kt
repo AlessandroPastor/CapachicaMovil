@@ -33,6 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.clip
+import android.util.Patterns
+
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
@@ -94,6 +96,7 @@ fun LoginScreen(
 
     val validateEmail = {
         isEmailError = !email.contains("") || !email.contains("")
+        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
         !isEmailError
     }
 
