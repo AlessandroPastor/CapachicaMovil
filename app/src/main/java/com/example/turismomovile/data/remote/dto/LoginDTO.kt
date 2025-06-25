@@ -1,67 +1,70 @@
 package com.example.turismomovile.data.remote.dto
 
-import android.service.autofill.UserData
 import com.example.turismomovile.domain.model.User
 import com.google.gson.annotations.SerializedName
-import io.ktor.util.decodeBase64String
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import android.util.Base64
+import kotlinx.serialization.SerialName
+
+
 @Serializable
 data class LoginDTO(
     val username: String,
     val password: String,
 )
-
+@Serializable
 // Respuesta completa del login
 data class LoginResponse(
-    @SerializedName("success")
+    @SerialName("success")
     val success: Boolean,
 
-    @SerializedName("message")
+    @SerialName("message")
     val message: String,
 
-    @SerializedName("data")
+    @SerialName("data")
     val data: LoginData
 )
 
+@Serializable
 // Datos dentro de la respuesta
 data class LoginData(
-    @SerializedName("token")
+    @SerialName("token")
     val token: String,
 
-    @SerializedName("expires_at")
+    @SerialName("expires_at")
     val expiresAt: String,
 
-    @SerializedName("username")
+    @SerialName("username")
     val username: UserDatas,
 
-    @SerializedName("roles")
+    @SerialName("roles")
     val roles: List<String>,
 
-    @SerializedName("permissions")
+    @SerialName("permissions")
     val permissions: List<String>
 )
+@Serializable
 data class UserDatas(
-    @SerializedName("id")
+    @SerialName("id")
     val id: Int,
 
-    @SerializedName("name")
+    @SerialName("name")
     val name: String,
 
-    @SerializedName("last_name")
+    @SerialName("last_name")
     val lastName: String,
 
-    @SerializedName("username")
+    @SerialName("username")
     val username: String,
 
-    @SerializedName("email")
+    @SerialName("email")
     val email: String?
 )
+
 
 
 @Serializable
