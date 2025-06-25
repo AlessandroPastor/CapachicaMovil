@@ -132,6 +132,7 @@ fun NavigationGraph(
         // Login
         composable(Routes.LOGIN) {
             LoginScreen(
+                navController = navController,
                 onLoginSuccess = { user ->
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
