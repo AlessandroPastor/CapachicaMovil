@@ -1,5 +1,7 @@
 package com.example.turismomovile.presentation.components
 
+import android.os.Build
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -30,6 +32,7 @@ import org.koin.compose.koinInject
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AppDrawer(
     drawerState: DrawerState,
@@ -95,6 +98,7 @@ fun AppDrawer(
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun UserProfileSection(user: User) {
     BoxWithConstraints(
@@ -177,16 +181,20 @@ private fun UserProfileSection(user: User) {
                 )
             }
 
-            // Fecha de creación formateada
-            user.createdAt?.let { dateString ->
-                val formattedDate = ZonedDateTime.parse(dateString)
-                    .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+            // Fecha de creación formateada de manera segura
+            user.createdAt?.takeIf { it.isNotBlank() }?.let { dateString ->
+                val formattedDate = runCatching {
+                    ZonedDateTime.parse(dateString)
+                        .format(DateTimeFormatter.ofPattern("dd MMM yyyy"))
+                }.getOrNull()
 
-                Text(
-                    text = "Registrado: $formattedDate",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.secondary
-                )
+                formattedDate?.let {
+                    Text(
+                        text = "Registrado: $it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
             }
         }
     }
