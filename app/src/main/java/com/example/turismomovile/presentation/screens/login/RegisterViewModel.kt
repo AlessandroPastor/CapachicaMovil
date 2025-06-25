@@ -1,6 +1,5 @@
 package com.example.turismomovile.presentation.screens.login
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turismomovile.data.local.SessionManager
@@ -54,24 +53,24 @@ class RegisterViewModel(
                         sessionManager.saveUser(user)
                         sessionManager.saveAuthToken(data.token)
 
-                        Log.d("RegisterViewModel", "✅ Registro exitoso para: ${user.username}")
+                        println("✅ Registro exitoso para: ${user.username}")
                     }
 
                     _registerState.value = RegisterState.Success(response)
                 } else {
                     val errorMsg = result.exceptionOrNull()?.message ?: "Error al registrar el usuario. Inténtalo de nuevo."
-                    Log.e("RegisterViewModel", "❌ Error en registro: $errorMsg")
+                    println("❌ Error en registro: $errorMsg")
                     _registerState.value = RegisterState.Error(errorMsg)
                 }
 
             } catch (e: IOException) {
-                Log.e("RegisterViewModel", "🌐 IOException: ${e.message}")
+                println("🌐 IOException: ${e.message}")
                 _registerState.value = RegisterState.Error("Problema de conexión. Verifica tu red.")
             } catch (e: TimeoutException) {
-                Log.e("RegisterViewModel", "⏳ TimeoutException: ${e.message}")
+                println("⏳ TimeoutException: ${e.message}")
                 _registerState.value = RegisterState.Error("La solicitud ha tardado demasiado. Intenta más tarde.")
             } catch (e: Exception) {
-                Log.e("RegisterViewModel", "🔥 Exception inesperada: ${e.message}")
+                println("🔥 Exception inesperada: ${e.message}")
                 _registerState.value = RegisterState.Error("Error inesperado. Por favor, intenta más tarde.")
             }
         }

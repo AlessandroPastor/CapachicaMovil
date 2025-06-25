@@ -18,7 +18,7 @@ class RegisterUseCase(
 
             // Realiza el registro llamando al servicio
             val response = authApiService.register(registerInput)
-            if (response.status && response.data != null) {
+            if (response.status == true && response.data != null) {
                 // Acceder a los datos de la respuesta: `data.user` y `data.token`
                 val userResponse = response.data.user
                 val token = response.data.token

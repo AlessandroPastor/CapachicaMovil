@@ -8,7 +8,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
 import android.util.Base64
-import kotlinx.serialization.SerialName
 
 
 @Serializable
@@ -19,49 +18,26 @@ data class LoginDTO(
 @Serializable
 // Respuesta completa del login
 data class LoginResponse(
-    @SerialName("success")
     val success: Boolean,
-
-    @SerialName("message")
     val message: String,
-
-    @SerialName("data")
     val data: LoginData
 )
 
 @Serializable
-// Datos dentro de la respuesta
 data class LoginData(
-    @SerialName("token")
     val token: String,
-
-    @SerialName("expires_at")
     val expiresAt: String,
-
-    @SerialName("username")
     val username: UserDatas,
-
-    @SerialName("roles")
     val roles: List<String>,
-
-    @SerialName("permissions")
     val permissions: List<String>
 )
+
 @Serializable
 data class UserDatas(
-    @SerialName("id")
     val id: Int,
-
-    @SerialName("name")
     val name: String,
-
-    @SerialName("last_name")
     val lastName: String,
-
-    @SerialName("username")
     val username: String,
-
-    @SerialName("email")
     val email: String?
 )
 
@@ -78,7 +54,7 @@ data class LoginInput(
 
 @Serializable
 data class RegisterResponse(
-    val status: Boolean,
+    val status: Boolean? = null,
     val message: String,
     val data: ResponseData? = null   // allow absence of 'data'
 )
