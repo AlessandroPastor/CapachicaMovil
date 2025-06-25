@@ -19,22 +19,16 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.clip
-import android.util.Patterns
-
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.geometry.Offset
@@ -51,52 +45,41 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import com.example.turismomovile.R
-import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppCard
 import com.example.turismomovile.presentation.components.AppTextFieldWithKeyboard
-import com.example.turismomovile.presentation.components.FloatingBubblesBackground
 import com.example.turismomovile.presentation.components.RotatingBackgroundLoginScreen
 import com.example.turismomovile.presentation.components.ShowLoadingDialog
-import com.example.turismomovile.presentation.theme.AppColors
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
-import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
-import org.koin.androidx.compose.koinViewModel
 
 
 @Composable
 fun LoginScreen(
     onLoginSuccess: (User) -> Unit,
-    navController: NavHostController,
-    onBackPressed: () -> Unit,
-    viewModel: LoginViewModel = koinViewModel(),
-    sessionManager: SessionManager = koinInject()
+    onBackPressed: () -> Unit, // Agregar el parámetro onBackPressed
+// Agregar el NavController
+    viewModel: LoginViewModel = koinInject()
 ) {
-
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val loginState by viewModel.loginState.collectAsStateWithLifecycle()
-    LaunchedEffect(Unit) {
-        viewModel.resetState()
-    }
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isEmailError by remember { mutableStateOf(false) }
     var isPasswordError by remember { mutableStateOf(false) }
+
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
     val validateEmail = {
         isEmailError = !email.contains("") || !email.contains("")
-        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
         !isEmailError
     }
 
@@ -111,7 +94,6 @@ fun LoginScreen(
             viewModel.login(email, password)
         }
     }
-    val scrollState = rememberScrollState()
 
     // Animación de Glow para el logo
     val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
@@ -125,6 +107,7 @@ fun LoginScreen(
 
     // Animación de entrada del logo
     val logoVisibility = remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         delay(500)
         logoVisibility.value = true
@@ -135,57 +118,72 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    if (isDarkMode)
-                        MaterialTheme.colorScheme.background
-                    else
-                        Color.Transparent
-                )
+                    Brush.linearGradient(
+                        colors = if (isDarkMode) {
+                            listOf(Color(0xFF14213D), Color(0xFF264653))
+                        } else {
+                            listOf(Color(0xFF0072FF), Color(0xFF00C6FF))
+                        },
+                        start = Offset(0f, 0f),
+                        end = Offset(800f, 1200f)
+                    )
+                ),
+            contentAlignment = Alignment.Center
         ) {
-            // Fondo animado con elementos de turismo
-            FloatingBubblesBackground(
-                modifier = Modifier.fillMaxSize()
+            //Rotación de imágenes de fondo
+            val images = listOf(
+                R.drawable.fondo,
+                R.drawable.fondo,
+                R.drawable.fondo2,
             )
+            RotatingBackgroundLoginScreen(images = images)
 
-            // Contenido principal centrado perfectamente
-            Box(
+            // Contenido principal (Formulario)
+            Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(24.dp)
+                    .wrapContentSize(Alignment.Center),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                AnimatedVisibility(
+                    visible = logoVisibility.value,
+                    enter = fadeIn(animationSpec = tween(1000)) + slideInVertically { -150 }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(150.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.1f))
+                            .shadow(10.dp, shape = CircleShape)
+                    ) {
+                        Image(
+                            painter = painterResource(R.drawable.capachica), // Cambia a tu logo
+                            contentDescription = "Logo de Capachica Tours",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .matchParentSize()
+                                .clip(CircleShape)
+                                .graphicsLayer(
+                                    scaleX = glowAnim,
+                                    scaleY = glowAnim
+                                )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(20.dp))
+
                 Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .shadow(
-                            elevation = 16.dp,
-                            shape = RoundedCornerShape(28.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.3f),
-                            spotColor = Color.Black.copy(alpha = 0.3f)
-                        ),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkMode)
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                        else
-                            Color.White.copy(alpha = 0.92f)
-                    ),
-                    border = BorderStroke(
-                        width = 1.5.dp,
-                        color = if (isDarkMode)
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                        else
-                            Color.Black.copy(alpha = 0.15f)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(20.dp), // Bordes redondeados
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.94f)),
+                    elevation = CardDefaults.cardElevation(12.dp) // Añadir una ligera sombra para resaltar el card
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(scrollState) // ⬅️ Habilita scroll vertical
-                            .padding(32.dp),
+                        modifier = Modifier.padding(28.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                        verticalArrangement = Arrangement.spacedBy(16.dp) // Aumentar el espacio entre los elementos
                     ) {
                         // Título animado
                         AnimatedVisibility(
@@ -196,20 +194,17 @@ fun LoginScreen(
                                 text = "Turismo Capachica",
                                 style = MaterialTheme.typography.headlineLarge.copy(
                                     fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 26.sp,
-                                    letterSpacing = 1.2.sp
+                                    fontSize = 24.sp, // Aumenta el tamaño del título para mayor visibilidad
+                                    letterSpacing = 1.sp, // Espaciado entre letras para un estilo más moderno
+                                    color = MaterialTheme.colorScheme.primary
                                 ),
-                                color = if (isDarkMode)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.Center
                             )
                         }
 
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
-                        // Campos de entrada
+                        // Campos de entrada (Usuario y Contraseña)
                         AppTextFieldWithKeyboard(
                             value = email,
                             onValueChange = {
@@ -217,16 +212,7 @@ fun LoginScreen(
                                 if (isEmailError) validateEmail()
                             },
                             label = "Usuario",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Email,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
+                            leadingIcon = { Icon(Icons.Default.Email, contentDescription = null) },
                             isError = isEmailError,
                             errorMessage = if (isEmailError) "Usuario Desconocido" else null,
                             keyboardOptions = KeyboardOptions(
@@ -236,7 +222,7 @@ fun LoginScreen(
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
                             ),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.padding(bottom = 12.dp)
                         )
 
                         AppTextFieldWithKeyboard(
@@ -250,11 +236,7 @@ fun LoginScreen(
                                 IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
                                     Icon(
                                         if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                                        tint = if (isDarkMode)
-                                            MaterialTheme.colorScheme.onSurface
-                                        else
-                                            MaterialTheme.colorScheme.primary
+                                        contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña"
                                     )
                                 }
                             },
@@ -268,10 +250,8 @@ fun LoginScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = { validateAndLogin() }
                             ),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.padding(bottom = 18.dp)
                         )
-
-                        Spacer(modifier = Modifier.height(8.dp))
 
                         // Botón de inicio de sesión
                         AppButton(
@@ -289,7 +269,7 @@ fun LoginScreen(
                             ) {
                                 Text(
                                     text = (loginState as? LoginState.Error)?.message ?: "",
-                                    modifier = Modifier.padding(16.dp),
+                                    modifier = Modifier.padding(14.dp),
                                     color = MaterialTheme.colorScheme.error,
                                     style = MaterialTheme.typography.bodyMedium,
                                     textAlign = TextAlign.Center
@@ -297,95 +277,43 @@ fun LoginScreen(
                             }
                         }
 
-                        // Fila de botones: "¿Olvidaste tu contraseña?" y "¿Crear cuenta?"
+                        // Fila de botones para "Olvidaste la contraseña" y "Crear cuenta"
                         Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp), // Espaciado horizontal
+                            horizontalArrangement = Arrangement.spacedBy(16.dp) // Espaciado entre los botones
                         ) {
-                            OutlinedButton(
-                                onClick = {},
-                                modifier = Modifier.weight(1f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isDarkMode)
-                                        MaterialTheme.colorScheme.outline
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            )  {
-                                Text(
-                                    text = "¿Olvidaste tu contraseña?",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 8.sp, // Puedes ajustarlo según necesidad
-                                )
+                            TextButton(onClick = { /* Implementar recuperación */ }) {
+                                Text("¿Olvidaste tu contraseña?", color = MaterialTheme.colorScheme.primary)
                             }
 
-
-                            OutlinedButton(
-                                onClick = { navController.navigate(Routes.REGISTER) },
-                                modifier = Modifier.weight(1f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isDarkMode)
-                                        MaterialTheme.colorScheme.outline
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                Text(
-                                    text = "¿Crear cuenta?",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 8.sp,
-                                )
+                            TextButton(onClick = { /* Implementar creación de cuenta */ }) {
+                                Text("¿Crear cuenta?", color = MaterialTheme.colorScheme.primary)
                             }
                         }
 
                         // Botón de regreso a la pantalla principal
-                        OutlinedButton(
-                            onClick = { onBackPressed() },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isDarkMode)
-                                    MaterialTheme.colorScheme.outline
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            ),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = if (isDarkMode)
-                                    MaterialTheme.colorScheme.onSurface
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            )
+                        TextButton(
+                            onClick = { onBackPressed() }, // Acción de regreso
+                            modifier = Modifier.padding(vertical = 12.dp) // Espaciado vertical
                         ) {
                             Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Volver",
-                                modifier = Modifier.size(20.dp)
+                                imageVector = Icons.Default.ArrowBack, // Ícono de regreso
+                                contentDescription = "Volver a la página principal",
+                                modifier = Modifier.size(20.dp), // Tamaño del ícono
+                                tint = MaterialTheme.colorScheme.primary // Color del ícono
                             )
-                            Spacer(modifier = Modifier.width(8.dp))
+                            Spacer(modifier = Modifier.width(8.dp)) // Espaciado entre el ícono y el texto
                             Text(
                                 text = "Volver a la página principal",
-                                fontWeight = FontWeight.SemiBold
+                                color = MaterialTheme.colorScheme.primary, // Color del texto
+                                style = MaterialTheme.typography.bodyMedium // Estilo del texto
                             )
                         }
                     }
                 }
+
             }
 
             // Mostrar el indicador de carga encima del formulario
