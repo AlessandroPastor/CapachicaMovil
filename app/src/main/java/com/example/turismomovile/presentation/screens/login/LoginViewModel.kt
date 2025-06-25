@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import java.io.IOException
 import java.util.concurrent.TimeoutException
 
+
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
     private val sessionManager: SessionManager
@@ -21,44 +22,59 @@ class LoginViewModel(
 
     fun login(username: String, password: String) {
         viewModelScope.launch {
+            // Depuración: Inicia el proceso de login
             println("Login attempt: Username = $username, Password = $password")
 
             _loginState.value = LoginState.Loading
 
+            // Depuración: Llamada al UseCase
             try {
-                val result = loginUseCase(username, password)
+                println("Attempting to authenticate user...")
 
-                if (result.isSuccess) {
-                    val user = result.getOrNull()!!
+                loginUseCase(username, password)
+                    .onSuccess { user ->
+                        // Depuración: Exito en login
+                        println("Login success: User ID = ${user.id}, Name = ${user.name}, Email = ${user.email}")
 
-                    try {
-                        sessionManager.saveUser(user)
-                    } catch (e: Exception) {
-                        println("Error saving user session: ${e.message}")
-                        _loginState.value = LoginState.Error("No se pudo guardar la sesión. Intenta nuevamente.")
-                        return@launch
+                        // Guardar usuario en el SessionManager
+                        try {
+                            sessionManager.saveUser(user)
+                            println("User data saved in sessionManager. User ID: ${user.id}")
+                        } catch (e: Exception) {
+                            println("Error saving user session: ${e.message}")
+                            _loginState.value = LoginState.Error("No se pudo guardar la sesión. Intenta nuevamente.")
+                            return@onSuccess
+                        }
+
+                        // Actualizar el estado a Success
+                        _loginState.value = LoginState.Success(user)
+
                     }
+                    .onFailure { error ->
+                        // Depuración: Error al intentar el login
+                        println("Login failed: ${error.message}")
 
-                    println("Login success: User ID = ${user.id}, Name = ${user.name}, Email = ${user.email}")
-                    _loginState.value = LoginState.Success(user)
+                        // Manejo de errores con mensajes específicos
+                        val errorMessage = when {
+                            error.message?.contains("Correo o contraseña incorrectos") == true ->
+                                "Correo o contraseña incorrectos. Inténtalo nuevamente."
+                            else -> "No se pudo iniciar sesión. Verifica tu conexión e intenta de nuevo."
+                        }
 
-                } else {
-                    val errorMessage = "Correo o contraseña incorrectos. Inténtalo nuevamente."
-                    _loginState.value = LoginState.Error(errorMessage)
-                }
-            } catch (e: IOException) {
-                println("IOException: ${e.message}")
-                _loginState.value = LoginState.Error("Problema de conexión. Verifica tu red.")
-            } catch (e: TimeoutException) {
-                println("TimeoutException: ${e.message}")
-                _loginState.value = LoginState.Error("La solicitud ha tardado demasiado. Intenta más tarde.")
+                        // Depuración: Error procesado
+                        println("Error message processed: $errorMessage")
+
+                        _loginState.value = LoginState.Error(errorMessage)
+                    }
             } catch (e: Exception) {
-                println("Exception during login: ${e.message}")
-                _loginState.value = LoginState.Error("Error inesperado. Por favor, intenta más tarde.")
+                // Depuración: Excepción no controlada
+                println("Exception during login process: ${e.message}")
+
+                _loginState.value =
+                    LoginState.Error("Error inesperado. Por favor, intenta más tarde.")
             }
         }
     }
-
     fun resetState() {
         _loginState.value = LoginState.Initial
     }
@@ -70,3 +86,5 @@ sealed class LoginState {
     data class Success(val user: User) : LoginState()
     data class Error(val message: String) : LoginState()
 }
+
+

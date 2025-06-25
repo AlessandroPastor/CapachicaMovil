@@ -23,8 +23,24 @@ class AuthRepositoryImpl(
             if (loginResponse.data.token.isNotEmpty()) {
                 authApiService.updateAuthToken(loginResponse.data.token)
 
-                val user = decodeToken(loginResponse.data.token)
-                    ?: return Result.failure(Exception("No se pudo extraer el usuario del token"))
+                val decodedUser = decodeToken(loginResponse.data.token)
+                val user = decodedUser ?: run {
+                    val u = loginResponse.data.username
+                    User(
+                        id = u.id.toString(),
+                        email = u.email ?: "",
+                        name = u.name,
+                        lastName = u.lastName,
+                        fullName = "${u.name} ${u.lastName}",
+                        username = u.username,
+                        code = null,
+                        imagenUrl = null,
+                        roles = loginResponse.data.roles,
+                        permissions = loginResponse.data.permissions,
+                        createdAt = null,
+                        token = loginResponse.data.token
+                    )
+                }
 
                 sessionManager.saveUser(user)
 
