@@ -60,6 +60,7 @@ import com.example.turismomovile.presentation.components.InfoRow
 import org.koin.compose.koinInject
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -68,11 +69,13 @@ import com.example.turismomovile.presentation.components.BottomNavigationBar
 import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
+import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun PlacesScreen(
@@ -83,17 +86,52 @@ fun PlacesScreen(
     themeViewModel: ThemeViewModel = koinInject()
 ) {
     // Estados
+    val lazyListState = rememberLazyListState()
+    var isBottomNavVisible by remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Variables para detectar dirección del scroll
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
+
+    // Detectar dirección del scroll mejorado
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemScrollOffset
+        }.collect { currentScrollOffset ->
+            val scrollDifference = currentScrollOffset - previousScrollOffset
+
+            scrollDirection = when {
+                scrollDifference > 50 -> LangPageViewModel.ScrollDirection.DOWN // Scroll hacia abajo
+                scrollDifference < -50 -> LangPageViewModel.ScrollDirection.UP   // Scroll hacia arriba
+                else -> scrollDirection // Mantener dirección actual
+            }
+
+            // Controlar visibilidad basado en la dirección y posición
+            isBottomNavVisible = when {
+                lazyListState.firstVisibleItemIndex == 0 &&
+                        currentScrollOffset < 50 -> true // Mostrar en el top
+                scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
+                scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
+                else -> isBottomNavVisible // Mantener estado actual
+            }
+
+            previousScrollOffset = currentScrollOffset
+        }
+    }
+
+    // Estados para las notificaciones
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(false)
     val currentSection by viewModel.currentSection
     val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
 
+    // Variables para manejar favoritos y refresco
     val favoriteItems = remember { mutableSetOf<String>() }
     var selectedAsociacion by remember { mutableStateOf<Asociacion?>(null) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
-    val visible = remember { mutableStateOf(false) }
 
     // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
@@ -104,10 +142,6 @@ fun PlacesScreen(
             type = NotificationType.SUCCESS,
             duration = 3500
         )
-
-        // Activar animaciones de contenido con timing escalonado
-        delay(1000)
-        visible.value = true
     }
 
     // Manejo de notificaciones del estado
@@ -120,19 +154,7 @@ fun PlacesScreen(
             )
         }
     }
-
-    // Manejo de notificaciones para stateAso
-    LaunchedEffect(stateAso.notification) {
-        if (stateAso.notification.isVisible) {
-            notificationState.showNotification(
-                message = stateAso.notification.message,
-                type = stateAso.notification.type,
-                duration = stateAso.notification.duration
-            )
-        }
-    }
-
-    // Controlar el estado de refresh con feedback
+// Controlar el estado de refresh con feedback
     LaunchedEffect(stateAso.isLoading, stateAso.isLoading) {
         if (!stateAso.isLoading && !stateAso.isLoading && isRefreshing) {
             isRefreshing = false
@@ -143,7 +165,6 @@ fun PlacesScreen(
             )
         }
     }
-
     // UI
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
@@ -172,84 +193,107 @@ fun PlacesScreen(
                 bottomBar = {
                     BottomNavigationBar(
                         currentSection = currentSection,
-                        onSectionSelected = { section -> viewModel.onSectionSelected(section) },
-                        navController = navController
+                        onSectionSelected = { section ->
+                            viewModel.onSectionSelected(section)
+                        },
+                        navController = navController,
+                        isVisible = isBottomNavVisible // Controlando la visibilidad con el estado
                     )
                 }
             ) { innerPadding ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
-                        .padding(16.dp)
-                ) {
-                    when {
-                        stateAso.isLoading -> {
-                            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
-                        }
-
-                        stateAso.error != null -> {
-                            Text(
-                                text = "Error al cargar asociaciones: ${stateAso.error}",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodyMedium
-                            )
-                        }
-
-                        else -> {
-                            Column(modifier = Modifier.fillMaxSize()) {
-                                // Título de la lista de asociaciones
-                                Text(
-                                    text = "Asociaciones Disponibles",
-                                    style = MaterialTheme.typography.titleLarge.copy(
-                                        fontWeight = FontWeight.Bold
-                                    ),
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                // Usamos PullToRefreshComponent para envolver el contenido
+                PullToRefreshComponent(
+                    isRefreshing = isRefreshing,
+                    onRefresh = {
+                        isRefreshing = true
+                        coroutineScope.launch {
+                            try {
+                                viewModel.loadAsociaciones()
+                                viewModel.loadImgAsoaciones()
+                            } catch (e: Exception) {
+                                notificationState.showNotification(
+                                    message = "Error: ${e.message ?: "Intente nuevamente"}",
+                                    type = NotificationType.ERROR,
+                                    duration = 3000
                                 )
+                                isRefreshing = false
+                            }
+                        }
+                    }
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(innerPadding)
+                            .padding(16.dp)
+                    ) {
+                        when {
+                            stateAso.isLoading -> {
+                                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                            }
 
-                                LazyVerticalGrid(
-                                    columns = GridCells.Fixed(2),
-                                    verticalArrangement = Arrangement.spacedBy(16.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    items(stateAso.itemsAso) { asociacion ->
-                                        val isFavorite = favoriteItems.contains(asociacion.id)
-                                        AssociationCard(
-                                            asociacion = asociacion,
-                                            isFavorite = isFavorite,
-                                            onFavoriteClick = {
-                                                if (isFavorite) favoriteItems.remove(asociacion.id)
-                                                else asociacion.id?.let { favoriteItems.add(it) }
-                                            },
-                                            onClick = { selectedAsociacion = asociacion }
-                                        )
+                            stateAso.error != null -> {
+                                Text(
+                                    text = "Error al cargar asociaciones: ${stateAso.error}",
+                                    color = MaterialTheme.colorScheme.error,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+
+                            else -> {
+                                Column(modifier = Modifier.fillMaxSize()) {
+                                    // Título de la lista de asociaciones
+                                    Text(
+                                        text = "Asociaciones Disponibles",
+                                        style = MaterialTheme.typography.titleLarge.copy(
+                                            fontWeight = FontWeight.Bold
+                                        ),
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+
+                                    LazyVerticalGrid(
+                                        columns = GridCells.Fixed(2),
+                                        verticalArrangement = Arrangement.spacedBy(16.dp),
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        items(stateAso.itemsAso) { asociacion ->
+                                            val isFavorite = favoriteItems.contains(asociacion.id)
+                                            AssociationCard(
+                                                asociacion = asociacion,
+                                                isFavorite = isFavorite,
+                                                onFavoriteClick = {
+                                                    if (isFavorite) favoriteItems.remove(asociacion.id)
+                                                    else asociacion.id?.let { favoriteItems.add(it) }
+                                                },
+                                                onClick = { selectedAsociacion = asociacion }
+                                            )
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    selectedAsociacion?.let { asociacion ->
-                        AssociationDetailDialog(
-                            association = asociacion,
-                            isFavorite = favoriteItems.contains(asociacion.id),
-                            onFavoriteClick = {
-                                if (favoriteItems.contains(asociacion.id)) {
-                                    favoriteItems.remove(asociacion.id)
-                                } else {
-                                    asociacion.id?.let { favoriteItems.add(it) }
-                                }
-                            },
-                            onDismiss = { selectedAsociacion = null }
-                        )
+                        // Mostrar el detalle de la asociación si es seleccionado
+                        selectedAsociacion?.let { asociacion ->
+                            AssociationDetailDialog(
+                                association = asociacion,
+                                isFavorite = favoriteItems.contains(asociacion.id),
+                                onFavoriteClick = {
+                                    if (favoriteItems.contains(asociacion.id)) {
+                                        favoriteItems.remove(asociacion.id)
+                                    } else {
+                                        asociacion.id?.let { favoriteItems.add(it) }
+                                    }
+                                },
+                                onDismiss = { selectedAsociacion = null }
+                            )
+                        }
                     }
                 }
             }
         }
     }
 }
-
-
 
 
 

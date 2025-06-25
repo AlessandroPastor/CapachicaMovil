@@ -32,7 +32,7 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
         val email = prefs[KEY_USER_EMAIL] ?: "SinEmail"
         val name = prefs[KEY_USER_NAME] ?: "SinNombre"
         return User(
-            id = "",  // Asumiendo que el ID no se guarda, puedes ajustarlo
+            id = "",
             email = email,
             name = name,
             token = token

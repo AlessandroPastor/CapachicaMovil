@@ -130,7 +130,7 @@ private fun TopAppBarContent(
         // Title
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge.copy(
+            style = MaterialTheme.typography.titleSmall.copy(
                 fontWeight = FontWeight.Bold
             ),
             color = colors.onSurface,

@@ -65,6 +65,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -101,6 +102,7 @@ import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
 @Composable
@@ -111,7 +113,42 @@ fun ServiceScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
-    // Estados
+    // Estados para el LazyColumn y scroll
+    val lazyListState = rememberLazyListState()
+    var isBottomNavVisible by remember { mutableStateOf(true) }
+    val coroutineScope = rememberCoroutineScope()
+
+    // Variables para detectar dirección del scroll
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
+
+    // Detectar dirección del scroll mejorado
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemScrollOffset
+        }.collect { currentScrollOffset ->
+            val scrollDifference = currentScrollOffset - previousScrollOffset
+
+            scrollDirection = when {
+                scrollDifference > 50 -> LangPageViewModel.ScrollDirection.DOWN // Scroll hacia abajo
+                scrollDifference < -50 -> LangPageViewModel.ScrollDirection.UP   // Scroll hacia arriba
+                else -> scrollDirection // Mantener dirección actual
+            }
+
+            // Controlar visibilidad basado en la dirección y posición
+            isBottomNavVisible = when {
+                lazyListState.firstVisibleItemIndex == 0 &&
+                        currentScrollOffset < 50 -> true // Mostrar en el top
+                scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
+                scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
+                else -> isBottomNavVisible // Mantener estado actual
+            }
+
+            previousScrollOffset = currentScrollOffset
+        }
+    }
+
+    // Estados adicionales
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
         initialValue = false,
@@ -123,8 +160,17 @@ fun ServiceScreen(
     var isSearchVisible by remember { mutableStateOf(false) }
     val currentSection by viewModel.currentSection
     var selectedCategory by remember { mutableStateOf<String?>(null) }
-    val lazyListState = rememberLazyListState()
     var currentPage by remember { mutableStateOf(0) }
+
+    // Ocultar bottom nav cuando aparece el teclado o búsqueda
+    LaunchedEffect(isSearchVisible) {
+        if (isSearchVisible) {
+            isBottomNavVisible = false
+        } else {
+            delay(300) // Pequeño delay para suavizar la transición
+            isBottomNavVisible = true
+        }
+    }
 
     // Efecto para cargar inicialmente
     LaunchedEffect(Unit) {
@@ -177,7 +223,17 @@ fun ServiceScreen(
             isRefreshing = false
         }
     }
-
+// Controlar el estado de refresh con feedback
+    LaunchedEffect(stateService.isLoading, stateService.isLoading) {
+        if (!stateService.isLoading && !stateService.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
+            )
+        }
+    }
     // UI
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
@@ -195,7 +251,9 @@ fun ServiceScreen(
                                 category = selectedCategory
                             )
                         },
-                        onToggleSearch = { isSearchVisible = !isSearchVisible },
+                        onToggleSearch = {
+                            isSearchVisible = !isSearchVisible
+                        },
                         onCloseSearch = {
                             isSearchVisible = false
                             searchQuery = ""
@@ -215,7 +273,8 @@ fun ServiceScreen(
                         onSectionSelected = { section ->
                             viewModel.onSectionSelected(section)
                         },
-                        navController = navController
+                        navController = navController,
+                        isVisible = isBottomNavVisible // ✅ Aquí usas el estado
                     )
                 }
             ) { innerPadding ->
@@ -237,13 +296,27 @@ fun ServiceScreen(
                     }
 
                     LazyColumn(
-                        state = lazyListState,
+                        state = lazyListState, // ✅ Conectado al estado de scroll
                         modifier = Modifier.fillMaxSize()
                     ) {
                         item {
                             PullToRefreshComponent(
                                 isRefreshing = isRefreshing,
-                                onRefresh = { isRefreshing = true }
+                                onRefresh = {
+                                    isRefreshing = true
+                                    coroutineScope.launch {
+                                        try {
+                                            viewModel.loadService()
+                                        } catch (e: Exception) {
+                                            notificationState.showNotification(
+                                                message = "Error: ${e.message ?: "Intente nuevamente"}",
+                                                type = NotificationType.ERROR,
+                                                duration = 3000
+                                            )
+                                            isRefreshing = false
+                                        }
+                                    }
+                                }
                             ) {
                                 ServiceContent(
                                     services = stateService.items,
@@ -256,6 +329,8 @@ fun ServiceScreen(
                                             search = searchQuery.takeIf { it.isNotEmpty() },
                                             category = selectedCategory
                                         )
+                                        // Mostrar bottom nav al cambiar categoría
+                                        isBottomNavVisible = true
                                     },
                                     viewModel = viewModel,
                                     onExploreClick = onClickExplorer,
@@ -284,6 +359,8 @@ fun ServiceScreen(
         }
     }
 }
+
+
 
 @Composable
 fun ServiceContent(

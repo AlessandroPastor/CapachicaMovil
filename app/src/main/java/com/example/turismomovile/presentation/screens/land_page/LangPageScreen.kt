@@ -92,6 +92,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
@@ -120,6 +121,39 @@ fun WelcomeScreen(
     themeViewModel: ThemeViewModel = koinInject(),
     navController: NavController
 ) {
+    // Estados para el LazyColumn y scroll
+    val lazyListState = rememberLazyListState()
+    var isBottomNavVisible by remember { mutableStateOf(true) }
+
+    // Variables para detectar dirección del scroll
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
+
+    // Detectar dirección del scroll mejorado
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemScrollOffset
+        }.collect { currentScrollOffset ->
+            val scrollDifference = currentScrollOffset - previousScrollOffset
+
+            scrollDirection = when {
+                scrollDifference > 50 -> LangPageViewModel.ScrollDirection.DOWN // Scroll hacia abajo
+                scrollDifference < -50 -> LangPageViewModel.ScrollDirection.UP   // Scroll hacia arriba
+                else -> scrollDirection // Mantener dirección actual
+            }
+
+            // Controlar visibilidad basado en la dirección y posición
+            isBottomNavVisible = when {
+                lazyListState.firstVisibleItemIndex == 0 &&
+                        currentScrollOffset < 50 -> true // Mostrar en el top
+                scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
+                scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
+                else -> isBottomNavVisible // Mantener estado actual
+            }
+
+            previousScrollOffset = currentScrollOffset
+        }
+    }
     val visible = remember { mutableStateOf(false) }
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
@@ -127,7 +161,6 @@ fun WelcomeScreen(
         lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     )
     val currentSection by remember { mutableStateOf(LangPageViewModel.Sections.HOME) }
-    val lazyListState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
     val municipalidadDescriptionState by viewModel.municipalidadDescriptionState.collectAsState()
     val state by viewModel.state.collectAsStateWithLifecycle()
@@ -139,7 +172,6 @@ fun WelcomeScreen(
     // Estado para controlar la visibilidad del botón WhatsApp
     val showWhatsAppButton = remember { mutableStateOf(false) }
 
-// Detectar si el usuario ha hecho scroll para mostrar/ocultar el botón
     val isScrolled = remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 100
@@ -236,7 +268,8 @@ fun WelcomeScreen(
                                 }
                             }
                         },
-                        navController = navController
+                        navController = navController,
+                        isVisible = isBottomNavVisible // Controlando la visibilidad con el estado
                     )
                 }
             ) { innerPadding ->
@@ -351,7 +384,6 @@ fun WelcomeScreen(
                     }
                     Spacer(modifier = Modifier.height(48.dp))  // Aquí aumentamos la altura para dar más espacio al botón
 
-// BOTÓN FLOTANTE DE WHATSAPP
                     // BOTÓN FLOTANTE DE WHATSAPP
                     TourismWhatsAppButton(
                         phoneNumber = "+51963378995", // Cambia por tu número
@@ -366,11 +398,8 @@ fun WelcomeScreen(
                             )
                     )
 
-
-
                     // OPCIONAL: Botón adicional para servicios específicos
-// (Descomenta si quieres múltiples botones)
-                    /*
+                    // (Descomenta si quieres múltiples botones)
                     AnimatedVisibility(
                         visible = showWhatsAppButton.value && isScrolled.value,  // Acceder a los valores con .value
                         enter = slideInVertically { it } + fadeIn(),
@@ -387,7 +416,7 @@ fun WelcomeScreen(
                             message = "Hola, quiero reservar un tour",
                             modifier = Modifier.size(48.dp) // Más pequeño
                         )
-                    }*/
+                    }
                 }
             }
         }

@@ -302,7 +302,7 @@ private fun DrawScope.drawTropicalIsland(center: Offset, size: Float) {
 
     // Sombras bajo las palmeras
     drawCircle(
-        color = Color(0x000000).copy(alpha = 0.2f),
+        color = Color(0xFF000000).copy(alpha = 0.2f),
         radius = size * 0.2f,
         center = Offset(center.x, center.y + size * 0.1f),
         blendMode = BlendMode.Multiply

@@ -454,4 +454,8 @@ class LangPageViewModel (
     enum class Sections {
         HOME, SERVICES, PLACES, EVENTS, RECOMMENDATIONS, PRODUCTS
     }
+    // Enum para las direcciones de scroll
+    enum class ScrollDirection {
+        UP, DOWN, NONE
+    }
 }

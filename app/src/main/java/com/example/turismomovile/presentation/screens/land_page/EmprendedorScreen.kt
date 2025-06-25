@@ -45,6 +45,39 @@ fun EmprendedoresScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+    // Estados para el LazyColumn y scroll
+    val lazyListState = rememberLazyListState()
+    var isBottomNavVisible by remember { mutableStateOf(true) }
+
+    // Variables para detectar dirección del scroll
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
+
+    // Detectar dirección del scroll mejorado
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemScrollOffset
+        }.collect { currentScrollOffset ->
+            val scrollDifference = currentScrollOffset - previousScrollOffset
+
+            scrollDirection = when {
+                scrollDifference > 50 -> LangPageViewModel.ScrollDirection.DOWN // Scroll hacia abajo
+                scrollDifference < -50 -> LangPageViewModel.ScrollDirection.UP   // Scroll hacia arriba
+                else -> scrollDirection // Mantener dirección actual
+            }
+
+            // Controlar visibilidad basado en la dirección y posición
+            isBottomNavVisible = when {
+                lazyListState.firstVisibleItemIndex == 0 &&
+                        currentScrollOffset < 50 -> true // Mostrar en el top
+                scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
+                scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
+                else -> isBottomNavVisible // Mantener estado actual
+            }
+
+            previousScrollOffset = currentScrollOffset
+        }
+    }
     // Estados
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
@@ -55,7 +88,6 @@ fun EmprendedoresScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
-    val lazyListState = rememberLazyListState()
     val currentSection by viewModel.currentSection
     var selectedEmprendedor by remember { mutableStateOf<Emprendedor?>(null) }
 
@@ -89,14 +121,24 @@ fun EmprendedoresScreen(
             )
         }
     }
-
+// Controlar el estado de refresh con feedback
+    LaunchedEffect(stateEmprendedor.isLoading, stateEmprendedor.isLoading) {
+        if (!stateEmprendedor.isLoading && !stateEmprendedor.isLoading && isRefreshing) {
+            isRefreshing = false
+            notificationState.showNotification(
+                message = "Datos actualizados correctamente",
+                type = NotificationType.SUCCESS,
+                duration = 2000
+            )
+        }
+    }
     // UI
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
             Scaffold(
                 topBar = {
                     MainTopAppBar(
-                        title = "Emprendedores",
+                        title = "Servicios",
                         isSearchVisible = isSearchVisible,
                         searchQuery = searchQuery,
                         onQueryChange = { searchQuery = it },
@@ -121,7 +163,8 @@ fun EmprendedoresScreen(
                         onSectionSelected = { section ->
                             viewModel.onSectionSelected(section)
                         },
-                        navController = navController
+                        navController = navController,
+                        isVisible = isBottomNavVisible // Controlando la visibilidad con el estado
                     )
                 }
             ) { innerPadding ->
@@ -691,21 +734,21 @@ fun EmprendedorCard(
                     .height(180.dp)
             ) {
                 // Imagen de fondo
-                val logoUrl = emprendedor.img_logo
-
-                if (!logoUrl.isNullOrEmpty()) {
+                if (emprendedor.imagenes.isNotEmpty()) {
+                    // Mostrar la primera imagen disponible del emprendedor
                     AsyncImage(
-                        model = logoUrl,  // 🔥 usamos directamente el valor de la propiedad
-                        contentDescription = "Logo ${emprendedor.razon_social}",
+                        model = emprendedor.imagenes.first().url_image,
+                        contentDescription = "Imagen del emprendedor",
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),
                         contentScale = ContentScale.Crop
                     )
-                } else if (emprendedor.imagenes.isNotEmpty()) {
+                } else if (!emprendedor.img_logo.isNullOrEmpty()) {
+                    // Si no hay imágenes, mostrar el logo del emprendedor
                     AsyncImage(
-                        model = emprendedor.imagenes.first().url_image,
-                        contentDescription = "Imagen del emprendedor",
+                        model = emprendedor.img_logo,  // Usamos directamente el valor de la propiedad
+                        contentDescription = "Logo ${emprendedor.razon_social}",
                         modifier = Modifier
                             .fillMaxSize()
                             .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)),

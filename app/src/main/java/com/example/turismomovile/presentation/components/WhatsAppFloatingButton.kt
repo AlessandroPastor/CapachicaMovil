@@ -12,6 +12,7 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -38,6 +39,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.CornerRadius
+import java.net.URLEncoder
 
 
 @Composable
@@ -138,88 +143,155 @@ fun WhatsAppFloatingButtonWithLabel(
     showLabel: Boolean = true
 ) {
     val uriHandler = LocalUriHandler.current
-    var isPressed by remember { mutableStateOf(false) }
-    var isHovered by remember { mutableStateOf(false) }
 
-    // Colores de WhatsApp
+    // Colores de WhatsApp con gradientes más ricos
     val whatsappGreen = Color(0xFF25D366)
     val whatsappGreenDark = Color(0xFF128C7E)
     val whatsappGreenLight = Color(0xFF34E877)
+    val whatsappGreenVibrant = Color(0xFF20C05C)
 
-    // Animaciones para escala del botón
-    val scale by animateFloatAsState(
-        targetValue = when {
-            isPressed -> 0.95f
-            isHovered -> 1.05f
-            else -> 1f
-        },
-        animationSpec = spring(
-            dampingRatio = Spring.DampingRatioMediumBouncy,
-            stiffness = Spring.StiffnessMedium
+    // Colores para efectos especiales
+    val shadowColor = Color(0xFF25D366).copy(alpha = 0.3f)
+    val glowColor = Color(0xFF34E877).copy(alpha = 0.4f)
+
+    // Animación de respiración suave para el efecto glow
+    val infiniteTransition = rememberInfiniteTransition(label = "glow")
+    val glowIntensity by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.7f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
         ),
-        label = "buttonScale"
+        label = "glowAnimation"
     )
 
-    // Contenedor que controla la visibilidad del botón y la etiqueta
+    // Animación de pulsación para la etiqueta
+    val labelPulse by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1500, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "labelPulse"
+    )
+
+    // Contenedor principal con animación de entrada espectacular
     AnimatedVisibility(
         visible = isVisible,
         enter = slideInHorizontally(
             initialOffsetX = { it },
             animationSpec = spring(
                 dampingRatio = Spring.DampingRatioMediumBouncy,
+                stiffness = Spring.StiffnessLow
+            )
+        ) + fadeIn(
+            animationSpec = tween(800, easing = FastOutSlowInEasing)
+        ) + scaleIn(
+            initialScale = 0.3f,
+            animationSpec = spring(
+                dampingRatio = Spring.DampingRatioMediumBouncy,
                 stiffness = Spring.StiffnessMedium
             )
-        ) + fadeIn(),
+        ),
         exit = slideOutHorizontally(
-            targetOffsetX = { it }
-        ) + fadeOut()
+            targetOffsetX = { it },
+            animationSpec = spring(stiffness = Spring.StiffnessHigh)
+        ) + fadeOut() + scaleOut(targetScale = 0.3f)
     ) {
-        // Fila para posicionar el botón a la izquierda y la etiqueta a la derecha
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start, // Alinea todo a la izquierda
-            modifier = modifier.padding(start = 16.dp, bottom = 16.dp) // Ajusta el espaciado
+            horizontalArrangement = Arrangement.Start,
+            modifier = modifier.padding(
+                start = 16.dp,
+                bottom = 24.dp,
+                top = 16.dp
+            )
         ) {
-            // Botón principal
+            // Botón principal con efectos espectaculares
             Box(
                 modifier = Modifier
-                    .size(64.dp)
+                    .size(68.dp) // Ligeramente más grande
+                    // Efecto de glow exterior
+                    .drawWithCache {
+                        onDrawBehind {
+                            drawCircle(
+                                color = glowColor,
+                                radius = size.width / 2 + (glowIntensity * 12.dp.toPx()),
+                                alpha = glowIntensity * 0.6f
+                            )
+                        }
+                    }
+                    // Sombra principal más dramática
                     .shadow(
-                        elevation = 16.dp,
+                        elevation = 20.dp,
                         shape = CircleShape,
-                        clip = false
+                        clip = false,
+                        ambientColor = shadowColor,
+                        spotColor = shadowColor
                     )
+                    // Sombra secundaria para más profundidad
+                    .drawBehind {
+                        drawCircle(
+                            color = Color.Black.copy(alpha = 0.15f),
+                            radius = size.width / 2,
+                            center = center.copy(y = center.y + 4.dp.toPx())
+                        )
+                    }
                     .clip(CircleShape)
+                    // Gradiente más rico y dinámico
                     .background(
-                        brush = Brush.verticalGradient(
+                        brush = Brush.radialGradient(
                             colors = listOf(
-                                whatsappGreenLight,
+                                whatsappGreenLight.copy(alpha = 0.9f),
+                                whatsappGreenVibrant,
                                 whatsappGreen,
                                 whatsappGreenDark
-                            )
+                            ),
+                            radius = 100f
                         )
+                    )
+                    // Borde sutil para definición
+                    .border(
+                        width = 1.dp,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.3f),
+                                Color.Transparent,
+                                Color.Black.copy(alpha = 0.1f)
+                            )
+                        ),
+                        shape = CircleShape
                     )
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
                         indication = rememberRipple(
                             bounded = true,
-                            radius = 32.dp,
-                            color = Color.White.copy(alpha = 0.3f)
+                            radius = 34.dp,
+                            color = Color.White.copy(alpha = 0.4f)
                         )
                     ) {
-                        val url = "https://wa.me/$phoneNumber?text=${message}"
+                        val encodedMessage = URLEncoder.encode(message, "UTF-8")
+                        val url = "https://wa.me/$phoneNumber?text=$encodedMessage"
                         uriHandler.openUri(url)
-                    }
-                    .graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
                     },
                 contentAlignment = Alignment.Center
             ) {
-                // Efecto de pulso sutil
-                PulseEffect(
-                    color = Color.White.copy(alpha = 0.3f),
-                    isVisible = true
+                // Efecto de highlight interior
+                Box(
+                    modifier = Modifier
+                        .size(58.dp)
+                        .clip(CircleShape)
+                        .background(
+                            brush = Brush.radialGradient(
+                                colors = listOf(
+                                    Color.White.copy(alpha = 0.15f),
+                                    Color.Transparent
+                                ),
+                                radius = 40f
+                            )
+                        )
                 )
                 Icon(
                     imageVector = Icons.Filled.Whatsapp, // Icono de WhatsApp
@@ -229,91 +301,107 @@ fun WhatsAppFloatingButtonWithLabel(
                 )
             }
 
-            // Etiqueta con el mensaje de ayuda (a la derecha del botón)
+            // Etiqueta mejorada con efectos espectaculares
             AnimatedVisibility(
                 visible = showLabel,
                 enter = slideInHorizontally(
-                    initialOffsetX = { it / 2 }
-                ) + fadeIn(),
+                    initialOffsetX = { it / 2 },
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessMedium
+                    )
+                ) + fadeIn(
+                    animationSpec = tween(600, delayMillis = 200)
+                ) + scaleIn(
+                    initialScale = 0.8f,
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy
+                    )
+                ),
                 exit = slideOutHorizontally(
                     targetOffsetX = { it / 2 }
-                ) + fadeOut()
+                ) + fadeOut() + scaleOut(targetScale = 0.8f)
             ) {
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
-                    shape = RoundedCornerShape(20.dp),
-                    shadowElevation = 8.dp,
+                    shape = RoundedCornerShape(24.dp),
+                    shadowElevation = 12.dp,
+                    tonalElevation = 4.dp,
                     border = BorderStroke(
                         1.dp,
-                        MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f),
+                                whatsappGreen.copy(alpha = 0.2f),
+                                MaterialTheme.colorScheme.outline.copy(alpha = 0.1f)
+                            )
+                        )
                     ),
-                    modifier = Modifier.padding(start = 12.dp) // Coloca un espacio entre el botón y el texto
+                    modifier = Modifier
+                        .padding(start = 16.dp)
+                        .graphicsLayer {
+                            scaleX = labelPulse
+                            scaleY = labelPulse
+                        }
+                        // Efecto de glow sutil en la etiqueta
+                        .drawWithCache {
+                            onDrawBehind {
+                                drawRoundRect(
+                                    color = whatsappGreen.copy(alpha = 0.1f),
+                                    size = size,
+                                    cornerRadius = CornerRadius(24.dp.toPx())
+                                )
+                            }
+                        }
                 ) {
-                    Text(
-                        text = label,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.padding(
-                            horizontal = 16.dp,
-                            vertical = 10.dp
-                        ),
-                        textAlign = TextAlign.Center
-                    )
+                    // Fondo con gradiente sutil
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                brush = Brush.verticalGradient(
+                                    colors = listOf(
+                                        MaterialTheme.colorScheme.surface,
+                                        MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+                                    )
+                                )
+                            )
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(
+                                horizontal = 20.dp,
+                                vertical = 12.dp
+                            )
+                        ) {
+                            // Pequeño indicador de WhatsApp
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(
+                                        color = whatsappGreen,
+                                        shape = CircleShape
+                                    )
+                            )
+
+                            Spacer(modifier = Modifier.width(8.dp))
+
+                            Text(
+                                text = label,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                letterSpacing = 0.25.sp,
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-@Composable
-private fun PulseEffect(
-    color: Color,
-    isVisible: Boolean
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
-
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.8f,
-        targetValue = 1.2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2000,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseScale"
-    )
-
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = 0.1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 2000,
-                easing = FastOutSlowInEasing
-            ),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "pulseAlpha"
-    )
-
-    if (isVisible) {
-        Box(
-            modifier = Modifier
-                .size(64.dp)
-                .clip(CircleShape)
-                .background(color.copy(alpha = alpha))
-                .graphicsLayer {
-                    scaleX = scale
-                    scaleY = scale
-                }
-        )
-    }
-}
-
-// Componente específico para turismo con mensajes predefinidos
+// Componente específico para turismo mejorado
 @Composable
 fun TourismWhatsAppButton(
     phoneNumber: String,

@@ -1,41 +1,68 @@
 package com.example.turismomovile.data.remote.dto
 
+import android.service.autofill.UserData
 import com.example.turismomovile.domain.model.User
+import com.google.gson.annotations.SerializedName
 import io.ktor.util.decodeBase64String
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-
+import android.util.Base64
 @Serializable
 data class LoginDTO(
     val username: String,
     val password: String,
 )
 
-@Serializable
+// Respuesta completa del login
 data class LoginResponse(
-    val status: Boolean,
+    @SerializedName("success")
+    val success: Boolean,
+
+    @SerializedName("message")
     val message: String,
+
+    @SerializedName("data")
     val data: LoginData
 )
 
-@Serializable
+// Datos dentro de la respuesta
 data class LoginData(
+    @SerializedName("token")
     val token: String,
-    val expires_at: String,
-    val username: Username,
+
+    @SerializedName("expires_at")
+    val expiresAt: String,
+
+    @SerializedName("username")
+    val username: UserDatas,
+
+    @SerializedName("roles")
     val roles: List<String>,
+
+    @SerializedName("permissions")
     val permissions: List<String>
 )
-
-@Serializable
-data class Username(
+data class UserDatas(
+    @SerializedName("id")
     val id: Int,
+
+    @SerializedName("name")
+    val name: String,
+
+    @SerializedName("last_name")
+    val lastName: String,
+
+    @SerializedName("username")
     val username: String,
-    val email: String,
-    val imagen_url: String? = null
+
+    @SerializedName("email")
+    val email: String?
 )
+
 
 @Serializable
 data class LoginInput(
@@ -95,29 +122,67 @@ fun decodeToken(token: String): User? {
             println("Token inválido: No tiene 3 partes.")
             return null
         }
+
         // Decodificar la segunda parte (payload) del token desde base64
-        val payloadJson = parts[1].decodeBase64String()
+        val payload = parts[1]
+        // Agregar padding si es necesario para Base64
+        val paddedPayload = when (payload.length % 4) {
+            2 -> payload + "=="
+            3 -> payload + "="
+            else -> payload
+        }
+
+        val payloadBytes = Base64.decode(paddedPayload, Base64.URL_SAFE)
+        val payloadJson = String(payloadBytes)
 
         // Parsear el payload como un objeto JSON
         val jsonObject = Json.decodeFromString<JsonObject>(payloadJson)
 
-        // Verificación de valores esperados en el payload
-        val id = jsonObject["sub"]?.jsonPrimitive?.content ?: "default_id"
-        val username = jsonObject["username"]?.jsonPrimitive?.content ?: "Desconocido"
+        // Extraer todos los campos del JWT según tu getJWTCustomClaims()
+        val id = jsonObject["id"]?.jsonPrimitive?.content ?:
+        jsonObject["sub"]?.jsonPrimitive?.content ?: "default_id"
+        val name = jsonObject["name"]?.jsonPrimitive?.content ?: "Sin nombre"
+        val lastName = jsonObject["last_name"]?.jsonPrimitive?.content ?: "Sin apellido"
+        val fullName = jsonObject["full_name"]?.jsonPrimitive?.content ?: "$name $lastName"
+        val username = jsonObject["username"]?.jsonPrimitive?.content ?: "Sin username"
         val email = jsonObject["email"]?.jsonPrimitive?.content ?: "Sin email"
+        val code = jsonObject["code"]?.jsonPrimitive?.content
+        val imagenUrl = jsonObject["imagen_url"]?.jsonPrimitive?.content
+        val createdAt = jsonObject["created_at"]?.jsonPrimitive?.content
+
+        // Extraer roles (array de strings)
+        val roles = jsonObject["roles"]?.jsonArray?.map {
+            it.jsonPrimitive.content
+        } ?: emptyList()
+
+        // Extraer permisos (array de strings)
+        val permissions = jsonObject["permissions"]?.jsonArray?.map {
+            it.jsonPrimitive.content
+        } ?: emptyList()
 
         // Imprimir el contenido del token para depuración
-        println("Decoded Token: ID=$id, Username=$username, Email=$email")
+        println("Decoded Token: ID=$id, Name=$name, LastName=$lastName, Username=$username, Email=$email")
+        println("Roles: $roles")
+        println("Permissions: $permissions")
 
-        // Crear el objeto `User` con la información extraída
+        // Crear el objeto `User` con toda la información extraída
         User(
-            id = id,  // Guardar el id
-            name = username,  // Guardar el nombre
-            email = email,  // Guardar el email
-            token = token  // Guardar el token
+            id = id,
+            email = email,
+            name = name,
+            lastName = lastName,
+            fullName = fullName,
+            username = username,
+            code = code,
+            imagenUrl = imagenUrl,
+            roles = roles,
+            permissions = permissions,
+            createdAt = createdAt,
+            token = token
         )
     } catch (e: Exception) {
         println("Error decodificando el token: ${e.message}")
+        e.printStackTrace()
         null
     }
 }

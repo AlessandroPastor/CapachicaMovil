@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -66,6 +67,39 @@ fun RecommendationsScreen(
     viewModel: LangPageViewModel = koinInject(),
     themeViewModel: ThemeViewModel = koinInject()
 ) {
+    // Estados para el LazyColumn y scroll
+    val lazyListState = rememberLazyListState()
+    var isBottomNavVisible by remember { mutableStateOf(true) }
+
+    // Variables para detectar dirección del scroll
+    var previousScrollOffset by remember { mutableStateOf(0) }
+    var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
+
+    // Detectar dirección del scroll mejorado
+    LaunchedEffect(lazyListState) {
+        snapshotFlow {
+            lazyListState.firstVisibleItemScrollOffset
+        }.collect { currentScrollOffset ->
+            val scrollDifference = currentScrollOffset - previousScrollOffset
+
+            scrollDirection = when {
+                scrollDifference > 50 -> LangPageViewModel.ScrollDirection.DOWN // Scroll hacia abajo
+                scrollDifference < -50 -> LangPageViewModel.ScrollDirection.UP   // Scroll hacia arriba
+                else -> scrollDirection // Mantener dirección actual
+            }
+
+            // Controlar visibilidad basado en la dirección y posición
+            isBottomNavVisible = when {
+                lazyListState.firstVisibleItemIndex == 0 &&
+                        currentScrollOffset < 50 -> true // Mostrar en el top
+                scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
+                scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
+                else -> isBottomNavVisible // Mantener estado actual
+            }
+
+            previousScrollOffset = currentScrollOffset
+        }
+    }
     // Estados
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
@@ -77,7 +111,6 @@ fun RecommendationsScreen(
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
-    val lazyListState = rememberLazyListState()
     val currentSection by viewModel.currentSection
     val visible = remember { mutableStateOf(false) }
     var selectedPlace by remember { mutableStateOf<Place?>(null) }
@@ -177,7 +210,8 @@ fun RecommendationsScreen(
                         onSectionSelected = { section ->
                             viewModel.onSectionSelected(section)
                         },
-                        navController = navController
+                        navController = navController,
+                        isVisible = isBottomNavVisible // Controlando la visibilidad con el estado
                     )
                 }
             ) { innerPadding ->
