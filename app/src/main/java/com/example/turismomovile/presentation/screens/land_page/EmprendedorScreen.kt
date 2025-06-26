@@ -68,8 +68,7 @@ fun EmprendedoresScreen(
 
             // Controlar visibilidad basado en la dirección y posición
             isBottomNavVisible = when {
-                lazyListState.firstVisibleItemIndex == 0 &&
-                        currentScrollOffset < 50 -> true // Mostrar en el top
+                lazyListState.firstVisibleItemIndex == 0 && currentScrollOffset < 50 -> true // Mostrar en el top
                 scrollDirection == LangPageViewModel.ScrollDirection.UP -> true  // Mostrar al scroll hacia arriba
                 scrollDirection == LangPageViewModel.ScrollDirection.DOWN -> false // Ocultar al scroll hacia abajo
                 else -> isBottomNavVisible // Mantener estado actual
@@ -78,18 +77,22 @@ fun EmprendedoresScreen(
             previousScrollOffset = currentScrollOffset
         }
     }
+
     // Estados
     val notificationState = rememberNotificationState()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
         initialValue = false,
         lifecycle = LocalLifecycleOwner.current.lifecycle
     )
-    val stateEmprendedor by viewModel.stateEmprendedor.collectAsState()
     var isRefreshing by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val currentSection by viewModel.currentSection
     var selectedEmprendedor by remember { mutableStateOf<Emprendedor?>(null) }
+    val stateEmprendedor by viewModel.stateEmprendedor.collectAsState()
+    // Paginación
+    val currentPage = stateEmprendedor.currentPage
+    val totalPages = stateEmprendedor.totalPages
 
     // Efectos
     LaunchedEffect(Unit) {
@@ -121,7 +124,8 @@ fun EmprendedoresScreen(
             )
         }
     }
-// Controlar el estado de refresh con feedback
+
+    // Controlar el estado de refresh con feedback
     LaunchedEffect(stateEmprendedor.isLoading, stateEmprendedor.isLoading) {
         if (!stateEmprendedor.isLoading && !stateEmprendedor.isLoading && isRefreshing) {
             isRefreshing = false
@@ -132,6 +136,7 @@ fun EmprendedoresScreen(
             )
         }
     }
+
     // UI
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
@@ -213,11 +218,60 @@ fun EmprendedoresScreen(
                             }
                         )
                     }
+
+                    // Log de depuración visible cada vez que cambia currentPage o totalPages
+                    LaunchedEffect(currentPage, totalPages) {
+                        println("🧭 [UI] currentPage = $currentPage | totalPages = $totalPages")
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.BottomCenter
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            FloatingActionButton(
+                                onClick = {
+                                    println("👈 Anterior presionado | currentPage = $currentPage")
+                                    if (currentPage > 0) {
+                                        viewModel.previousPage()
+                                    }
+                                },
+                                modifier = Modifier.alpha(if (currentPage > 0) 1f else 0.5f)
+                            ) {
+                                Icon(imageVector = Icons.Default.NavigateBefore, contentDescription = "Anterior")
+                            }
+
+                            Text(
+                                text = "Página ${currentPage + 1} de $totalPages",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
+
+                            FloatingActionButton(
+                                onClick = {
+                                    println("👉 Siguiente presionado | currentPage = $currentPage")
+                                    if (currentPage < totalPages - 1) {
+                                        viewModel.nextPage()
+                                    }
+                                },
+                                modifier = Modifier.alpha(if (currentPage < totalPages - 1) 1f else 0.5f)
+                            ) {
+                                Icon(imageVector = Icons.Default.NavigateNext, contentDescription = "Siguiente")
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
+
+
 
 
 @Composable

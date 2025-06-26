@@ -166,20 +166,26 @@ class LangPageViewModel (
         }
     }
     fun loadEmprendedores(
-        page: String? = 0.toString(),
+        page: Int = _stateEmprendedor.value.currentPage,  // Mantén el valor actual si no se pasa
         name: String? = null,
         category: String? = null
     ) {
         viewModelScope.launch {
+            // Indicador de carga
             _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
 
             try {
                 val response = apiServiceEmprendedorService.getEmprendedor(
                     page = page,
-                    size = 10,
+                    size = 5,
                     name = name,
                     category = category
                 )
+
+                // Validamos que la respuesta esté completa
+                if (response.content == null || response.currentPage == null) {
+                    throw IllegalStateException("Respuesta de servidor incompleta o corrupta")
+                }
 
                 println("🛰️ [Emprendedores] Página actual: ${response.currentPage} / ${response.totalPages}")
                 println("📦 Total Emprendedores en esta página: ${response.content.size}")
@@ -187,10 +193,17 @@ class LangPageViewModel (
                     println("   ➡️ ID: ${emprendedor.id} | Nombre: ${emprendedor.razon_social}")
                 }
 
+                val totalPages = if (response.totalElements % 5 == 0) {
+                    response.totalElements / 5
+                } else {
+                    (response.totalElements / 5) + 1
+                }
+
+                // ✅ Estado actualizado SOLO si la respuesta fue exitosa y consistente
                 _stateEmprendedor.value = _stateEmprendedor.value.copy(
                     items = response.content,
                     currentPage = response.currentPage,
-                    totalPages = response.totalPages,
+                    totalPages = totalPages,
                     totalElements = response.totalElements,
                     isLoading = false,
                     error = null
@@ -198,18 +211,24 @@ class LangPageViewModel (
 
             } catch (e: Exception) {
                 println("❌ [Emprendedores] Error al cargar emprendedores: ${e.message}")
+                // 🔐 Volvemos al estado anterior para evitar inconsistencias
                 _stateEmprendedor.value = _stateEmprendedor.value.copy(
                     isLoading = false,
-                    error = e.message,
                     notification = NotificationState(
-                        message = e.message ?: "Error al cargar los emprendedores",
+                        message = "No se pudo cargar la página. ${e.message ?: ""}".trim(),
                         type = NotificationType.ERROR,
                         isVisible = true
                     )
+                    // Nota: No actualizamos currentPage ni items aquí
                 )
             }
         }
     }
+
+
+
+
+
 
 
     fun loadService(page: String? = 0.toString(), search: String? = null, category: String? = null) {
@@ -458,4 +477,26 @@ class LangPageViewModel (
     enum class ScrollDirection {
         UP, DOWN, NONE
     }
+
+    fun nextPage() {
+        val current = _stateEmprendedor.value.currentPage
+        val total = _stateEmprendedor.value.totalPages
+        if (current + 1 < total) {
+            println("✅ Ejecutando nextPage(): ${current + 1}")
+            loadEmprendedores(current + 1)
+        } else {
+            println("⛔ No se puede avanzar. currentPage=$current, totalPages=$total")
+        }
+    }
+
+    fun previousPage() {
+        val current = _stateEmprendedor.value.currentPage
+        if (current > 0) {
+            println("✅ Ejecutando previousPage(): ${current - 1}")
+            loadEmprendedores(current - 1)
+        } else {
+            println("⛔ Ya estás en la primera página")
+        }
+    }
+
 }

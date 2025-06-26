@@ -191,7 +191,7 @@ fun RecommendationsScreen(
                         isSearchVisible = isSearchVisible,
                         searchQuery = searchQuery,
                         onQueryChange = { searchQuery = it },
-                        onSearch = { viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() }) },
+                        onSearch = {},
                         onToggleSearch = { isSearchVisible = !isSearchVisible },
                         onCloseSearch = {
                             isSearchVisible = false
@@ -224,7 +224,6 @@ fun RecommendationsScreen(
                         isRefreshing = isRefreshing,
                         onRefresh = {
                             isRefreshing = true
-                            viewModel.loadEmprendedores(searchQuery.takeIf { it.isNotEmpty() })
                         }
                     ) {
                         RecommendationsGrid(

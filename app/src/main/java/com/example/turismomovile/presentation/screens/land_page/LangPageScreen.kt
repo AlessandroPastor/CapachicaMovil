@@ -652,6 +652,7 @@ fun MunicipalidadDetailedInfo(
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             }
+            Spacer(modifier = Modifier.height(20.dp))
 
             // Grid de información mejorado
             Column(

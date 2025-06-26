@@ -29,7 +29,7 @@ class EmprendedorApiService(
 ) : BaseApiService(client, sessionManager) {
 
     suspend fun getEmprendedor(
-        page: String? = 0.toString(),
+        page: Int? = 0,
         size: Int = 10,
         category: String? = null,
         name: String? = null
@@ -41,13 +41,13 @@ class EmprendedorApiService(
                 name?.let { parameter("name", it) }
                 category?.let { parameter("category", it) }
             }
-            val rawJson = response.bodyAsText()
             return response.body()
         } catch (e: Exception) {
             e.printStackTrace()
             throw e
         }
     }
+
 
 
     // Obtener un emprendedor por ID

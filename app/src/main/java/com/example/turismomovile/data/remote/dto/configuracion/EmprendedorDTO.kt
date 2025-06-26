@@ -10,7 +10,6 @@ data class EmprendedorResponse(
     val currentPage: Int,
     val totalElements: Int,
     val content: List<Emprendedor>,
-    val perPage: Int = 0
 )
 
 // Modelo completo de Emprendedor
