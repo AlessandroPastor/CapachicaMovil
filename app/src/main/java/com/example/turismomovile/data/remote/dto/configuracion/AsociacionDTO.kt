@@ -17,6 +17,8 @@ data class Asociacion(
     val nombre : String? = null,
     val descripcion: String? = null,
     val lugar : String? = null,
+    val phone : String? = null,
+    val office_hours : String? = null,
     val estado: Boolean = true,
     val municipalidadId: String? = null,
     val imagenes : List<Imagenes>? = null,

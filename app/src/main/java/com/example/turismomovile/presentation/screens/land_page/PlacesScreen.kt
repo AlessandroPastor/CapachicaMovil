@@ -1,17 +1,24 @@
+import androidx.compose.animation.animateContentSize
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -61,8 +68,17 @@ import org.koin.compose.koinInject
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.Map
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.components.BottomNavigationBar
@@ -70,12 +86,16 @@ import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
+import com.example.turismomovile.presentation.components.TourismMessageType
+import com.example.turismomovile.presentation.components.TourismWhatsAppButton
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.turismomovile.R
+import com.example.turismomovile.presentation.components.WhatsAppFloatingButton
 
 @Composable
 fun PlacesScreen(
@@ -176,7 +196,7 @@ fun PlacesScreen(
                         searchQuery = searchQuery,
                         onQueryChange = { searchQuery = it },
                         onSearch = {
-                            viewModel.loadAsociaciones(searchQuery = searchQuery)
+                            viewModel.loadAsociaciones(name = searchQuery)
                         },
                         onToggleSearch = { isSearchVisible = !isSearchVisible },
                         onCloseSearch = {
@@ -306,18 +326,27 @@ fun AssociationCard(
     modifier: Modifier = Modifier
 ) {
     val pagerState = rememberPagerState(pageCount = { asociacion.imagenes?.size ?: 0 })
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
 
     Card(
         onClick = onClick,
-        modifier = modifier,
+        modifier = modifier
+            .shadow(
+                elevation = if (isPressed) 8.dp else 4.dp,
+                shape = RoundedCornerShape(16.dp)
+            )
+            .animateContentSize(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
-        )
-    ) {
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        interactionSource = interactionSource
+    )
+    {
         Box(modifier = Modifier.fillMaxWidth()) {
-            // Botón de favorito
+            // Botón de favorito con animación
             IconButton(
                 onClick = {
                     onFavoriteClick()
@@ -326,6 +355,11 @@ fun AssociationCard(
                     .align(Alignment.TopEnd)
                     .padding(8.dp)
                     .zIndex(1f)
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        shape = CircleShape
+                    )
+                    .size(36.dp)
             ) {
                 Icon(
                     imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
@@ -339,39 +373,86 @@ fun AssociationCard(
                 modifier = Modifier.padding(8.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = asociacion.nombre ?: "Sin nombre",
-                    style = MaterialTheme.typography.titleMedium.copy(
-                        fontWeight = FontWeight.Bold
-                    ),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 8.dp),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                // Nombre con gradiente
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 8.dp)
+                        .background(
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                    Color.Transparent
+                                )
+                            ),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                ) {
+                    Text(
+                        text = asociacion.nombre ?: "Sin nombre",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .padding(horizontal = 16.dp, vertical = 4.dp)
+                            .align(Alignment.Center),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
 
-                HorizontalPager(
-                    state = pagerState,
+                // Pager con efecto de borde
+                Box(
                     modifier = Modifier
                         .height(140.dp)
                         .fillMaxWidth()
-                ) { page ->
-                    Box(
-                        modifier = Modifier
-                            .padding(4.dp)
-                            .clip(RoundedCornerShape(8.dp))
-                            .fillMaxSize()
-                    ) {
-                        Image(
-                            painter = rememberAsyncImagePainter(asociacion.imagenes?.get(page)?.url_image),
-                            contentDescription = "Imagen ${page + 1} de ${asociacion.nombre}",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier.fillMaxSize()
+                        .clip(RoundedCornerShape(12.dp))
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(12.dp)
                         )
+                ) {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.fillMaxSize()
+                    ) { page ->
+                        Box(
+                            modifier = Modifier.fillMaxSize()
+                        ) {
+                            Image(
+                                painter = rememberAsyncImagePainter(
+                                    model = asociacion.imagenes?.get(page)?.url_image,
+                                    placeholder = ColorPainter(MaterialTheme.colorScheme.surface)
+                                ),
+                                contentDescription = "Imagen ${page + 1} de ${asociacion.nombre}",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
+                            )
+
+                            // Overlay oscuro en la parte inferior para mejorar legibilidad
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(32.dp)
+                                    .align(Alignment.BottomStart)
+                                    .background(
+                                        brush = Brush.verticalGradient(
+                                            colors = listOf(
+                                                Color.Transparent,
+                                                Color.Black.copy(alpha = 0.3f)
+                                            )
+                                        )
+                                    )
+                            )
+                        }
                     }
                 }
 
+                // Indicadores de página más visibles
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
                     horizontalArrangement = Arrangement.Center
@@ -380,57 +461,91 @@ fun AssociationCard(
                         repeat(it.size) { index ->
                             Box(
                                 modifier = Modifier
-                                    .padding(2.dp)
-                                    .size(8.dp)
+                                    .padding(horizontal = 2.dp)
+                                    .size(10.dp)
                                     .clip(CircleShape)
                                     .background(
-                                        if (pagerState.currentPage == index)
+                                        color = if (pagerState.currentPage == index)
                                             MaterialTheme.colorScheme.primary
                                         else
-                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f)
+                                            MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = if (pagerState.currentPage == index) 1.dp else 0.dp,
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        shape = CircleShape
                                     )
                             )
                         }
                     }
                 }
 
-                // Rating y ubicación
+                // Rating y ubicación con mejor espaciado
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 8.dp),
+                        .padding(top = 12.dp, bottom = 4.dp),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Rating",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                    // Rating con más información
+                    Column(
+                        horizontalAlignment = Alignment.Start,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Star,
+                                contentDescription = "Rating",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = "4.8 (128)",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(start = 4.dp)
+                            )
+                        }
                         Text(
-                            text = "4.8",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                            modifier = Modifier.padding(start = 4.dp)
+                            text = "Excelente",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
 
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.LocationOn,
-                            contentDescription = "Ubicación",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
-                        )
+                    // Ubicación con icono más destacado
+                    Column(
+                        horizontalAlignment = Alignment.End,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = "Ubicación",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Text(
+                                text = asociacion.lugar ?: "Desconocido",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    fontWeight = FontWeight.SemiBold
+                                ),
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.padding(start = 4.dp),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                         Text(
-                            text = asociacion.lugar ?: "Desconocido",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f),
-                            modifier = Modifier.padding(start = 4.dp),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            text = "2.5 km",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 2.dp)
                         )
                     }
                 }
@@ -456,13 +571,19 @@ fun AssociationDetailDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            shape = RoundedCornerShape(28.dp),
+                .padding(horizontal = 16.dp, vertical = 24.dp)
+                .animateContentSize(), // ✨ Animación suave
+            shape = RoundedCornerShape(24.dp), // 🎨 Esquinas más elegantes
             color = MaterialTheme.colorScheme.surface,
-            shadowElevation = 24.dp,
+            shadowElevation = 32.dp, // 🌟 Sombra más dramática
             border = BorderStroke(
-                width = 0.5.dp,
-                color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                width = 1.dp,
+                brush = Brush.linearGradient(
+                    colors = listOf(
+                        MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                        MaterialTheme.colorScheme.secondary.copy(alpha = 0.2f)
+                    )
+                )
             )
         ) {
             Column(
@@ -470,169 +591,305 @@ fun AssociationDetailDialog(
                     .fillMaxWidth()
                     .verticalScroll(rememberScrollState())
             ) {
-                // Header con imagen
+                // 🖼️ Header con imagen mejorado
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(240.dp)
+                        .height(260.dp) // Un poco más alto
+                        .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                 ) {
-                    Image(
-                        painter = rememberAsyncImagePainter(association.imagenes?.firstOrNull()?.url_image),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier.fillMaxSize()
-                    )
+                    // Imagen con overlay gradiente
+                    Box(modifier = Modifier.fillMaxSize()) {
+                        Image(
+                            painter = rememberAsyncImagePainter(
+                                model = association.imagenes?.firstOrNull()?.url_image,
+                                placeholder = painterResource(R.drawable.escallani) // 🖼️ Placeholder bonito
+                            ),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.fillMaxSize()
+                        )
 
-                    // Botón de cerrar
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(16.dp)
-                            .background(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                                CircleShape
-                            )
-                            .size(36.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = "Cerrar",
-                            tint = MaterialTheme.colorScheme.onSurface
+                        // 🌅 Gradiente overlay para mejor legibilidad
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(
+                                    Brush.verticalGradient(
+                                        colors = listOf(
+                                            Color.Black.copy(alpha = 0.3f),
+                                            Color.Transparent,
+                                            Color.Black.copy(alpha = 0.5f)
+                                        )
+                                    )
+                                )
                         )
                     }
 
-                    // Botón de favorito
-                    IconButton(
-                        onClick = onFavoriteClick,
+                    // 🎯 Botones flotantes con efectos
+                    Row(
                         modifier = Modifier
-                            .align(Alignment.TopStart)
-                            .padding(16.dp)
-                            .background(
-                                MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
-                                CircleShape
-                            )
-                            .size(36.dp)
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Icon(
-                            imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                            contentDescription = if (isFavorite) "Quitar de favoritos" else "Añadir a favoritos",
-                            tint = if (isFavorite) MaterialTheme.colorScheme.error
-                            else MaterialTheme.colorScheme.onSurface
-                        )
+                        // 💖 Botón de favorito mejorado
+                        IconButton(
+                            onClick = onFavoriteClick,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                    shape = CircleShape
+                                )
+                                .size(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Quitar de favoritos" else "Añadir a favoritos",
+                                tint = if (isFavorite) Color(0xFFFF4757) // ❤️ Rojo más bonito
+                                else MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+
+                        // ❌ Botón de cerrar mejorado
+                        IconButton(
+                            onClick = onDismiss,
+                            modifier = Modifier
+                                .background(
+                                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f),
+                                    shape = CircleShape
+                                )
+                                .size(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "Cerrar",
+                                tint = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 }
 
-                // Contenido
+                // 📝 Contenido mejorado
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
                 ) {
+                    // 📛 Título con efecto
                     Text(
-                        text = association.nombre ?: "Nombre desconocido",
-                        style = MaterialTheme.typography.headlineSmall.copy(
+                        text = association.nombre ?: "Destino Increíble",
+                        style = MaterialTheme.typography.headlineMedium.copy(
                             fontWeight = FontWeight.ExtraBold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                            brush = Brush.horizontalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primary,
+                                    MaterialTheme.colorScheme.secondary
+                                )
+                            )
+                        ),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
 
-                    // Rating y ubicación
+                    // ⭐ Rating y ubicación mejorados
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            repeat(5) { index ->
-                                Icon(
-                                    imageVector = Icons.Default.Star,
-                                    contentDescription = null,
-                                    tint = if (index < 4) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                                    modifier = Modifier.size(20.dp)
-                                )
+                        // 🌟 Rating con estrellas bonitas
+                        Column {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                repeat(5) { index ->
+                                    Icon(
+                                        imageVector = Icons.Default.Star,
+                                        contentDescription = null,
+                                        tint = if (index < 4) Color(0xFFFFD700) // ⭐ Dorado perfecto
+                                        else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f),
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                             }
                             Text(
-                                text = "4.8 (128 reseñas)",
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.padding(start = 8.dp)
+                                text = "4.8 • 128 reseñas",
+                                style = MaterialTheme.typography.labelMedium.copy(
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
+                                ),
+                                modifier = Modifier.padding(top = 2.dp)
                             )
                         }
 
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Text(
-                                text = association.lugar ?: "Desconocido",
-                                style = MaterialTheme.typography.labelLarge,
-                                modifier = Modifier.padding(start = 4.dp)
-                            )
+                        // 📍 Ubicación con chip bonito
+                        Surface(
+                            color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
+                            shape = RoundedCornerShape(20.dp),
+                            modifier = Modifier.padding(start = 8.dp)
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Text(
+                                    text = association.lugar ?: "Ubicación especial",
+                                    style = MaterialTheme.typography.labelMedium.copy(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        fontWeight = FontWeight.Medium
+                                    ),
+                                    modifier = Modifier.padding(start = 4.dp),
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
                         }
                     }
 
-                    // Descripción
-                    Text(
-                        text = association.descripcion ?: "No hay descripción disponible",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            lineHeight = 24.sp,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    // 📋 Descripción con mejor formato
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        ),
+                        shape = RoundedCornerShape(16.dp)
+                    ) {
+                        Text(
+                            text = association.descripcion ?: "Descubre este increíble destino lleno de aventuras y experiencias únicas que te dejarán recuerdos inolvidables.",
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                lineHeight = 26.sp,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f)
+                            ),
+                            modifier = Modifier.padding(16.dp)
                         )
-                    )
+                    }
 
-                    // Horario y contacto
-                    Column(
+                    // 📞 Información de contacto mejorada
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                        shape = RoundedCornerShape(16.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                        ) {
+                            Text(
+                                text = "Información de contacto",
+                                style = MaterialTheme.typography.titleSmall.copy(
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+
+                            association.office_hours?.let {
+                                InfoRow(
+                                    icon = Icons.Default.AccessTime, // 🕐 Mejor icono para horario
+                                    text = "Horario: $it",
+                                    iconColor = MaterialTheme.colorScheme.secondary
+                                )
+                            }
+
+                            association.phone?.let {
+                                InfoRow(
+                                    icon = Icons.Default.Phone, // 📞 Mejor icono para teléfono
+                                    text = "Teléfono: $it",
+                                    iconColor = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                        }
+                    }
+
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                            .height(64.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        InfoRow(
-                            icon = Icons.Default.ShoppingCart,
-                            text = "Abierto de 9:00 AM a 6:00 PM"
-                        )
-                        InfoRow(
-                            icon = Icons.Default.Explore,
-                            text = "A 15 minutos del centro"
-                        )
-                    }
-
-                    // Botones de acción
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
+                        // 🗺️ Botón Ver en mapa
                         Button(
                             onClick = onDismiss,
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(),
+                            shape = RoundedCornerShape(16.dp),
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primaryContainer,
                                 contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         ) {
+                            Icon(
+                                imageVector = Icons.Default.Map,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
                             Text("Ver en mapa")
                         }
 
-                        Button(
-                            onClick = { /* Llamar o contactar */ },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                        // ✅ Aquí va tu botón redondo tal cual es
+                        Box(
+                            modifier = Modifier
+                                .size(64.dp) // 👈 Exactamente igual que el botón
                         ) {
-                            Text("Contactar")
+                            WhatsAppFloatingButton(
+                                phoneNumber = association.phone ?: "+51963378995",
+                                modifier = Modifier.fillMaxSize(), // 🔥 Para que ocupe toda la caja
+                                isVisible = true
+                            )
                         }
                     }
                 }
             }
         }
+    }
+}
+
+
+// 📋 Componente InfoRow mejorado
+@Composable
+private fun InfoRow(
+    icon: ImageVector,
+    text: String,
+    iconColor: Color = MaterialTheme.colorScheme.primary
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Surface(
+            color = iconColor.copy(alpha = 0.1f),
+            shape = CircleShape,
+            modifier = Modifier.size(32.dp)
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = iconColor,
+                modifier = Modifier
+                    .size(16.dp)
+                    .padding(8.dp)
+            )
+        }
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium.copy(
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+            ),
+            modifier = Modifier.padding(start = 12.dp)
+        )
     }
 }

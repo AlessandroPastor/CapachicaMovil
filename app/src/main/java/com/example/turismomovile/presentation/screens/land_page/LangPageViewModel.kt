@@ -277,11 +277,11 @@ class LangPageViewModel (
 
 
 
-    fun loadAsociaciones(page: Int = 0, searchQuery: String? = null) {
+    fun loadAsociaciones(page: Int = 0, name: String? = null) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
             try {
-                repositoryAso.getAsociaciones(page = page, name = searchQuery)
+                repositoryAso.getAsociaciones(page = page, name = name)
                     .onSuccess { response ->
 
                         // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥

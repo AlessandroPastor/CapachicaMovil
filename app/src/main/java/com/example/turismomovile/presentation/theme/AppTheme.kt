@@ -11,90 +11,90 @@ import androidx.compose.ui.graphics.Color
 
 // Colores personalizados mejorados para turismo
 object AppColors {
-    // Light Theme Colors - Paleta turística moderna
-    val Primary = Color(0xFF1E88E5)        // Azul océano vibrante
-    val PrimaryVariant = Color(0xFF1565C0) // Azul más profundo
-    val Secondary = Color(0xFF26A69A)      // Verde turquesa tropical
-    val SecondaryVariant = Color(0xFF00695C) // Verde esmeralda
-    val Tertiary = Color(0xFFFF7043)       // Naranja atardecer
-    val Background = Color(0xFFF8FFFE)     // Blanco nieve con tinte azul
-    val Surface = Color(0xFFFFFFFF)        // Blanco puro
-    val SurfaceVariant = Color(0xFFF5F5F5) // Gris muy claro
-    val Error = Color(0xFFE53935)          // Rojo coral
+    // Light Theme Colors - Paleta turística moderna inspirada en paraísos tropicales
+    val Primary = Color(0xFF00BCD4)        // Turquesa cristalino como agua del Caribe
+    val PrimaryVariant = Color(0xFF0097A7) // Azul profundo del océano
+    val Secondary = Color(0xFFFF6B35)      // Coral vibrante del atardecer tropical
+    val SecondaryVariant = Color(0xFFE65100) // Naranja fuego del ocaso
+    val Tertiary = Color(0xFF7CB342)       // Verde jade de palmeras
+    val Background = Color(0xFFF0FDFF)     // Blanco cristal con toque de brisa marina
+    val Surface = Color(0xFFFFFFFF)        // Blanco arena fina
+    val SurfaceVariant = Color(0xFFF5FAFE) // Gris perla suave
+    val Error = Color(0xFFE57373)          // Rojo suave como flor tropical
     val OnPrimary = Color(0xFFFFFFFF)      // Blanco
     val OnSecondary = Color(0xFFFFFFFF)    // Blanco
-    val OnBackground = Color(0xFF1A1A1A)   // Negro suave
-    val OnSurface = Color(0xFF212121)      // Gris muy oscuro
+    val OnBackground = Color(0xFF1A1A1A)   // Negro carbón suave
+    val OnSurface = Color(0xFF2E3440)      // Gris pizarra elegante
     val OnError = Color(0xFFFFFFFF)        // Blanco
 
-    // Colores accent para elementos especiales
-    val AccentGold = Color(0xFFFFB300)     // Dorado para premiums
-    val AccentCoral = Color(0xFFFF6B6B)    // Coral para destacados
-    val AccentLavender = Color(0xFF9C27B0) // Lavanda para categorías
+    // Colores accent para elementos especiales - Inspirados en joyas tropicales
+    val AccentGold = Color(0xFFFFC107)     // Dorado sol del amanecer
+    val AccentCoral = Color(0xFFFF7043)    // Coral del Mar Rojo
+    val AccentLavender = Color(0xFF9575CD) // Lavanda de campos de Provenza
 
-    // Notification Colors Light - Más suaves y modernos
-    val SuccessLight = Color(0xFFE8F5E8)   // Verde menta claro
-    val SuccessTextLight = Color(0xFF2E7D32) // Verde bosque
-    val ErrorLight = Color(0xFFFFEBEE)     // Rosa claro
-    val ErrorTextLight = Color(0xFFD32F2F) // Rojo moderno
-    val WarningLight = Color(0xFFFFF8E1)   // Amarillo crema
-    val WarningTextLight = Color(0xFFF57C00) // Naranja dorado
-    val InfoLight = Color(0xFFE1F5FE)      // Azul cielo claro
-    val InfoTextLight = Color(0xFF0277BD)  // Azul información
+    // Notification Colors Light - Suaves como brisa marina
+    val SuccessLight = Color(0xFFE8F8F5)   // Verde menta glacial
+    val SuccessTextLight = Color(0xFF00695C) // Verde esmeralda profundo
+    val ErrorLight = Color(0xFFFFF3E0)     // Melocotón suave
+    val ErrorTextLight = Color(0xFFD84315) // Naranja terracota
+    val WarningLight = Color(0xFFFFF8E1)   // Crema de vainilla
+    val WarningTextLight = Color(0xFFFF8F00) // Ámbar dorado
+    val InfoLight = Color(0xFFE0F2F1)      // Aguamarina clara
+    val InfoTextLight = Color(0xFF00838F)  // Azul petróleo
 
-    // Dark Theme Colors - Más elegantes y con mejor contraste
-    val PrimaryDark = Color(0xFF42A5F5)    // Azul brillante
-    val PrimaryVariantDark = Color(0xFF1976D2) // Azul profundo
-    val SecondaryDark = Color(0xFF4DB6AC)  // Turquesa brillante
-    val SecondaryVariantDark = Color(0xFF00897B) // Verde mar
-    val TertiaryDark = Color(0xFFFFAB40)   // Naranja dorado
-    val BackgroundDark = Color(0xFF0A0E13) // Azul noche profundo
-    val SurfaceDark = Color(0xFF1A1D23)    // Gris azulado oscuro
-    val SurfaceVariantDark = Color(0xFF2A2D33) // Gris medio
+    // Dark Theme Colors - Noche tropical elegante
+    val PrimaryDark = Color(0xFF26C6DA)    // Turquesa luminoso nocturno
+    val PrimaryVariantDark = Color(0xFF00ACC1) // Azul cobalto profundo
+    val SecondaryDark = Color(0xFFFF8A65)  // Coral luminoso
+    val SecondaryVariantDark = Color(0xFFFF5722) // Naranja volcánico
+    val TertiaryDark = Color(0xFF9CCC65)   // Verde lima nocturno
+    val BackgroundDark = Color(0xFF0D1421) // Azul noche profunda del océano
+    val SurfaceDark = Color(0xFF1E2A38)    // Gris pizarra nocturna
+    val SurfaceVariantDark = Color(0xFF2A3441) // Gris carbón elegante
     val OnPrimaryDark = Color(0xFF000000)  // Negro
     val OnSecondaryDark = Color(0xFF000000) // Negro
-    val OnBackgroundDark = Color(0xFFE0E0E0) // Gris claro
-    val OnSurfaceDark = Color(0xFFE0E0E0)  // Gris claro
+    val OnBackgroundDark = Color(0xFFECEFF1) // Gris perla luminoso
+    val OnSurfaceDark = Color(0xFFE0E3E7)  // Gris claro como niebla
     val OnErrorDark = Color(0xFF000000)    // Negro
 
-    // Colores accent dark
-    val AccentGoldDark = Color(0xFFFFD54F) // Dorado claro
-    val AccentCoralDark = Color(0xFFFF8A80) // Coral claro
-    val AccentLavenderDark = Color(0xFFBA68C8) // Lavanda claro
+    // Colores accent dark - Joyas nocturnas
+    val AccentGoldDark = Color(0xFFFFD54F) // Oro brillante de luna llena
+    val AccentCoralDark = Color(0xFFFFAB91) // Coral suave nocturno
+    val AccentLavenderDark = Color(0xFFB39DDB) // Lavanda lunar
 
-    // Notification Colors Dark - Mejor visibilidad
-    val SuccessDark = Color(0xFF2E7D32)    // Verde oscuro
-    val SuccessTextDark = Color(0xFFA5D6A7) // Verde claro
-    val ErrorDark = Color(0xFFD32F2F)      // Rojo oscuro
-    val ErrorTextDark = Color(0xFFFFCDD2)  // Rosa claro
-    val WarningDark = Color(0xFFFFA000)    // Naranja oscuro
-    val WarningTextDark = Color(0xFFFFE082) // Amarillo claro
-    val InfoDark = Color(0xFF1976D2)       // Azul oscuro
-    val InfoTextDark = Color(0xFF81D4FA)   // Azul claro
+    // Notification Colors Dark - Elegancia nocturna
+    val SuccessDark = Color(0xFF00695C)    // Verde bosque nocturno
+    val SuccessTextDark = Color(0xFFB2DFDB) // Verde menta luminoso
+    val ErrorDark = Color(0xFFD84315)      // Naranja volcánico
+    val ErrorTextDark = Color(0xFFFFCCBC)  // Melocotón suave
+    val WarningDark = Color(0xFFFF8F00)    // Ámbar intenso
+    val WarningTextDark = Color(0xFFFFE0B2) // Crema dorada
+    val InfoDark = Color(0xFF00838F)       // Azul petróleo
+    val InfoTextDark = Color(0xFFB2EBF2)   // Aguamarina luminosa
 
-    // Gradientes para elementos especiales
+    // Gradientes para elementos especiales - Inspirados en paisajes
     val GradientPrimary = listOf(
-        Color(0xFF1E88E5),
-        Color(0xFF26A69A)
+        Color(0xFF00BCD4),  // Turquesa caribeño
+        Color(0xFF7CB342)   // Verde jade
     )
 
     val GradientSunset = listOf(
-        Color(0xFFFF7043),
-        Color(0xFFFFB300)
+        Color(0xFFFF6B35),  // Coral del atardecer
+        Color(0xFFFFC107)   // Dorado del sol
     )
 
     val GradientNight = listOf(
-        Color(0xFF1A1D23),
-        Color(0xFF0A0E13)
+        Color(0xFF1E2A38),  // Pizarra nocturna
+        Color(0xFF0D1421)   // Océano profundo
     )
 
-    // Colores semánticos para turismo
-    val BeachBlue = Color(0xFF03A9F4)      // Azul playa
-    val MountainGreen = Color(0xFF4CAF50)  // Verde montaña
-    val DesertSand = Color(0xFFFFE0B2)     // Arena del desierto
-    val ForestGreen = Color(0xFF388E3C)    // Verde bosque
-    val SkyBlue = Color(0xFF87CEEB)        // Azul cielo
-    val SunsetOrange = Color(0xFFFF8A65)   // Naranja atardecer
+    // Colores semánticos para turismo - Inspirados en destinos únicos
+    val BeachBlue = Color(0xFF00E5FF)      // Azul Maldivas cristalino
+    val MountainGreen = Color(0xFF66BB6A)  // Verde Alpes suizo
+    val DesertSand = Color(0xFFFFCC80)     // Arena dorada del Sahara
+    val ForestGreen = Color(0xFF43A047)    // Verde Amazonas profundo
+    val SkyBlue = Color(0xFF81D4FA)        // Azul cielo patagónico
+    val SunsetOrange = Color(0xFFFFAB40)   // Naranja Santorini
 }
 
 // Dimensiones personalizadas ampliadas y organizadas

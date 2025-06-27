@@ -10,7 +10,9 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -23,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
@@ -115,15 +118,26 @@ private fun TopAppBarContent(
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Explorer Button
+        // 🎨 VERSIÓN CON EFECTOS PREMIUM
         IconButton(
             onClick = onClickExplorer,
-            modifier = Modifier.size(48.dp)
+            modifier = Modifier
+                .size(48.dp)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            colors.primary.copy(alpha = 0.1f),
+                            Color.Transparent
+                        )
+                    ),
+                    shape = CircleShape
+                )
         ) {
             Icon(
-                imageVector = Icons.Default.Explore,
+                imageVector = Icons.Default.Flight, // Tu icono elegido
                 contentDescription = "Explorar",
-                tint = colors.primary
+                tint = colors.primary,
+                modifier = Modifier.size(24.dp)
             )
         }
 

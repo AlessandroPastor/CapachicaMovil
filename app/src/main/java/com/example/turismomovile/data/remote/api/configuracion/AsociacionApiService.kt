@@ -26,6 +26,7 @@
             return client.get(ApiConstants.Configuration.ASOCIACION_GET) {
                 parameter("page", page)
                 parameter("size", size)
+                name?.let { parameter("name", it) }
             }.body()
         }
 

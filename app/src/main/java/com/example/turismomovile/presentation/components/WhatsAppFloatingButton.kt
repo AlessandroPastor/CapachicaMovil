@@ -124,7 +124,7 @@ fun WhatsAppFloatingButton(
         ) {
             // Icono de WhatsApp personalizado (usando Chat como alternativa)
             Icon(
-                imageVector = Icons.Default.Chat,
+                imageVector = Icons.Filled.Whatsapp, // Icono de WhatsApp
                 contentDescription = "Contactar por WhatsApp",
                 tint = Color.White,
                 modifier = Modifier.size(28.dp)
