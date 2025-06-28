@@ -19,10 +19,11 @@ class ModuleApiService(client: HttpClient, sessionManager: SessionManager) : Bas
     sessionManager
 ) {
 
-    suspend fun getModules(page: Int = 0, size: Int = 20, name: String?): ModuleResponse {
+    suspend fun getModules(page: Int = 0, size: Int = 5, name: String?): ModuleResponse {
         return client.get(ApiConstants.Configuration.MODULES) {
             parameter("page", page)
             parameter("size", size)
+            name?.let { parameter("name", it) }
             addAuthHeader()
         }.body()
     }

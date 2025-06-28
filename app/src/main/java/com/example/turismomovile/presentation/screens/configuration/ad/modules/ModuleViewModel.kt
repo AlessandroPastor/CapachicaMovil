@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.modules
+package com.example.turismomovile.presentation.screens.configuration.ad.modules
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

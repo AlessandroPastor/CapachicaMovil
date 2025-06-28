@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.asociaciones
+package com.example.turismomovile.presentation.screens.configuration.ad.asociaciones
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -25,17 +25,21 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
+import com.example.turismomovile.data.remote.dto.configuracion.Imagenes
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsociaciones
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.toCreateDTO
 import com.example.turismomovile.presentation.components.AppDialog
 import com.example.turismomovile.presentation.components.AppEmptyState
+import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.SearchBarSimple
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import org.koin.compose.koinInject
 
+
+// Pantalla AsociacionesScreen adaptada con componentes reutilizables
 
 @Composable
 fun AsociacionesScreen(
@@ -55,7 +59,7 @@ fun AsociacionesScreen(
 
     // Cargar datos iniciales
     LaunchedEffect(Unit) {
-        viewModel.loadMunicipalidad()
+        viewModel.loadMunicipalidadCompleta()
         viewModel.loadAllAsociaciones()
     }
 
@@ -70,7 +74,6 @@ fun AsociacionesScreen(
     }
 
     NotificationHost(state = notificationState) {
-
         Scaffold(
             floatingActionButton = {
                 FloatingActionButton(
@@ -81,8 +84,7 @@ fun AsociacionesScreen(
                     Icon(Icons.Default.Add, contentDescription = "Agregar")
                 }
             }
-        ) {
-            innerPadding ->
+        ) { innerPadding ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -90,71 +92,71 @@ fun AsociacionesScreen(
                     .padding(horizontal = 16.dp)
             ) {
                 Column(modifier = Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(76.dp))
-                    SearchBarSimple(
+                    Spacer(modifier = Modifier.height(70.dp))
+
+                    SearchBar(
                         query = searchQuery,
                         onQueryChange = {
                             searchQuery = it
                             viewModel.loadAllAsociaciones(searchQuery = it.ifEmpty { null })
-                        }
+                        },
+                        placeholderText = "Buscar asociaciones...",
+                        modifier = Modifier.fillMaxWidth()
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    when {
-                        state.itemsAso.isEmpty() -> AppEmptyState(title = "No se encontraron Resultados" )
-                        else -> {
-                            LazyColumn(
-                                modifier = Modifier.weight(1f),
-                                contentPadding = PaddingValues(bottom = 80.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                items(state.itemsAso, key = { it.id ?: "" }) { asociacion ->
-                                    AsociacionCard(
-                                        asociacion = asociacion,
-                                        municipalidades = stateMuni.items,
-                                        imagenes = stateImgAso.items.filter { it.asociacion_id == asociacion.id },
-                                        onClick = { selectedAsociacion = asociacion },
-                                        onDelete = { viewModel.deleteAsociaciones(asociacion.id!!) },
-                                        onAddImage = {
-                                            selectedImgAsociacion = ImgAsociaciones(
-                                                asociacion.id!!,
-                                                asociacion_id = TODO(),
-                                                url_image = TODO(),
-                                                estado = TODO(),
-                                                codigo = TODO(),
-                                                created_at = TODO(),
-                                                updated_at = TODO()
-                                            )
-                                            showImgDialog = true
-                                        }
-                                    )
+                    Box(modifier = Modifier.weight(1f)) {
+                        when {
+                            state.itemsAso.isEmpty() -> {
+                                AppEmptyState(title = "No se encontraron resultados",
+                                    description = "No se encontro Asociacione")
+                            }
+                            else -> {
+                                LazyColumn(
+                                    contentPadding = PaddingValues(bottom = 80.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    items(state.itemsAso, key = { it.id ?: "" }) { asociacion ->
+                                        AsociacionCard(
+                                            asociacion = asociacion,
+                                            municipalidades = stateMuni.items,
+                                            imagenes = stateImgAso.items.filter { it.asociacion_id == asociacion.id },
+                                            onClick = { selectedAsociacion = asociacion },
+                                            onDelete = { viewModel.deleteAsociaciones(asociacion.id!!) },
+                                            onAddImage = {
+                                                selectedImgAsociacion = ImgAsociaciones(
+                                                    asociacion.id!!, asociacion_id = asociacion.id,
+                                                    url_image = "", estado = true, codigo = "", created_at = null, updated_at = null
+                                                )
+                                                showImgDialog = true
+                                            }
+                                        )
+                                    }
                                 }
                             }
                         }
                     }
 
-                    PaginationControls(
-                        currentPage = state.currentPage,
-                        totalPages = state.totalPages,
-                        onPrevious = {
-                            if (state.currentPage > 0) {
-                                viewModel.loadAllAsociaciones((state.currentPage - 1).toString())
-                            }
-                        },
-                        onNext = {
-                            if (state.currentPage < state.totalPages - 1) {
-                                viewModel.loadAllAsociaciones((state.currentPage + 1).toString())
-                            }
-                        }
-                    )
+                    if (state.totalPages > 1) {
+                        AppPaginationControls(
+                            currentPage = state.currentPage,
+                            totalPages = state.totalPages,
+                            onPreviousPage = {
+                                viewModel.loadAllAsociaciones((state.currentPage - 1),searchQuery)
+                            },
+                            onNextPage = {
+                                    viewModel.loadAllAsociaciones((state.currentPage + 1),searchQuery)
 
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)
+                        )
+                    }
                 }
             }
         }
     }
 
-    // Diálogo para Asociación
     selectedAsociacion?.let { asociacion ->
         AsociacionDialog(
             asociacion = asociacion,
@@ -166,14 +168,18 @@ fun AsociacionesScreen(
                         viewModel.createAsociaciones(dto)
                     }
                 } else {
-                    viewModel.updateAsociaciones(updatedAsociacion)
+                    val asociacionConImagenes = updatedAsociacion.copy(
+                        imagenes = updatedAsociacion.imagenes?.map { img ->
+                            img.copy(asociacion_id = updatedAsociacion.id)
+                        }
+                    )
+                    viewModel.updateAsociacion(asociacionConImagenes)
                 }
                 selectedAsociacion = null
             }
         )
     }
 
-    // Diálogo para Imagen de Asociación
     if (showImgDialog) {
         ImgAsociacionDialog(
             imgAsociacion = selectedImgAsociacion,
@@ -191,6 +197,7 @@ fun AsociacionesScreen(
         )
     }
 }
+
 
 // Componentes mejorados
 
@@ -265,7 +272,6 @@ fun AsociacionCard(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ImageSlider(imagenes: List<ImgAsociaciones>) {
     val pagerState = rememberPagerState(pageCount = { imagenes.size })
@@ -321,81 +327,84 @@ fun AsociacionDialog(
     onDismiss: () -> Unit,
     onSave: (Asociacion) -> Unit
 ) {
-    // Estados para los campos del formulario
     var nombre by remember { mutableStateOf(asociacion.nombre ?: "") }
     var lugar by remember { mutableStateOf(asociacion.lugar ?: "") }
     var descripcion by remember { mutableStateOf(asociacion.descripcion ?: "") }
     var selectedMunicipalidadId by remember { mutableStateOf(asociacion.municipalidadId ?: "") }
-    var estado by remember { mutableStateOf(asociacion.estado ?: true) }
+    var estado by remember { mutableStateOf(asociacion.estado) }
 
-    // Estados para los errores de validación
-    var errors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
-
-    // Función para validar todos los campos
-    fun validateFields(): Boolean {
-        val newErrors = mutableMapOf<String, String?>()
-
-        if (nombre.isBlank()) newErrors["nombre"] = "El nombre es requerido"
-        if (lugar.isBlank()) newErrors["lugar"] = "El lugar es requerido"
-        if (descripcion.isBlank()) newErrors["descripcion"] = "La descripción es requerida"
-        if (selectedMunicipalidadId.isBlank()) newErrors["municipalidad_id"] = "Seleccione una municipalidad"
-
-        errors = newErrors
-        return newErrors.isEmpty()
+    var imagenes: MutableList<ImgAsociaciones> by remember {
+        mutableStateOf(
+            asociacion.imagenes?.map {
+                ImgAsociaciones(
+                    id = it.id,
+                    url_image = it.url_image ?: "",
+                    estado = it.estado ?: true,
+                    codigo = it.codigo ?: "",
+                    asociacion_id = asociacion.id ?: "",
+                    created_at = null,
+                    updated_at = null
+                )
+            }?.toMutableList() ?: mutableListOf()
+        )
     }
+    var tempImagen by remember { mutableStateOf<ImgAsociaciones?>(null) }
+    var errors by remember { mutableStateOf<Map<String, String?>>(emptyMap()) }
+    var showImageDialog by remember { mutableStateOf(false) }
 
     AppDialog(
         title = if (asociacion.id.isNullOrBlank()) "Nueva Asociación" else "Editar Asociación",
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(
-                onClick = {
-                    if (validateFields()) {
-                        onSave(
-                            asociacion.copy(
-                                nombre = nombre,
-                                lugar = lugar,
-                                descripcion = descripcion,
-                                municipalidadId = selectedMunicipalidadId,
-                                estado = estado
-                            )
-                        )
-                    }
+            TextButton(onClick = {
+                if (nombre.isBlank() || lugar.isBlank() || descripcion.isBlank() || selectedMunicipalidadId.isBlank()) {
+                    errors = mapOf(
+                        "nombre" to nombre.takeIf { it.isBlank() }?.let { "Requerido" },
+                        "lugar" to lugar.takeIf { it.isBlank() }?.let { "Requerido" },
+                        "descripcion" to descripcion.takeIf { it.isBlank() }?.let { "Requerido" },
+                        "municipalidad_id" to selectedMunicipalidadId.takeIf { it.isBlank() }?.let { "Selecciona una" }
+                    ).filterValues { it != null }
+                    return@TextButton
                 }
-            ) {
+
+                onSave(
+                    asociacion.copy(
+                        nombre = nombre,
+                        lugar = lugar,
+                        descripcion = descripcion,
+                        municipalidadId = selectedMunicipalidadId,
+                        estado = estado,
+                    )
+                )
+            }) {
                 Text("Guardar")
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            // Selector de Municipalidad con validación
+        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             var expanded by remember { mutableStateOf(false) }
-            Box(modifier = Modifier.fillMaxWidth()) {
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable { expanded = true } // Ahora todo el box es clickeable
+            ) {
                 OutlinedTextField(
-                    value = municipalidades.firstOrNull { it.id == selectedMunicipalidadId }?.distrito
-                        ?: "Seleccionar municipalidad",
+                    value = municipalidades.firstOrNull { it.id == selectedMunicipalidadId }?.distrito ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Municipalidad *") },
-                    trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { expanded = true },
+                    label = { Text("Municipalidad") },
+                    trailingIcon = {
+                        IconButton(onClick = { expanded = true }) {
+                            Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
                     isError = errors.containsKey("municipalidad_id"),
                     supportingText = {
-                        errors["municipalidad_id"]?.let {
-                            Text(text = it, color = MaterialTheme.colorScheme.error)
-                        }
+                        errors["municipalidad_id"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                     }
                 )
                 DropdownMenu(
@@ -408,7 +417,6 @@ fun AsociacionDialog(
                             onClick = {
                                 selectedMunicipalidadId = muni.id ?: ""
                                 expanded = false
-                                // Limpiar error al seleccionar
                                 errors = errors - "municipalidad_id"
                             }
                         )
@@ -416,25 +424,17 @@ fun AsociacionDialog(
                 }
             }
 
-            // Campo Nombre con validación
             OutlinedTextField(
                 value = nombre,
                 onValueChange = {
                     nombre = it
-                    // Limpiar error al escribir
                     if (it.isNotBlank()) errors = errors - "nombre"
                 },
                 label = { Text("Nombre *") },
-                modifier = Modifier.fillMaxWidth(),
                 isError = errors.containsKey("nombre"),
-                supportingText = {
-                    errors["nombre"]?.let {
-                        Text(text = it, color = MaterialTheme.colorScheme.error)
-                    }
-                }
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Campo Lugar con validación
             OutlinedTextField(
                 value = lugar,
                 onValueChange = {
@@ -442,16 +442,10 @@ fun AsociacionDialog(
                     if (it.isNotBlank()) errors = errors - "lugar"
                 },
                 label = { Text("Lugar *") },
-                modifier = Modifier.fillMaxWidth(),
                 isError = errors.containsKey("lugar"),
-                supportingText = {
-                    errors["lugar"]?.let {
-                        Text(text = it, color = MaterialTheme.colorScheme.error)
-                    }
-                }
+                modifier = Modifier.fillMaxWidth()
             )
 
-            // Campo Descripción con validación
             OutlinedTextField(
                 value = descripcion,
                 onValueChange = {
@@ -459,58 +453,93 @@ fun AsociacionDialog(
                     if (it.isNotBlank()) errors = errors - "descripcion"
                 },
                 label = { Text("Descripción *") },
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3,
                 isError = errors.containsKey("descripcion"),
-                supportingText = {
-                    errors["descripcion"]?.let {
-                        Text(text = it, color = MaterialTheme.colorScheme.error)
-                    }
-                }
+                modifier = Modifier.fillMaxWidth(),
+                maxLines = 3
             )
 
-            // Switch de Estado
+            // ESTADO
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Estado:", modifier = Modifier.padding(end = 8.dp))
-                Switch(
-                    checked = estado,
-                    onCheckedChange = { estado = it }
-                )
+                Text("Estado:", Modifier.padding(end = 8.dp))
+                Switch(checked = estado, onCheckedChange = { estado = it })
                 Text(if (estado) "Activo" else "Inactivo")
+            }
+
+            // IMÁGENES
+            Text("Imágenes:", style = MaterialTheme.typography.labelLarge)
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                imagenes.forEachIndexed { index, img ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("• ${img.codigo ?: "Sin código"}", Modifier.weight(1f))
+                        IconButton(onClick = {
+                            imagenes.removeAt(index)
+                        }) {
+                            Icon(Icons.Default.Delete, contentDescription = "Eliminar imagen", tint = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+
+                Button(onClick = {
+                    tempImagen = null
+                    showImageDialog = true
+                }) {
+                    Icon(Icons.Default.Add, contentDescription = null)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Agregar Imagen")
+                }
             }
         }
     }
+
+    if (showImageDialog) {
+        ImgAsociacionDialog(
+            imgAsociacion = tempImagen, // Aquí asegúrate que tempImagen sea de tipo ImgAsociaciones
+            onDismiss = { showImageDialog = false },
+            onSave = { nuevaImg ->
+                imagenes = imagenes.toMutableList().apply {
+                    val imgConAsocId = if (asociacion.id != null) {
+                        nuevaImg.copy(asociacion_id = asociacion.id)
+                    } else {
+                        nuevaImg.copy(asociacion_id = "") // o null, según tu modelo
+                    }
+                    add(imgConAsocId)
+                }
+                showImageDialog = false
+            }
+        )
+    }
 }
+
 
 @Composable
 fun ImgAsociacionDialog(
-    imgAsociacion: ImgAsociaciones?,
+    imgAsociacion: ImgAsociaciones?, // CAMBIO
     onDismiss: () -> Unit,
-    onSave: (ImgAsociaciones) -> Unit
+    onSave: (ImgAsociaciones) -> Unit // ✅ TAMBIÉN ESTO
 ) {
     var codigo by remember { mutableStateOf(imgAsociacion?.codigo ?: "") }
     var urlImage by remember { mutableStateOf(imgAsociacion?.url_image ?: "") }
-    var estado by remember { mutableStateOf(imgAsociacion?.estado ?: "true") }
+    var estado by remember { mutableStateOf(imgAsociacion?.estado ?: true) }
+    val id = imgAsociacion?.id
+    val asociacionId = imgAsociacion?.asociacion_id // NECESARIO PARA CREACIÓN Y UPDATE
 
     val camposValidos = codigo.isNotBlank() && urlImage.isNotBlank()
 
     AppDialog(
-        title = if (imgAsociacion?.id.isNullOrBlank()) "Nueva Imagen" else "Editar Imagen",
+        title = if (id.isNullOrBlank()) "Nueva Imagen" else "Editar Imagen",
         onDismissRequest = onDismiss,
         confirmButton = {
             TextButton(
                 onClick = {
                     onSave(
-                        imgAsociacion?.copy(
-                            codigo = codigo,
-                            url_image = urlImage,
-                            estado = estado
-                        ) ?: ImgAsociaciones(
-                            id = "",
+                        ImgAsociaciones(
+                            id = id,
+                            asociacion_id = asociacionId ?: "", // si es creación, ya lo habías seteado antes
                             codigo = codigo,
                             url_image = urlImage,
                             estado = estado,
-                            asociacion_id = imgAsociacion?.asociacion_id ?: "",
+                            created_at = imgAsociacion?.created_at,
+                            updated_at = imgAsociacion?.updated_at
                         )
                     )
                 },
@@ -520,9 +549,7 @@ fun ImgAsociacionDialog(
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancelar")
-            }
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
         }
     ) {
         Column(
@@ -534,24 +561,21 @@ fun ImgAsociacionDialog(
             OutlinedTextField(
                 value = codigo,
                 onValueChange = { codigo = it },
-                label = { Text("Código") },
+                label = { Text("Código *") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             OutlinedTextField(
                 value = urlImage,
                 onValueChange = { urlImage = it },
-                label = { Text("URL de la imagen") },
+                label = { Text("URL de la imagen *") },
                 modifier = Modifier.fillMaxWidth()
             )
 
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Estado:", modifier = Modifier.padding(end = 8.dp))
-                Switch(
-                    checked = estado.toBoolean(),
-                    onCheckedChange = { estado = it.toString() }
-                )
-                Text(if (estado.toBoolean()) "Activo" else "Inactivo")
+                Text("Estado:", Modifier.padding(end = 8.dp))
+                Switch(checked = estado, onCheckedChange = { estado = it })
+                Text(if (estado) "Activo" else "Inactivo")
             }
 
             if (urlImage.isNotBlank()) {
@@ -569,61 +593,31 @@ fun ImgAsociacionDialog(
     }
 }
 
+
+
+
+
 @Composable
-fun PaginationControls(
-    currentPage: Int,
-    totalPages: Int,
-    onPrevious: () -> Unit,
-    onNext: () -> Unit,
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholderText: String,
     modifier: Modifier = Modifier
 ) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 16.dp),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Botón Anterior
-        IconButton(
-            onClick = onPrevious,
-            enabled = currentPage > 0,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.NavigateBefore,
-                contentDescription = "Página anterior",
-                tint = if (currentPage > 0) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                }
-            )
-        }
-
-        // Indicador de página
-        Text(
-            text = "Página ${currentPage + 1} de $totalPages",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(horizontal = 16.dp)
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(placeholderText) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+            singleLine = true,
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+            modifier = Modifier.fillMaxWidth()
         )
-
-        // Botón Siguiente
-        IconButton(
-            onClick = onNext,
-            enabled = currentPage < totalPages - 1,
-            modifier = Modifier.size(48.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.NavigateNext,
-                contentDescription = "Página siguiente",
-                tint = if (currentPage < totalPages - 1) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
-                }
-            )
-        }
     }
 }

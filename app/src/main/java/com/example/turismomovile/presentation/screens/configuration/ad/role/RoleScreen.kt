@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.role
+package com.example.turismomovile.presentation.screens.configuration.ad.role
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -23,6 +23,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.ModuleSelectedDTO
 import com.example.turismomovile.data.remote.dto.configuracion.Role
 import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppDialog
+import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.AppTextField
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.rememberNotificationState
@@ -192,47 +193,20 @@ fun RoleScreen(
                     }
                 }
 
-                // Paginación
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = LocalAppDimens.current.spacing_16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { viewModel.previousPage() },
-                        enabled = state.currentPage > 0,
-                        modifier = Modifier.widthIn(min = 100.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.NavigateBefore,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Anterior")
-                    }
-
-                    Text(
-                        text = "${state.currentPage + 1} de ${state.totalPages}",
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                if (state.totalPages > 1) {
+                    AppPaginationControls(
+                        currentPage = state.currentPage,
+                        totalPages = state.totalPages,
+                        onPreviousPage = {
+                            viewModel.loadRoles((state.currentPage - 1), searchQuery)
+                        },
+                        onNextPage = {
+                            viewModel.loadRoles((state.currentPage + 1), searchQuery)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 16.dp)
                     )
-
-                    Button(
-                        onClick = { viewModel.nextPage() },
-                        enabled = state.currentPage + 1 < state.totalPages,
-                        modifier = Modifier.widthIn(min = 100.dp)
-                    ) {
-                        Text("Siguiente")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            Icons.Default.NavigateNext,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
                 }
             }
         }

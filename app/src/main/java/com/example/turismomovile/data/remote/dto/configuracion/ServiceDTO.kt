@@ -21,8 +21,8 @@ data class Service(
     val code: String,
     val category: String,
     val status: Int,
-    val emprendedores: List<EmprendedorServiceS>,
-    val images: List<ServiceImage>
+    val emprendedores: List<EmprendedorServiceS>?= null,
+    val images: List<ServiceImage>?= null
 )
 
 @Serializable
@@ -38,7 +38,7 @@ data class ServiceCreateDto(
     val code: String,
     val description: String,
     val category: String,
-    val status: Boolean = true,
+    val status: Int,
 )
 
 @Serializable
@@ -60,4 +60,17 @@ data class ServiceState(
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState()
 )
+
+fun Service.toCreateDto(): ServiceCreateDto {
+    return ServiceCreateDto(
+        name = this.name,
+        code = this.code,
+        description = this.description,
+        category = this.category,
+        status = this.status
+    )
+}
+
+
+
 

@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.modulos_padres
+package com.example.turismomovile.presentation.screens.configuration.ad.modulos_padres
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,12 +15,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 
 import com.example.turismomovile.data.remote.dto.configuracion.ParentModule
+import com.example.turismomovile.presentation.components.AppPaginationControls
 
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.StatisticCard
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
-import io.dev.kmpventas.presentation.screens.configuration.role.modulos_padres.ParentModuleViewModel
 import org.koin.androidx.compose.koinViewModel
 
 
@@ -124,35 +124,21 @@ fun ParentModuleScreen(
                     }
                 }
 
-                // Paginación
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { viewModel.previousPage() },
-                        enabled = state.currentPage > 0
-                    ) {
-                        Icon(Icons.Default.NavigateBefore, contentDescription = null)
-                        Spacer(Modifier.width(4.dp))
-                        Text("Anterior")
-                    }
-
-                    Text(
-                        text = "${state.currentPage + 1} de ${state.totalPages}",
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        style = MaterialTheme.typography.bodyLarge
+                if (state.totalPages > 1) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    AppPaginationControls(
+                        currentPage = state.currentPage,
+                        totalPages = state.totalPages,
+                        onPreviousPage = {
+                            viewModel.loadParentModules(state.currentPage - 1, searchQuery)
+                        },
+                        onNextPage = {
+                            viewModel.loadParentModules(state.currentPage + 1, searchQuery)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp)
                     )
-
-                    Button(
-                        onClick = { viewModel.nextPage() },
-                        enabled = state.currentPage + 1 < state.totalPages
-                    ) {
-                        Text("Siguiente")
-                        Spacer(Modifier.width(4.dp))
-                        Icon(Icons.Default.NavigateNext, contentDescription = null)
-                    }
                 }
             }
         }

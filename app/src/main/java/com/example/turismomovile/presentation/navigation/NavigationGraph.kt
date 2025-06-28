@@ -6,12 +6,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.turismomovile.data.local.SessionManager
-import com.example.turismomovile.presentation.screens.configuration.role.asociaciones.AsociacionesScreen
+import com.example.turismomovile.presentation.screens.configuration.ad.asociaciones.AsociacionesScreen
 import io.dev.kmpventas.presentation.navigation.Routes
-import com.example.turismomovile.presentation.screens.configuration.role.modules.ModuleScreen
-import com.example.turismomovile.presentation.screens.configuration.role.modulos_padres.ParentModuleScreen
-import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadScreen
-import com.example.turismomovile.presentation.screens.configuration.role.role.RoleScreen
+import com.example.turismomovile.presentation.screens.configuration.ad.modules.ModuleScreen
+import com.example.turismomovile.presentation.screens.configuration.ad.modulos_padres.ParentModuleScreen
+import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadScreen
+import com.example.turismomovile.presentation.screens.configuration.ad.role.RoleScreen
 import com.example.turismomovile.presentation.screens.login.LoginScreen
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import com.example.turismomovile.presentation.screens.land_page.EmprendedoresScreen
@@ -21,6 +21,7 @@ import com.example.turismomovile.presentation.screens.land_page.LangPageViewMode
 import PlacesScreen
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.ui.Modifier
+import com.example.turismomovile.presentation.screens.configuration.ad.service.ServiceHomeScreen
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
@@ -289,7 +290,8 @@ private fun setupMenuRoutes(
         Routes.HomeScreen.Setup.MUNICIPALIDAD to "Municipalidad",
         Routes.HomeScreen.Setup.ASOCIACIONES to "Asociaciones",
         Routes.HomeScreen.Setup.USUARIOS to "Usuarios",
-        Routes.HomeScreen.Setup.SEPTIONS to "Secciones"
+        Routes.HomeScreen.Setup.SEPTIONS to "Secciones",
+        Routes.HomeScreen.Setup.SERVICE to "Servicios"
     )
 
     implementedRoutes.forEach { (route, title) ->
@@ -319,6 +321,10 @@ private fun setupMenuRoutes(
                         paddingValues = paddingValues
                     )
                     Routes.HomeScreen.Setup.ASOCIACIONES -> AsociacionesScreen(
+                        navController = navController,
+                        paddingValues = paddingValues
+                    )
+                    Routes.HomeScreen.Setup.SERVICE -> ServiceHomeScreen(
                         navController = navController,
                         paddingValues = paddingValues
                     )

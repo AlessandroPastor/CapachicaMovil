@@ -25,9 +25,9 @@ data class ImgAsociacionesByAsoacionesResponse(
 @Serializable
 data class ImgAsociaciones(
     val id: String? = null,
-    val asociacion_id : String?,
+    val asociacion_id : String?= null,
     val url_image: String? = null,
-    val estado : String?,
+    val estado: Boolean = true,
     val codigo: String? = null,
     val created_at: String? = null,
     val updated_at: String? = null,

@@ -204,7 +204,7 @@ fun ServiceScreen(
                     currentPage < stateService.totalPages - 1) {
                     currentPage++
                     viewModel.loadService(
-                        page = currentPage.toString(),
+                        page = currentPage,
                         search = searchQuery.takeIf { it.isNotEmpty() },
                         category = selectedCategory
                     )
@@ -874,7 +874,7 @@ private fun ServiceImage(service: Service) {
             ),
         contentAlignment = Alignment.Center
     ) {
-        val imageUrl = service.images.firstOrNull()?.imagen_url
+        val imageUrl = service.images?.firstOrNull()?.imagen_url
         if (!imageUrl.isNullOrEmpty()) {
             AsyncImage(
                 model = ImageRequest.Builder(context)
@@ -970,7 +970,7 @@ fun ServiceDetails(service: Service) {
             .verticalScroll(rememberScrollState())
     ) {
         // Image carousel
-        if (service.images.isNotEmpty()) {
+        if (service.images?.isNotEmpty() == true) {
             ServiceImageCarousel(service.images)
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -983,8 +983,8 @@ fun ServiceDetails(service: Service) {
         Spacer(modifier = Modifier.height(16.dp))
 
         // Providers
-        if (service.emprendedores.isNotEmpty()) {
-            ServiceProviders(service.emprendedores)
+        if (service.emprendedores?.isNotEmpty() == true) {
+            service.emprendedores?.let { ServiceProviders(it) }
         }
     }
 }

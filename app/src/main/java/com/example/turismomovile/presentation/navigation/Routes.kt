@@ -25,6 +25,7 @@ object Routes {
             private const val SETUP = "$HOME_PREFIX/setup"
             const val MUNICIPALIDAD = "$SETUP/municipalidad"
             const val USUARIOS = "$SETUP/user"
+            const val SERVICE = "$SETUP/service"
             const val SEPTIONS = "$SETUP/sections"
             const val MODULE = "$SETUP/module"
             const val PARENT_MODULE = "$SETUP/parent-module"

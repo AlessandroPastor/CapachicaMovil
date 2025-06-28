@@ -6,6 +6,7 @@
     import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionCreateDTO
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionResponse
+    import com.example.turismomovile.data.remote.dto.configuracion.AsociacionUpdateDTO
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionWithFamily
     import io.ktor.client.HttpClient
     import io.ktor.client.call.body
@@ -22,7 +23,7 @@
                                 sessionManager: SessionManager
     ): BaseApiService(client, sessionManager) {
 
-        suspend fun getAsociaciones(page: Int = 0, size: Int = 10, name: String?): AsociacionResponse {
+        suspend fun getAsociaciones(page: Int = 0, size: Int = 3, name: String?): AsociacionResponse {
             return client.get(ApiConstants.Configuration.ASOCIACION_GET) {
                 parameter("page", page)
                 parameter("size", size)
@@ -43,22 +44,23 @@
         }
 
 
-        suspend fun createAsociacion(module: AsociacionCreateDTO): Asociacion {
+        suspend fun createAsociacion(dto: AsociacionCreateDTO): Asociacion
+        {
             return client.post(ApiConstants.Configuration.ASOCIACION_POST) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
-                setBody(module)
+                setBody(dto)
             }.body()
         }
 
-        suspend fun updateAsociacion(id: String, asociacion: Asociacion): Asociacion {
+        suspend fun updateAsociacion(id: String, dto: AsociacionUpdateDTO): Asociacion
+        {
             return client.put(ApiConstants.Configuration.ASOCIACION_PUT.replace("{id}", id)) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
-                setBody(asociacion)
+                setBody(dto)
             }.body()
         }
-
 
         suspend fun deleteAsociacion(id: String) {
             client.delete(ApiConstants.Configuration.ASOCIACION_DELETE.replace("{id}", id)) {

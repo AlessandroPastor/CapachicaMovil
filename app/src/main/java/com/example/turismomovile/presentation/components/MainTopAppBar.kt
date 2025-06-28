@@ -19,6 +19,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Public
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -134,7 +135,7 @@ private fun TopAppBarContent(
                 )
         ) {
             Icon(
-                imageVector = Icons.Default.Flight, // Tu icono elegido
+                imageVector = Icons.Outlined.Public, // Tu icono elegido
                 contentDescription = "Explorar",
                 tint = colors.primary,
                 modifier = Modifier.size(24.dp)

@@ -4,6 +4,7 @@ import com.example.turismomovile.data.remote.api.configuracion.AsociacionApiServ
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionCreateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionResponse
+import com.example.turismomovile.data.remote.dto.configuracion.AsociacionUpdateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionWithFamily
 import com.example.turismomovile.domain.repository.configuration.AsociacionesRepository
 
@@ -29,23 +30,22 @@ class AsociacionesRepositoryImpl(
         }
     }
 
-    // Crear una nueva asociación
-    override suspend fun createAsociaciones(asoaciones: AsociacionCreateDTO): Result<Asociacion> {
+    override suspend fun createAsociaciones(dto: AsociacionCreateDTO): Result<Asociacion> {
         return try {
-            Result.success(apiService.createAsociacion(asoaciones)) // Llamamos al servicio correspondiente
+            Result.success(apiService.createAsociacion(dto))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    // Actualizar una asociación
-    override suspend fun updateAsociaciones(id: String, asoaciones: Asociacion): Result<Asociacion> {
+    override suspend fun updateAsociaciones(id: String, dto: AsociacionUpdateDTO): Result<Asociacion> {
         return try {
-            Result.success(apiService.updateAsociacion(id, asoaciones)) // Llamamos al servicio correspondiente
+            Result.success(apiService.updateAsociacion(id, dto))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     // Eliminar una asociación
     override suspend fun deleteAsociaciones(id: String): Result<Unit> {

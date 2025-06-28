@@ -1,5 +1,6 @@
 package com.example.turismomovile.presentation.screens.login
 
+import android.content.res.Configuration
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -34,14 +35,18 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.clip
 import android.util.Patterns
+import androidx.compose.foundation.ScrollState
 
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
@@ -78,10 +83,13 @@ fun LoginScreen(
     viewModel: LoginViewModel = koinViewModel(),
     sessionManager: SessionManager = koinInject()
 ) {
-
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val loginState by viewModel.loginState.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isLargeScreen = screenWidth >= 600.dp
+
     LaunchedEffect(Unit) {
         viewModel.resetState()
     }
@@ -100,7 +108,7 @@ fun LoginScreen(
     }
 
     val validatePassword = {
-        isPasswordError = password.length < 3
+        isPasswordError = password.length < 1
         !isPasswordError
     }
 
@@ -112,7 +120,7 @@ fun LoginScreen(
     }
     val scrollState = rememberScrollState()
 
-    // Animación de Glow para el logo
+    // Animaciones
     val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 1f,
         targetValue = 1.2f,
@@ -122,7 +130,6 @@ fun LoginScreen(
         ), label = "glow animation"
     )
 
-    // Animación de entrada del logo
     val logoVisibility = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(500)
@@ -134,260 +141,121 @@ fun LoginScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .background(
-                    if (isDarkMode)
-                        MaterialTheme.colorScheme.background
-                    else
-                        Color.Transparent
+                    brush = if (isDarkMode) {
+                        SolidColor(MaterialTheme.colorScheme.background)
+                    } else {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.Primary.copy(alpha = 0.1f),
+                                AppColors.Background
+                            )
+                        )
+                    }
                 )
-        ) {
-            // Fondo animado con elementos de turismo
-            FloatingBubblesBackground(
-                modifier = Modifier.fillMaxSize()
-            )
+        )
+        {
+            // Fondo animado adaptativo
+            if (!isLargeScreen) {
+                FloatingBubblesBackground(
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                // Fondo animado con elementos de turismo
+                FloatingBubblesBackground(
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
 
-            // Contenido principal centrado perfectamente
+            // Contenido principal con adaptabilidad
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(24.dp),
+                    .padding(
+                        horizontal = if (isLargeScreen) 96.dp else 24.dp,
+                        vertical = if (isLargeScreen) 48.dp else 24.dp
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .shadow(
-                            elevation = 16.dp,
-                            shape = RoundedCornerShape(28.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.3f),
-                            spotColor = Color.Black.copy(alpha = 0.3f)
-                        ),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkMode)
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                        else
-                            Color.White.copy(alpha = 0.92f)
-                    ),
-                    border = BorderStroke(
-                        width = 1.5.dp,
-                        color = if (isDarkMode)
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                        else
-                            Color.Black.copy(alpha = 0.15f)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-                ) {
-                    Column(
+                if (isLargeScreen) {
+                    // Diseño para tablets y pantallas grandes
+                    Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .verticalScroll(scrollState) // ⬅️ Habilita scroll vertical
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                            .height(IntrinsicSize.Max),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        // Título animado
-                        AnimatedVisibility(
-                            visible = logoVisibility.value,
-                            enter = fadeIn(animationSpec = tween(1200))
-                        ) {
-                            Text(
-                                text = "Turismo Capachica",
-                                style = MaterialTheme.typography.headlineLarge.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 26.sp,
-                                    letterSpacing = 1.2.sp
+                        // Panel de imagen (solo en pantallas grandes)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(end = 32.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(
+                                    if (isDarkMode) AppColors.SurfaceDark.copy(alpha = 0.8f)
+                                    else AppColors.Surface.copy(alpha = 0.8f)
                                 ),
-                                color = if (isDarkMode)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.primary,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Campos de entrada
-                        AppTextFieldWithKeyboard(
-                            value = email,
-                            onValueChange = {
-                                email = it
-                                if (isEmailError) validateEmail()
-                            },
-                            label = "Usuario",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            isError = isEmailError,
-                            errorMessage = if (isEmailError) "Usuario Desconocido" else null,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Email,
-                                imeAction = ImeAction.Next
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        AppTextFieldWithKeyboard(
-                            value = password,
-                            onValueChange = {
-                                password = it
-                                if (isPasswordError) validatePassword()
-                            },
-                            label = "Contraseña",
-                            trailingIcon = {
-                                IconButton(onClick = { isPasswordVisible = !isPasswordVisible }) {
-                                    Icon(
-                                        if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
-                                        tint = if (isDarkMode)
-                                            MaterialTheme.colorScheme.onSurface
-                                        else
-                                            MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            },
-                            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            isError = isPasswordError,
-                            errorMessage = if (isPasswordError) "Contraseña Incorrecta" else null,
-                            keyboardOptions = KeyboardOptions(
-                                keyboardType = KeyboardType.Password,
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = { validateAndLogin() }
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Botón de inicio de sesión
-                        AppButton(
-                            text = "INICIAR SESIÓN",
-                            onClick = { validateAndLogin() },
-                            enabled = email.isNotEmpty() && password.isNotEmpty(),
-                            loading = loginState is LoginState.Loading,
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        // Mostrar error de login
-                        AnimatedVisibility(visible = loginState is LoginState.Error) {
-                            AppCard(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(
-                                    text = (loginState as? LoginState.Error)?.message ?: "",
-                                    modifier = Modifier.padding(16.dp),
-                                    color = MaterialTheme.colorScheme.error,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-
-                        // Fila de botones: "¿Olvidaste tu contraseña?" y "¿Crear cuenta?"
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            contentAlignment = Alignment.Center
                         ) {
-                            OutlinedButton(
-                                onClick = {},
-                                modifier = Modifier.weight(1f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isDarkMode)
-                                        MaterialTheme.colorScheme.outline
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            )  {
-                                Text(
-                                    text = "¿Olvidaste tu contraseña?",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 8.sp, // Puedes ajustarlo según necesidad
-                                )
-                            }
-
-
-                            OutlinedButton(
-                                onClick = { navController.navigate(Routes.REGISTER) },
-                                modifier = Modifier.weight(1f),
-                                border = BorderStroke(
-                                    1.dp,
-                                    if (isDarkMode)
-                                        MaterialTheme.colorScheme.outline
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                ),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = ButtonDefaults.outlinedButtonColors(
-                                    contentColor = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            ) {
-                                Text(
-                                    text = "¿Crear cuenta?",
-                                    fontWeight = FontWeight.SemiBold,
-                                    fontSize = 8.sp,
-                                )
-                            }
-                        }
-
-                        // Botón de regreso a la pantalla principal
-                        OutlinedButton(
-                            onClick = { onBackPressed() },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isDarkMode)
-                                    MaterialTheme.colorScheme.outline
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            ),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = if (isDarkMode)
-                                    MaterialTheme.colorScheme.onSurface
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "Volver",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Volver a la página principal",
-                                fontWeight = FontWeight.SemiBold
+                            Image(
+                                painter = painterResource(id = R.drawable.escallani),
+                                contentDescription = "Turismo Capachica",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.8f)
+                                    .graphicsLayer {
+                                        scaleX = glowAnim
+                                        scaleY = glowAnim
+                                    },
+                                contentScale = ContentScale.Fit
                             )
                         }
+
+                        // Formulario de login
+                        LoginFormContent(
+                            isDarkMode = isDarkMode,
+                            scrollState = scrollState,
+                            logoVisibility = logoVisibility,
+                            email = email,
+                            onEmailChange = { email = it; if (isEmailError) validateEmail() },
+                            password = password,
+                            onPasswordChange = { password = it; if (isPasswordError) validatePassword() },
+                            isPasswordVisible = isPasswordVisible,
+                            togglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                            isEmailError = isEmailError,
+                            isPasswordError = isPasswordError,
+                            validateAndLogin = validateAndLogin,
+                            loginState = loginState,
+                            focusManager = focusManager,
+                            navController = navController,
+                            onBackPressed = onBackPressed,
+                            modifier = Modifier.weight(1f)
+                        )
                     }
+                } else {
+                    // Diseño para móviles
+                    LoginFormContent(
+                        isDarkMode = isDarkMode,
+                        scrollState = scrollState,
+                        logoVisibility = logoVisibility,
+                        email = email,
+                        onEmailChange = { email = it; if (isEmailError) validateEmail() },
+                        password = password,
+                        onPasswordChange = { password = it; if (isPasswordError) validatePassword() },
+                        isPasswordVisible = isPasswordVisible,
+                        togglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        isEmailError = isEmailError,
+                        isPasswordError = isPasswordError,
+                        validateAndLogin = validateAndLogin,
+                        loginState = loginState,
+                        focusManager = focusManager,
+                        navController = navController,
+                        onBackPressed = onBackPressed,
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
             }
 
-            // Mostrar el indicador de carga encima del formulario
             if (loginState is LoginState.Loading) {
                 ShowLoadingDialog(isLoading = true)
             }
@@ -401,4 +269,332 @@ fun LoginScreen(
     }
 }
 
+@Composable
+private fun LoginFormContent(
+    isDarkMode: Boolean,
+    scrollState: ScrollState,
+    logoVisibility: MutableState<Boolean>,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isPasswordVisible: Boolean,
+    togglePasswordVisibility: () -> Unit,
+    isEmailError: Boolean,
+    isPasswordError: Boolean,
+    validateAndLogin: () -> Unit,
+    loginState: LoginState,
+    focusManager: FocusManager,
+    navController: NavHostController,
+    onBackPressed: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .wrapContentHeight()
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(28.dp),
+                ambientColor = Color.Black.copy(alpha = 0.3f),
+                spotColor = Color.Black.copy(alpha = 0.3f)
+            ),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDarkMode)
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            else
+                Color.White.copy(alpha = 0.92f)
+        ),
+        border = BorderStroke(
+            width = 1.5.dp,
+            color = if (isDarkMode)
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+            else
+                Color.Black.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Logo y título
+            AnimatedVisibility(
+                visible = logoVisibility.value,
+                enter = fadeIn(animationSpec = tween(1200))
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_capachica),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(120.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, AppColors.Primary, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "Turismo Capachica",
+                        style = MaterialTheme.typography.headlineLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            fontSize = 26.sp,
+                            letterSpacing = 1.2.sp
+                        ),
+                        color = MaterialTheme.colorScheme.primary,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Campos de formulario
+            AppTextFieldWithKeyboard(
+                value = email,
+                onValueChange = onEmailChange,
+                label = "Correo electrónico",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Email,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                isError = isEmailError,
+                errorMessage = if (isEmailError) "Ingrese un correo válido" else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AppTextFieldWithKeyboard(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = "Contraseña",
+                trailingIcon = {
+                    IconButton(onClick = togglePasswordVisibility) {
+                        Icon(
+                            if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (isPasswordVisible) "Ocultar contraseña" else "Mostrar contraseña",
+                            tint = if (isDarkMode)
+                                MaterialTheme.colorScheme.onSurface
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                isError = isPasswordError,
+                errorMessage = if (isPasswordError) "Mínimo 6 caracteres" else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { validateAndLogin() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botón de acción principal
+            AppButton(
+                text = "INICIAR SESIÓN",
+                onClick = validateAndLogin,
+                enabled = email.isNotEmpty() && password.isNotEmpty(),
+                loading = loginState is LoginState.Loading,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            // Manejo de errores
+            AnimatedVisibility(visible = loginState is LoginState.Error) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = (loginState as? LoginState.Error)?.message ?: "Error desconocido",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Links secundarios
+            ResponsiveActionButtons(
+                isDarkMode = isDarkMode,
+                navController = navController,
+                onBackPressed = onBackPressed
+            )
+        }
+    }
+}
+
+
+@Composable
+private fun ResponsiveActionButtons(
+    isDarkMode: Boolean,
+    navController: NavHostController,
+    onBackPressed: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    if (screenWidth < 600.dp && isLandscape) {
+        // Diseño para móviles en horizontal
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("¿Olvidaste tu contraseña?", fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = { navController.navigate(Routes.REGISTER) },
+                modifier = Modifier.fillMaxWidth(),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text("¿Crear cuenta?", fontWeight = FontWeight.SemiBold)
+            }
+
+            OutlinedButton(
+                onClick = onBackPressed,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Volver", fontWeight = FontWeight.SemiBold)
+            }
+        }
+    } else {
+        // Diseño estándar (vertical o pantallas grandes)
+        Row(
+            modifier = modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = {},
+                modifier = Modifier.weight(1f),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "¿Olvidaste tu contraseña?",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = if (screenWidth < 400.dp) 10.sp else 12.sp
+                )
+            }
+
+            OutlinedButton(
+                onClick = { navController.navigate(Routes.REGISTER) },
+                modifier = Modifier.weight(1f),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(
+                    text = "¿Crear cuenta?",
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = if (screenWidth < 400.dp) 10.sp else 12.sp
+                )
+            }
+        }
+
+        OutlinedButton(
+            onClick = onBackPressed,
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(
+                1.dp,
+                if (isDarkMode) MaterialTheme.colorScheme.outline
+                else MaterialTheme.colorScheme.primary
+            ),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = if (isDarkMode)
+                    MaterialTheme.colorScheme.onSurface
+                else
+                    MaterialTheme.colorScheme.primary
+            )
+        ) {
+            Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = "Volver a la página principal",
+                fontWeight = FontWeight.SemiBold,
+                fontSize = if (screenWidth < 400.dp) 12.sp else 14.sp
+            )
+        }
+    }
+}

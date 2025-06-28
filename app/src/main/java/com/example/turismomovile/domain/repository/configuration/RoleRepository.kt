@@ -5,7 +5,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.RoleModulesReques
 import com.example.turismomovile.data.remote.dto.configuracion.RoleResponse
 
 interface RoleRepository {
-    suspend fun getRoles(page: Int = 0, size: Int = 20, name: String? = null): Result<RoleResponse>
+    suspend fun getRoles(page: Int = 0, size: Int = 1, name: String? = null): Result<RoleResponse>
     suspend fun getRoleById(id: String): Result<Role>
     suspend fun createRole(role: Role): Result<Role>
     suspend fun updateRole(role: Role): Result<Role>

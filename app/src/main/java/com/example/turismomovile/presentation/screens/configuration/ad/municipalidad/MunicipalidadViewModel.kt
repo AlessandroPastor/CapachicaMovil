@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.municipalidad
+package com.example.turismomovile.presentation.screens.configuration.ad.municipalidad
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

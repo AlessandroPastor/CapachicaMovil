@@ -1,4 +1,4 @@
-package io.dev.kmpventas.presentation.screens.configuration.role.modulos_padres
+package com.example.turismomovile.presentation.screens.configuration.ad.modulos_padres
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,7 +25,7 @@ class ParentModuleViewModel(
     fun loadParentModules(page: Int = 0, searchQuery: String? = null) {
         viewModelScope.launch {
             _state.value = _state.value.copy(isLoading = true)
-            repository.getParentModules(page = page, size = 7, name = searchQuery) // ← Aquí establecemos el límite
+            repository.getParentModules(page = page, size = 1, name = searchQuery) // ← Aquí establecemos el límite
                 .onSuccess { response ->
                     _state.value = _state.value.copy(
                         items = response.content,

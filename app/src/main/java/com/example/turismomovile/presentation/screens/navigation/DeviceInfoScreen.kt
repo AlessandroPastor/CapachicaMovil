@@ -315,9 +315,9 @@ private fun PhotoGallerySection() {
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            GalleryThumbnail(R.drawable.cottos)
-            GalleryThumbnail(R.drawable.capachica)
-            GalleryThumbnail(R.drawable.isla_tikonata)
+            GalleryThumbnail(R.drawable.escallani)
+            GalleryThumbnail(R.drawable.escallani)
+            GalleryThumbnail(R.drawable.escallani)
         }
     }
 }

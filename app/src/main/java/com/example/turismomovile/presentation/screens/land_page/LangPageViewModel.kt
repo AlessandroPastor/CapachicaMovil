@@ -231,7 +231,7 @@ class LangPageViewModel (
 
 
 
-    fun loadService(page: String? = 0.toString(), search: String? = null, category: String? = null) {
+    fun loadService(page: Int? = 0, search: String? = null, category: String? = null) {
         viewModelScope.launch {
             // Iniciamos el estado de carga
             _stateService.value = _stateService.value.copy(isLoading = true)

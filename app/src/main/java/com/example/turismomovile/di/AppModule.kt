@@ -30,11 +30,12 @@ import com.example.turismomovile.domain.repository.configuration.ParentModuleRep
 import com.example.turismomovile.domain.repository.configuration.RoleRepository
 import com.example.turismomovile.domain.usecase.LoginUseCase
 import com.example.turismomovile.domain.usecase.RegisterUseCase
-import com.example.turismomovile.presentation.screens.configuration.role.asociaciones.AsociacionesViewModel
-import com.example.turismomovile.presentation.screens.configuration.role.modules.ModuleViewModel
-import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadDescriptionViewModel
-import com.example.turismomovile.presentation.screens.configuration.role.municipalidad.MunicipalidadViewModel
-import com.example.turismomovile.presentation.screens.configuration.role.role.RoleViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.asociaciones.AsociacionesViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.modules.ModuleViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadDescriptionViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.role.RoleViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.service.ServiceViewModel
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import com.example.turismomovile.presentation.screens.login.LoginViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
@@ -139,6 +140,7 @@ val appModule = module {
     single { MunicipalidadDescriptionViewModel(get()) }
     single { MunicipalidadViewModel(get()) }
     single { AsociacionesViewModel(get(), get(), get()) }
+    single {ServiceViewModel(get())}
     viewModel { RegisterViewModel(get(),get()) }
 
 }

@@ -19,7 +19,7 @@ class RoleApiService(client: HttpClient, sessionManager: SessionManager) : BaseA
     sessionManager
 ) {
 
-    suspend fun getRoles(page: Int = 0, size: Int = 20, name: String? = null): RoleResponse {
+    suspend fun getRoles(page: Int = 0, size: Int = 1, name: String? = null): RoleResponse {
         return client.get(ApiConstants.Configuration.ROLES) {
             parameter("page", page)
             parameter("size", size)

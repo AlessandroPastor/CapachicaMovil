@@ -6,7 +6,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.ParentModuleListR
 
 interface ParentModuleRepository {
 
-    suspend fun getParentModules(page: Int = 0, size: Int = 20, name: String? = null): Result<ParentModuleListResponse>
+    suspend fun getParentModules(page: Int = 0, size: Int = 1, name: String? = null): Result<ParentModuleListResponse>
 
     suspend fun getParentModuleById(id: String): Result<ParentModule>
 

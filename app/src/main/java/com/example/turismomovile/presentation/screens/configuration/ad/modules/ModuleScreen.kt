@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.modules
+package com.example.turismomovile.presentation.screens.configuration.ad.modules
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -16,6 +16,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.turismomovile.data.remote.dto.configuracion.ModuleCreateDTO
@@ -25,23 +26,36 @@ import com.example.turismomovile.data.remote.dto.configuracion.toModuleDTO
 import com.example.turismomovile.data.remote.dto.formatDateTime
 import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppDialog
+import com.example.turismomovile.presentation.components.AppEmptyState
+import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.AppTextField
+import com.example.turismomovile.presentation.components.ConfirmDialog
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.StatisticCard
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
+import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.LocalAppDimens
+import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
 
 @Composable
 fun ModuleScreen(
     navController: NavHostController,
     paddingValues: PaddingValues,
-    viewModel: ModuleViewModel = koinInject()
+    viewModel: ModuleViewModel = koinInject(),
+    themeViewModel: ThemeViewModel = koinInject()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notificationState = rememberNotificationState()
+    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
+        initialValue = false,
+        lifecycle = LocalLifecycleOwner.current.lifecycle
+    )
+
     var searchQuery by remember { mutableStateOf("") }
+    var selectedModule by remember { mutableStateOf<ModuleDTO?>(null) }
+    var moduleToDelete by remember { mutableStateOf<ModuleDTO?>(null) }
 
     LaunchedEffect(state.notification) {
         if (state.notification.isVisible) {
@@ -53,238 +67,128 @@ fun ModuleScreen(
         }
     }
 
-    NotificationHost(state = notificationState) {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(LocalAppDimens.current.spacing_16.dp)
-            ) {
-                // Estadísticas
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = LocalAppDimens.current.spacing_16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    StatisticCard(
-                        title = "Total Módulos",
-                        value = state.totalElements.toString(),
-                        icon = Icons.Default.Folder,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(100.dp)
-                    )
-                    StatisticCard(
-                        title = "Módulos Activos",
-                        value = state.items.count { it.status }.toString(),
-                        icon = Icons.Default.CheckCircle,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(100.dp)
-                    )
-                    StatisticCard(
-                        title = "Módulos Inactivos",
-                        value = state.items.count { !it.status }.toString(),
-                        icon = Icons.Default.Cancel,
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(100.dp)
-                    )
+    AppTheme(darkTheme = isDarkMode) {
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                floatingActionButton = {
+                    FloatingActionButton(onClick = {
+                        selectedModule = ModuleDTO("", "", "", "")
+                    }) {
+                        Icon(Icons.Default.Add, contentDescription = "Agregar módulo")
+                    }
                 }
-
-                // Barra de herramientas
-                Row(
+            ) { innerPadding ->
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = LocalAppDimens.current.spacing_16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .fillMaxSize()
+                        .padding(innerPadding)
                 ) {
-                    TextField(
-                        value = searchQuery,
-                        onValueChange = {
-                            searchQuery = it
-                            viewModel.loadModules(searchQuery = it.ifEmpty { null })
-                        },
-                        placeholder = { Text("Buscar módulos...") },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        },
+                    Column(
                         modifier = Modifier
-                            .weight(1f)
-                            .heightIn(min = 56.dp),
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-                            focusedContainerColor = MaterialTheme.colorScheme.surface
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp)
+                    ) {
+                        Spacer(modifier = Modifier.height(70.dp))
+
+                        SearchBar(
+                            query = searchQuery,
+                            onQueryChange = {
+                                searchQuery = it
+                                viewModel.loadModules(searchQuery = it.ifEmpty { null })
+                            },
+                            placeholderText = "Buscar módulos...",
+                            modifier = Modifier.fillMaxWidth()
                         )
-                    )
 
-                    AppButton(
-                        text = "Nuevo Módulo",
-                        onClick = {
-                            viewModel.setSelectedModule(ModuleDTO(title = "", subtitle = "", type = "", status = true))
-                        },
-                        icon = Icons.Default.Add,
-                        modifier = Modifier.widthIn(min = 180.dp)
-                    )
-                }
+                        Spacer(modifier = Modifier.height(16.dp))
 
-                // Tabla de módulos
-                Surface(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    shape = MaterialTheme.shapes.medium,
-                    shadowElevation = 1.dp
-                ) {
-                    Column {
-                        // Encabezados
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surfaceVariant)
-                                .padding(16.dp)
-                        ) {
-                            Text(
-                                text = "NOMBRE",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(3f)
-                            )
-                            Text(
-                                text = "CÓDIGO",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(2.8f)
-                            )
-                            Text(
-                                text = "ESTADO",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(3f)
-                            )
-                            Text(
-                                text = "FECHA CREACIÓN",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(3f)
-                            )
-                            Text(
-                                text = "ACCIONES",
-                                style = MaterialTheme.typography.titleSmall,
-                                modifier = Modifier.weight(2.5f),
-                                textAlign = TextAlign.Center
-                            )
-                        }
+                        Box(modifier = Modifier.weight(1f)) {
+                            when {
+                                state.isLoading -> {
+                                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                                        CircularProgressIndicator()
+                                    }
+                                }
 
-                        if (state.items.isEmpty()) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(32.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = if (searchQuery.isEmpty())
-                                        "No hay módulos disponibles"
-                                    else
-                                        "No se encontraron resultados para '$searchQuery'",
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        } else {
-                            LazyColumn {
-                                items(state.items) { module ->
-                                    ModuleRow(
-                                        module = module,
-                                        onEdit = { viewModel.setSelectedModule(module) },
-                                        onDelete = { viewModel.deleteModule(module.id ?: "") }
+                                state.items.isEmpty() -> {
+                                    AppEmptyState(
+                                        title = "No se encontraron módulos",
+                                        description = "Intenta con otro término de búsqueda"
                                     )
+                                }
+
+                                else -> {
+                                    LazyColumn(
+                                        modifier = Modifier.fillMaxSize(),
+                                        contentPadding = PaddingValues(bottom = 16.dp),
+                                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                                    ) {
+                                        items(state.items, key = { it.id ?: it.title }) { module ->
+                                            ModuleRow(
+                                                module = module,
+                                                onEdit = { selectedModule = module },
+                                                onDelete = { moduleToDelete = module }
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                }
 
-                // Paginación
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = LocalAppDimens.current.spacing_16.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Button(
-                        onClick = { viewModel.previousPage() },
-                        enabled = state.currentPage > 0, // Solo habilita si hay páginas previas
-                        modifier = Modifier.widthIn(min = 100.dp)
-                    ) {
-                        Icon(
-                            Icons.Default.NavigateBefore,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Anterior")
-                    }
-
-                    Text(
-                        text = "${state.currentPage + 1} de ${state.totalPages}",
-                        modifier = Modifier.padding(horizontal = 24.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    Button(
-                        onClick = { viewModel.nextPage() },
-                        enabled = state.currentPage + 1 < state.totalPages, // Solo habilita si hay más páginas
-                        modifier = Modifier.widthIn(min = 100.dp)
-                    ) {
-                        Text("Siguiente")
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Icon(
-                            Icons.AutoMirrored.Filled.NavigateNext,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp)
-                        )
+                        if (state.totalPages > 1) {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            AppPaginationControls(
+                                currentPage = state.currentPage,
+                                totalPages = state.totalPages,
+                                onPreviousPage = {
+                                    viewModel.loadModules(state.currentPage - 1, searchQuery)
+                                },
+                                onNextPage = {
+                                    viewModel.loadModules(state.currentPage + 1, searchQuery)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
             }
         }
+    }
 
-        if (state.isDialogOpen) {
-            ModuleDialog(
-                module = state.selectedItem,
-                parentModules = state.parentModules,
-                onDismiss = { viewModel.closeDialog() },
-                onSave = { moduleCreateDTO ->
-                    val moduleDTO = moduleCreateDTO.toModuleDTO() // Convierte a ModuleDTO
+    selectedModule?.let { module ->
+        ModuleDialog(
+            module = module,
+            parentModules = state.parentModules,
+            onDismiss = { selectedModule = null },
+            onSave = { moduleCreateDTO ->
+                val dto = moduleCreateDTO.toModuleDTO()
+                if (dto.id.isNullOrEmpty()) viewModel.createModule(dto)
+                else viewModel.updateModule(dto)
+                selectedModule = null
+            }
+        )
+    }
 
-                    if (!state.selectedItem?.id.isNullOrEmpty()) {
-                        // Si hay un ID, se actualiza el módulo
-                        state.selectedItem?.id?.let { moduleId ->
-                            viewModel.updateModule(moduleDTO.copy(id = moduleId))
-                        }
-                    } else {
-                        // Si no hay ID, se crea un nuevo módulo
-                        viewModel.createModule(moduleDTO)
-                    }
-                }
-            )
-        }
-
+    moduleToDelete?.let { module ->
+        ConfirmDialog(
+            title = "¿Eliminar módulo?",
+            description = "¿Estás seguro de que deseas eliminar el módulo \"${module.title}\"?",
+            onConfirm = {
+                module.id?.let { viewModel.deleteModule(it) }
+                moduleToDelete = null
+            },
+            onDismiss = {
+                moduleToDelete = null
+            }
+        )
     }
 }
 
 
 @Composable
-private fun ModuleRow(
+ fun ModuleRow(
     module: ModuleDTO,
     onEdit: () -> Unit,
     onDelete: () -> Unit
@@ -584,3 +488,27 @@ fun ModuleDialog(
 }
 
 
+@Composable
+private fun SearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholderText: String,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(placeholderText) },
+            leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Buscar") },
+            singleLine = true,
+            shape = MaterialTheme.shapes.extraLarge,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                disabledContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}

@@ -1,5 +1,6 @@
 package com.example.turismomovile.presentation.screens.login
 
+import android.util.Patterns
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
@@ -11,12 +12,14 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -28,19 +31,26 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.ViewCompat.FocusDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.turismomovile.R
@@ -72,15 +82,20 @@ fun RegisterScreen(
     val themeViewModel: ThemeViewModel = koinInject()
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val registerState by viewModel.registerState.collectAsStateWithLifecycle()
+    val configuration = LocalConfiguration.current
+    val screenWidth = configuration.screenWidthDp.dp
+    val isLargeScreen = screenWidth >= 600.dp
+
     LaunchedEffect(Unit) {
         viewModel.resetState()
     }
+
+    // Estados del formulario
     var name by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
     var isPasswordVisible by remember { mutableStateOf(false) }
     var isEmailError by remember { mutableStateOf(false) }
     var isPasswordError by remember { mutableStateOf(false) }
@@ -88,13 +103,14 @@ fun RegisterScreen(
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
 
+    // Validaciones
     val validateEmail = {
-        isEmailError = !email.contains("@") || email.isEmpty()
+        isEmailError = !Patterns.EMAIL_ADDRESS.matcher(email).matches()
         !isEmailError
     }
 
     val validatePassword = {
-        isPasswordError = password.length < 3
+        isPasswordError = password.length < 6
         !isPasswordError
     }
 
@@ -105,40 +121,7 @@ fun RegisterScreen(
         }
     }
 
-    LaunchedEffect(registerState) {
-        if (registerState is RegisterViewModel.RegisterState.Success) {
-            (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
-                val decoded = decodeToken(data.token) // 🔹 Decodificar JWT para obtener más información
-
-                val userResponse = data.user
-
-                val user = User(
-                    id = userResponse.id.toString(),
-                    email = userResponse.email,
-                    name = userResponse.username,
-                    last_name = decoded?.last_name ?: "",
-                    fullName = decoded?.fullName,
-                    username = decoded?.username ?: userResponse.username,
-                    code = decoded?.code,
-                    imagenUrl = decoded?.imagenUrl,
-                    roles = decoded?.roles ?: emptyList(),
-                    permissions = decoded?.permissions ?: emptyList(),
-                    created_at = decoded?.created_at,
-                    token = data.token
-                )
-
-                // 🔹 Guardar usuario en sesión local
-                onRegisterSuccess(user)
-
-                // 🔹 Navegar a HOME limpiando el stack de login y register
-                navController.navigate(Routes.HOME) {
-                    popUpTo(Routes.LOGIN) { inclusive = true }
-                }
-            }
-        }
-    }
-
-    // Animación de Glow para el logo
+    // Animaciones
     val glowAnim by rememberInfiniteTransition(label = "glow").animateFloat(
         initialValue = 1f,
         targetValue = 1.2f,
@@ -148,7 +131,6 @@ fun RegisterScreen(
         ), label = "glow animation"
     )
 
-// Animación de entrada del logo
     val logoVisibility = remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         delay(500)
@@ -156,305 +138,13 @@ fun RegisterScreen(
     }
     val scrollState = rememberScrollState()
 
-
-    AppTheme(darkTheme = isDarkMode) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(
-                    if (isDarkMode)
-                        MaterialTheme.colorScheme.background
-                    else
-                        Color.Transparent
-                )
-        ) {
-            // Fondo animado con elementos de turismo
-            FloatingBubblesBackground(
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Contenido principal centrado perfectamente
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(24.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .shadow(
-                            elevation = 16.dp,
-                            shape = RoundedCornerShape(28.dp),
-                            ambientColor = Color.Black.copy(alpha = 0.3f),
-                            spotColor = Color.Black.copy(alpha = 0.3f)
-                        ),
-                    shape = RoundedCornerShape(28.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (isDarkMode)
-                            MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
-                        else
-                            Color.White.copy(alpha = 0.92f)
-                    ),
-                    border = BorderStroke(
-                        width = 1.5.dp,
-                        color = if (isDarkMode)
-                            MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
-                        else
-                            Color.Black.copy(alpha = 0.15f)
-                    ),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(scrollState) // ⬅️ Habilita scroll vertical
-                            .padding(32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Título con icono
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.PersonAdd,
-                                contentDescription = null,
-                                tint = if (isDarkMode)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            )
-                            Text(
-                                text = "Registro",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold
-                                ),
-                                color = if (isDarkMode)
-                                    MaterialTheme.colorScheme.primary
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            )
-                        }
-
-                        Text(
-                            text = "Turismo Capachica",
-                            style = MaterialTheme.typography.titleMedium.copy(
-                                fontWeight = FontWeight.ExtraBold
-                            ),
-                            color = if (isDarkMode)
-                                MaterialTheme.colorScheme.onSurface
-                            else
-                                Color.Black,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        // Campos de entrada
-                        AppTextFieldWithKeyboard(
-                            value = name,
-                            onValueChange = { name = it },
-                            label = "Nombre",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        AppTextFieldWithKeyboard(
-                            value = lastName,
-                            onValueChange = { lastName = it },
-                            label = "Apellido",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        AppTextFieldWithKeyboard(
-                            value = username,
-                            onValueChange = { username = it },
-                            label = "Usuario",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.AccountCircle,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        AppTextFieldWithKeyboard(
-                            value = email,
-                            onValueChange = {
-                                email = it
-                                if (isEmailError) validateEmail()
-                            },
-                            label = "Correo electrónico",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Email,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            isError = isEmailError,
-                            errorMessage = if (isEmailError) "Correo no válido" else null,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        AppTextFieldWithKeyboard(
-                            value = password,
-                            onValueChange = {
-                                password = it
-                                if (isPasswordError) validatePassword()
-                            },
-                            label = "Contraseña",
-                            leadingIcon = {
-                                Icon(
-                                    Icons.Default.Lock,
-                                    contentDescription = null,
-                                    tint = if (isDarkMode)
-                                        MaterialTheme.colorScheme.onSurface
-                                    else
-                                        MaterialTheme.colorScheme.primary
-                                )
-                            },
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = { isPasswordVisible = !isPasswordVisible },
-                                    modifier = Modifier.size(24.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = "Mostrar/Ocultar Contraseña",
-                                        tint = if (isDarkMode)
-                                            MaterialTheme.colorScheme.onSurface
-                                        else
-                                            MaterialTheme.colorScheme.primary
-                                    )
-                                }
-                            },
-                            visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                            isError = isPasswordError,
-                            errorMessage = if (isPasswordError) "Mínimo 3 caracteres" else null,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                            modifier = Modifier.fillMaxWidth()
-                        )
-
-                        Spacer(modifier = Modifier.height(8.dp))
-
-                        // Botón de registro
-                        Button(
-                            onClick = { validateAndRegister() },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(50.dp),
-                            enabled = email.isNotEmpty() && password.isNotEmpty(),
-                            shape = MaterialTheme.shapes.medium,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
-                        ) {
-                            if (registerState is RegisterViewModel.RegisterState.Loading) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.size(24.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    strokeWidth = 2.dp
-                                )
-                            } else {
-                                Text(
-                                    text = "REGISTRARSE",
-                                    style = MaterialTheme.typography.labelLarge.copy(
-                                        fontWeight = FontWeight.ExtraBold
-                                    )
-                                )
-                            }
-                        }
-
-                        // Mostrar error de registro
-                        if (registerState is RegisterViewModel.RegisterState.Error) {
-                            Surface(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = MaterialTheme.shapes.small,
-                                color = MaterialTheme.colorScheme.errorContainer,
-                                contentColor = MaterialTheme.colorScheme.onErrorContainer
-                            ) {
-                                Text(
-                                    text = (registerState as RegisterViewModel.RegisterState.Error).message,
-                                    modifier = Modifier.padding(12.dp),
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-                        // Botón de regreso a la pantalla principal
-                        OutlinedButton(
-                            onClick = { onBackPressed() },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
-                            border = BorderStroke(
-                                1.dp,
-                                if (isDarkMode)
-                                    MaterialTheme.colorScheme.outline
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            ),
-                            colors = ButtonDefaults.outlinedButtonColors(
-                                contentColor = if (isDarkMode)
-                                    MaterialTheme.colorScheme.onSurface
-                                else
-                                    MaterialTheme.colorScheme.primary
-                            )
-                        ) {
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "¿Ya tienes una cuenta? Inicia sesión",
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-            }
-
-            if (registerState is RegisterViewModel.RegisterState.Loading) {
-                ShowRegisterLoadingDialog(isLoading = true)
-            }
-        }
-    }
-
+    // Manejo del estado de éxito
     LaunchedEffect(registerState) {
         if (registerState is RegisterViewModel.RegisterState.Success) {
             (registerState as RegisterViewModel.RegisterState.Success).response.data?.let { data ->
-                val decoded = decodeToken(data.token)  // 🔹 Decodificar JWT para más información
-
+                val decoded = decodeToken(data.token)
                 val userResponse = data.user
 
-                // 🔹 Construcción completa del modelo User con toda la información relevante
                 val user = User(
                     id = userResponse.id.toString(),
                     email = userResponse.email,
@@ -470,10 +160,474 @@ fun RegisterScreen(
                     token = data.token
                 )
 
-                // 🔹 Llamar a función externa para guardar el usuario correctamente
                 onRegisterSuccess(user)
+                navController.navigate(Routes.HOME) {
+                    popUpTo(Routes.LOGIN) { inclusive = true }
+                }
             }
         }
     }
 
+    AppTheme(darkTheme = isDarkMode) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    brush = if (isDarkMode) {
+                        SolidColor(MaterialTheme.colorScheme.background)
+                    } else {
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                AppColors.Primary.copy(alpha = 0.1f),
+                                AppColors.Background
+                            )
+                        )
+                    }
+                )
+        )
+        {
+            // Fondo animado adaptativo
+            if (!isLargeScreen) {
+                FloatingBubblesBackground(
+                    modifier = Modifier.fillMaxSize()
+                )
+            } else {
+                FloatingBubblesBackground(
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+
+            // Contenido principal con adaptabilidad
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(
+                        horizontal = if (isLargeScreen) 96.dp else 24.dp,
+                        vertical = if (isLargeScreen) 48.dp else 24.dp
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                if (isLargeScreen) {
+                    // Diseño para tablets y pantallas grandes
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(IntrinsicSize.Max),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Panel de imagen (solo en pantallas grandes)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight()
+                                .padding(end = 32.dp)
+                                .clip(RoundedCornerShape(24.dp))
+                                .background(
+                                    if (isDarkMode) AppColors.SurfaceDark.copy(alpha = 0.8f)
+                                    else AppColors.Surface.copy(alpha = 0.8f)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.playaesoncida),
+                                contentDescription = "Registro Turismo Capachica",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.8f)
+                                    .graphicsLayer {
+                                        scaleX = glowAnim
+                                        scaleY = glowAnim
+                                    },
+                                contentScale = ContentScale.Fit
+                            )
+                        }
+
+                        // Formulario de registro
+                        RegisterFormContent(
+                            isDarkMode = isDarkMode,
+                            scrollState = scrollState,
+                            logoVisibility = logoVisibility,
+                            name = name,
+                            onNameChange = { name = it },
+                            lastName = lastName,
+                            onLastNameChange = { lastName = it },
+                            username = username,
+                            onUsernameChange = { username = it },
+                            email = email,
+                            onEmailChange = { email = it; if (isEmailError) validateEmail() },
+                            password = password,
+                            onPasswordChange = { password = it; if (isPasswordError) validatePassword() },
+                            isPasswordVisible = isPasswordVisible,
+                            togglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                            isEmailError = isEmailError,
+                            isPasswordError = isPasswordError,
+                            validateAndRegister = validateAndRegister,
+                            registerState = registerState,
+                            focusManager = focusManager,
+                            navController = navController,
+                            onBackPressed = onBackPressed,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                } else {
+                    // Diseño para móviles
+                    RegisterFormContent(
+                        isDarkMode = isDarkMode,
+                        scrollState = scrollState,
+                        logoVisibility = logoVisibility,
+                        name = name,
+                        onNameChange = { name = it },
+                        lastName = lastName,
+                        onLastNameChange = { lastName = it },
+                        username = username,
+                        onUsernameChange = { username = it },
+                        email = email,
+                        onEmailChange = { email = it; if (isEmailError) validateEmail() },
+                        password = password,
+                        onPasswordChange = { password = it; if (isPasswordError) validatePassword() },
+                        isPasswordVisible = isPasswordVisible,
+                        togglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        isEmailError = isEmailError,
+                        isPasswordError = isPasswordError,
+                        validateAndRegister = validateAndRegister,
+                        registerState = registerState,
+                        focusManager = focusManager,
+                        navController = navController,
+                        onBackPressed = onBackPressed,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            }
+
+            if (registerState is RegisterViewModel.RegisterState.Loading) {
+                ShowRegisterLoadingDialog(isLoading = true)
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegisterFormContent(
+    isDarkMode: Boolean,
+    scrollState: ScrollState,
+    logoVisibility: MutableState<Boolean>,
+    name: String,
+    onNameChange: (String) -> Unit,
+    lastName: String,
+    onLastNameChange: (String) -> Unit,
+    username: String,
+    onUsernameChange: (String) -> Unit,
+    email: String,
+    onEmailChange: (String) -> Unit,
+    password: String,
+    onPasswordChange: (String) -> Unit,
+    isPasswordVisible: Boolean,
+    togglePasswordVisibility: () -> Unit,
+    isEmailError: Boolean,
+    isPasswordError: Boolean,
+    validateAndRegister: () -> Unit,
+    registerState: RegisterViewModel.RegisterState,
+    focusManager: FocusManager,
+    navController: NavHostController,
+    onBackPressed: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val focusRequesterLastName = remember { FocusRequester() }
+    val focusRequesterUsername = remember { FocusRequester() }
+    val focusRequesterEmail = remember { FocusRequester() }
+    val focusRequesterPassword = remember { FocusRequester() }
+
+    Card(
+        modifier = modifier
+            .wrapContentHeight()
+            .shadow(
+                elevation = 16.dp,
+                shape = RoundedCornerShape(28.dp),
+                ambientColor = Color.Black.copy(alpha = 0.3f),
+                spotColor = Color.Black.copy(alpha = 0.3f)
+            ),
+        shape = RoundedCornerShape(28.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isDarkMode)
+                MaterialTheme.colorScheme.surface.copy(alpha = 0.95f)
+            else
+                Color.White.copy(alpha = 0.92f)
+        ),
+        border = BorderStroke(
+            width = 1.5.dp,
+            color = if (isDarkMode)
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+            else
+                Color.Black.copy(alpha = 0.15f)
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollState)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Encabezado con logo y título
+            AnimatedVisibility(
+                visible = logoVisibility.value,
+                enter = fadeIn(animationSpec = tween(1200))
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Image(
+                        painter = painterResource(id = R.drawable.logo_capachica),
+                        contentDescription = "Logo",
+                        modifier = Modifier
+                            .size(100.dp)
+                            .clip(CircleShape)
+                            .border(2.dp, AppColors.Primary, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PersonAdd,
+                            contentDescription = null,
+                            tint = if (isDarkMode)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Registro",
+                            style = MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            ),
+                            color = if (isDarkMode)
+                                MaterialTheme.colorScheme.primary
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
+                    }
+                    Text(
+                        text = "Turismo Capachica",
+                        style = MaterialTheme.typography.titleMedium.copy(
+                            fontWeight = FontWeight.SemiBold
+                        ),
+                        color = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            Color.Black,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                }
+            }
+
+            // Campos del formulario
+            AppTextFieldWithKeyboard(
+                value = name,
+                onValueChange = onNameChange,
+                label = "Nombre",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterLastName.requestFocus() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AppTextFieldWithKeyboard(
+                value = lastName,
+                onValueChange = onLastNameChange,
+                label = "Apellido",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Person,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterUsername.requestFocus() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AppTextFieldWithKeyboard(
+                value = username,
+                onValueChange = onUsernameChange,
+                label = "Usuario",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterUsername.requestFocus() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AppTextFieldWithKeyboard(
+                value = email,
+                onValueChange = onEmailChange,
+                label = "Correo electrónico",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Email,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                isError = isEmailError,
+                errorMessage = if (isEmailError) "Ingrese un correo válido" else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    imeAction = ImeAction.Next
+                ),
+                keyboardActions = KeyboardActions(
+                    onNext = { focusRequesterUsername.requestFocus() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            AppTextFieldWithKeyboard(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = "Contraseña",
+                leadingIcon = {
+                    Icon(
+                        Icons.Default.Lock,
+                        contentDescription = null,
+                        tint = if (isDarkMode)
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingIcon = {
+                    IconButton(
+                        onClick = togglePasswordVisibility,
+                        modifier = Modifier.size(24.dp)
+                    ) {
+                        Icon(
+                            imageVector = if (isPasswordVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = "Mostrar/Ocultar Contraseña",
+                            tint = if (isDarkMode)
+                                MaterialTheme.colorScheme.onSurface
+                            else
+                                MaterialTheme.colorScheme.primary
+                        )
+                    }
+                },
+                visualTransformation = if (isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                isError = isPasswordError,
+                errorMessage = if (isPasswordError) "Mínimo 6 caracteres" else null,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    imeAction = ImeAction.Done
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = { validateAndRegister() }
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Botón de registro
+            Button(
+                onClick = validateAndRegister,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                enabled = name.isNotEmpty() && lastName.isNotEmpty() &&
+                        username.isNotEmpty() && email.isNotEmpty() &&
+                        password.isNotEmpty(),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                if (registerState is RegisterViewModel.RegisterState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp
+                    )
+                } else {
+                    Text(
+                        text = "REGISTRARSE",
+                        style = MaterialTheme.typography.labelLarge.copy(
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                    )
+                }
+            }
+
+            // Manejo de errores
+            AnimatedVisibility(visible = registerState is RegisterViewModel.RegisterState.Error) {
+                AppCard(modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        text = (registerState as? RegisterViewModel.RegisterState.Error)?.message ?: "Error desconocido",
+                        modifier = Modifier.padding(16.dp),
+                        color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+
+            // Botón para volver al login
+            OutlinedButton(
+                onClick = { navController.popBackStack() },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    1.dp,
+                    if (isDarkMode) MaterialTheme.colorScheme.outline
+                    else MaterialTheme.colorScheme.primary
+                ),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = if (isDarkMode)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Volver",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "¿Ya tienes una cuenta? Inicia sesión",
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+        }
+    }
 }

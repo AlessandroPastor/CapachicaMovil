@@ -668,7 +668,7 @@ private fun getIconForTitle(title: String): ImageVector {
         "movimiento de almacén" -> Icons.Default.Warehouse
         "pagos" -> Icons.Default.CreditCard
         "reportes" -> Icons.Default.BarChart
-
+        "tipo de servicios"-> Icons.Default.MiscellaneousServices
         // Configuración
         "usuarios" -> Icons.Default.Person
         "usuario empresa" -> Icons.Default.Business
@@ -676,7 +676,8 @@ private fun getIconForTitle(title: String): ImageVector {
         "modulos" -> Icons.Default.Extension
         "roles" -> Icons.Default.AdminPanelSettings
         "municipalidad" -> Icons.Default.Domain
-        "asociaciones" -> Icons.Default.List
+        "asociaciones" -> Icons.Default.Business
+        "configuración página"-> Icons.Default.Pages
 
         // Catálogo
         "unidad medida" -> Icons.Default.Straighten

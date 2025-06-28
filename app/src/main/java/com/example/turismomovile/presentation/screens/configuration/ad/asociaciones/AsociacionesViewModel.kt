@@ -1,14 +1,18 @@
-package com.example.turismomovile.presentation.screens.configuration.role.asociaciones
+package com.example.turismomovile.presentation.screens.configuration.ad.asociaciones
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionCreateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionState
+import com.example.turismomovile.data.remote.dto.configuracion.AsociacionUpdateDTO
+import com.example.turismomovile.data.remote.dto.configuracion.ImagenUpdateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsoacionesState
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsociaciones
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsociacionesCreateDTO
+import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadState
+import com.example.turismomovile.data.remote.dto.configuracion.toCreateDTO
 import com.example.turismomovile.domain.repository.configuration.AsociacionesRepository
 import com.example.turismomovile.domain.repository.configuration.ImgAsociacionesRepository
 import com.example.turismomovile.domain.repository.configuration.MunicipalidadRepository
@@ -38,60 +42,40 @@ class AsociacionesViewModel (
     init {
         loadAllAsociaciones()
         loadAllImgAsoaciones()
-        loadMunicipalidad()
+        loadMunicipalidadCompleta()
     }
 
-    fun loadAllAsociaciones(searchQuery: String? = null) {
+    fun loadAllAsociaciones(page: Int? = 0, searchQuery: String? = null) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true, currentPage = 0)  // Inicializamos currentPage en 0
+            // ⏳ Iniciamos el estado de carga
+            _state.value = _state.value.copy(isLoading = true)
+
             try {
-                println("🔄 Iniciando solicitud para cargar todas las asociaciones...")
-                println("   📄 Parámetros de búsqueda: $searchQuery")
+                println("🔄 [Asociaciones] Iniciando carga (página $page, búsqueda: $searchQuery)...")
 
-                var currentPage = 0  // Aseguramos que currentPage sea 0
-                var totalPages = 1   // Inicializamos totalPages con un valor por defecto
-                var allContent: List<Asociacion> = emptyList()
+                // Llamada directa a la página solicitada
+                val response = repository.getAsociaciones(page = page ?: 0, name = searchQuery)
 
-                do {
-                    println("🔄 Cargando página $currentPage...")
-                    val response = repository.getAsociaciones(page = currentPage, name = searchQuery)
+                response.onSuccess { res ->
+                    println("✅ Página ${res.currentPage} cargada con éxito")
+                    println("   ➕ Total registros recibidos: ${res.content.size}")
+                    println("   🆔 IDs: ${res.content.map { it.id }}")
 
-                    response.onSuccess { res ->
-                        totalPages = res.totalPages // Asignamos el valor real de totalPages
-                        val content = res.content
-
-                        // Concatenar las asociaciones de la página actual
-                        allContent = allContent + content
-
-                        // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥
-                        println("🛰️ Respuesta de la API recibida para la página $currentPage:")
-                        println("   📦 Total asociaciones en esta página: ${content.size}")
-                        println("   🆔 IDs de asociaciones: ${content.map { it.id }}")
-                        println("------------------------------------------------------------")
-                    }.onFailure { error ->
-                        throw error
-                    }
-
-                    // Incrementar la página para la siguiente solicitud
-                    currentPage++
-
-                } while (currentPage < totalPages)
-
-                // Actualizar estado con todas las asociaciones
-                _state.value = _state.value.copy(
-                    itemsAso = allContent,
-                    currentPage = currentPage,  // Asegúrate de actualizar currentPage
-                    totalPages = totalPages,
-                    isLoading = false,
-                    error = null
-                )
-
-                // Confirmar que los datos fueron procesados correctamente
-                println("✔️ Todas las asociaciones cargadas correctamente.")
+                    // Actualizamos el estado con la página recibida
+                    _state.value = _state.value.copy(
+                        itemsAso = res.content,
+                        currentPage = res.currentPage,
+                        totalPages = res.totalPages,
+                        totalElements = res.totalElements,
+                        isLoading = false,
+                        error = null
+                    )
+                }.onFailure { error ->
+                    throw error
+                }
 
             } catch (e: Exception) {
-                println("❌ Error al intentar obtener las asociaciones.")
-                println("   📩 Detalles del error: ${e.message}")
+                println("❌ Error al cargar asociaciones: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message,
@@ -106,178 +90,121 @@ class AsociacionesViewModel (
     }
 
 
-
-    fun loadMunicipalidad(page: Int = 0, searchQuery: String? = null) {
+    fun loadMunicipalidadCompleta(page: Int? = 0) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _stateMuni.update { it.copy(isLoading = true) }
             try {
-                repositoryMuni.getMunicipalidad(page = page, name = searchQuery)
-                    .onSuccess { response ->
-
-                        // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥
-                        println("🛰️ MUNICIPALIDAD DEBUG INFO:")
-                        println("   📄 Página actual: ${response.currentPage + 1} / ${response.totalPages}")
-                        println("   📦 Total Municipalidades esta página: ${response.content.size}")
-                        println("   🆔 IDs de Municipalidades:")
-                        response.content.forEach { municipalidad ->
-                            println("     ➡️ ID: ${municipalidad.id} | Nombre: ${municipalidad.distrito}")
-                        }
-                        println("------------------------------------------------------------")
-
-                        _stateMuni.value = _stateMuni.value.copy(
-                            items = response.content,
-                            currentPage = response.currentPage,
-                            totalPages = response.totalPages,
+                val response = repositoryMuni.getMunicipalidad(page = page ?: 0)
+                response.onSuccess { res ->
+                    _stateMuni.update {
+                        it.copy(
+                            items = res.content,
                             isLoading = false,
                             error = null
                         )
                     }
-                    .onFailure { error ->
-                        println("❌ Error al cargar municipalidades: ${error.message}")
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            error = error.message,
-                            notification = NotificationState(
-                                message = error.message ?: "Error al cargar municipalidades",
-                                type = NotificationType.ERROR,
-                                isVisible = true
-                            )
-                        )
-                    }
+                }.onFailure { error ->
+                    throw error
+                }
             } catch (e: Exception) {
-                println("❌ Excepción inesperada: ${e.message}")
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    error = e.message,
-                    notification = NotificationState(
-                        message = e.message ?: "Error inesperado",
-                        type = NotificationType.ERROR,
-                        isVisible = true
+                _stateMuni.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message,
+                        notification = NotificationState(
+                            message = e.message ?: "Error al cargar municipalidades",
+                            type = NotificationType.ERROR,
+                            isVisible = true
+                        )
                     )
-                )
+                }
             }
         }
     }
 
 
 
-    fun createAsociaciones(dto: AsociacionCreateDTO) {
+
+
+
+
+    // IMPORTANTE: Usa el DTO correcto (AsociacionUpdateDTO)
+    fun updateAsociacion(asociacion: Asociacion) {
         viewModelScope.launch {
-            println("📤 [CREATE] Intentando crear Asociaciones...")
-            println("   ➡️ Lugar: ${dto.lugar}")
-            println("   ➡️ Nombre: ${dto.nombre}")
-            println("   ➡️ Description: ${dto.descripcion}")
-            println("   ➡️ Municipality: ${dto.municipalidad_id}")
+            println("🔄 [UPDATE] Iniciando actualización de Asociación...")
+            // ... logs como tienes ahora...
 
             _state.update { it.copy(isLoading = true) }
 
-            repository.createAsociaciones(dto)
-                .onSuccess {
-                    println("✅ [CREATE] Asociacion creada correctamente")
-                    loadAllAsociaciones()
-                    _state.update {
-                        it.copy(
-                            selectedItem = null,
-                            isDialogOpen = false,
-                            notification = NotificationState(
-                                message = "Asociacion creada exitosamente",
-                                type = NotificationType.SUCCESS,
-                                isVisible = true
-                            )
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    println("❌ [CREATE] Error al crear Asociacion: ${error.message}")
-                    _state.update {
-                        it.copy(
-                            isLoading = false,
-                            notification = NotificationState(
-                                message = error.message ?: "Error al crear Asociacion",
-                                type = NotificationType.ERROR,
-                                isVisible = true
-                            )
-                        )
-                    }
-                }
-        }
-    }
+            // Aseguramos que todas las imágenes tengan el asociacion_id correcto
+            val imagenesUpdate = asociacion.imagenes?.map { img ->
+                ImagenUpdateDTO(
+                    id = img.id,
+                    asociacion_id = asociacion.id!!, // SIEMPRE asigna el id de la asociacion
+                    url_image = img.url_image ?: "",
+                    estado = img.estado ?: true,
+                    codigo = img.codigo ?: "",
+                    description = img.description ?: ""
+                )
+            } ?: emptyList()
+            val dto = AsociacionUpdateDTO(
+                municipalidad_id = asociacion.municipalidadId ?: "",
+                nombre = asociacion.nombre ?: "",
+                descripcion = asociacion.descripcion ?: "",
+                lugar = asociacion.lugar ?: "",
+                phone = asociacion.phone ?: "",
+                office_hours = asociacion.office_hours ?: "",
+                url = asociacion.url ?: "",
+                estado = asociacion.estado,
+                imagenes = imagenesUpdate
+            )
 
-    fun updateAsociaciones(asociacion: Asociacion) {
-        viewModelScope.launch {
-            // Log de inicio de la actualización
-            println("🔄 Intentando actualizar Asociación con ID=${asociacion.id}")
-            println("   ➡️ Datos de la Asociación a actualizar: ${asociacion}")
-
-            // Cambiamos el estado a cargando
-            _state.value = _state.value.copy(isLoading = true)
-
-            // Verificamos si la asociación tiene un ID válido
-            asociacion.id?.let { id ->
-                println("🔄 ID de la Asociación: $id")
-                println("   ➡️ Intentando enviar los siguientes datos al repositorio: ${asociacion}")
-
-                // Realizamos la actualización a través del repositorio
-                repository.updateAsociaciones(id, asociacion)
-                    .onSuccess { response ->
-                        // Respuesta exitosa
-                        println("✅ Asociación actualizada correctamente con ID=$id")
-                        println("   ➡️ Respuesta del servidor: ${response.toString()}")
-
-                        // Mostrar los datos que hemos recibido como respuesta del servidor
-                        if (response != null) {
-                            println("   ➡️ Datos actualizados de la asociación: ${response.nombre}, ${response.lugar}")
-                        } else {
-                            println("   ➡️ Respuesta vacía o no esperada del servidor.")
-                        }
-
-                        // Cargamos nuevamente las asociaciones después de la actualización
+            if (asociacion.id != null) {
+                println("📤 Enviando DTO para actualización: $dto")
+                repository.updateAsociaciones(asociacion.id, dto)
+                    .onSuccess {
+                        println("✅ Asociación actualizada correctamente en el servidor.")
                         loadAllAsociaciones()
-
-                        // Actualizar el estado
-                        _state.value = _state.value.copy(
-                            isDialogOpen = false,
-                            selectedItem = null,
-                            notification = NotificationState(
-                                message = "Asociación actualizada exitosamente",
-                                type = NotificationType.SUCCESS,
-                                isVisible = true
+                        _state.update {
+                            it.copy(
+                                isDialogOpen = false,
+                                selectedItem = null,
+                                notification = NotificationState(
+                                    message = "Asociación actualizada exitosamente",
+                                    type = NotificationType.SUCCESS,
+                                    isVisible = true
+                                )
                             )
-                        )
-                        println("   ✅ Estado actualizado correctamente")
+                        }
                     }
                     .onFailure { error ->
-                        // Error al intentar actualizar la asociación
-                        println("❌ Error al actualizar Asociación ID=$id: ${error.message}")
-                        println("   ➡️ Detalles del error: ${error.message}")
-                        println("   ➡️ Stack Trace: ${error.stackTraceToString()}")
-
-                        // Actualizar el estado con un error
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            notification = NotificationState(
-                                message = error.message ?: "Error al actualizar Asociación",
-                                type = NotificationType.ERROR,
-                                isVisible = true
+                        println("❌ Error actualizando Asociación en el servidor.")
+                        println("   📩 Detalles del error: ${error.message}")
+                        _state.update {
+                            it.copy(
+                                isLoading = false,
+                                notification = NotificationState(
+                                    message = error.message ?: "Error al actualizar Asociación",
+                                    type = NotificationType.ERROR,
+                                    isVisible = true
+                                )
                             )
-                        )
-
-                        // Enviar un mensaje más específico según el tipo de error
-                        if (error.message?.contains("Connection") == true) {
-                            println("   ❌ Error de conexión. Verifica la red o el servidor.")
                         }
                     }
-            } ?: run {
-                // Si no existe un ID, mostramos un error
-                println("❌ No se proporcionó un ID para la Asociación.")
-                _state.value = _state.value.copy(
-                    isLoading = false,
-                    notification = NotificationState(
-                        message = "No se proporcionó un ID para la Asociación",
-                        type = NotificationType.ERROR,
-                        isVisible = true
+            } else {
+                println("❗ Datos incompletos para actualización:")
+                println("   ➕ ID nulo: ${asociacion.id == null}")
+                println("   ➕ DTO generado: $dto")
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        notification = NotificationState(
+                            message = "Datos incompletos para actualizar",
+                            type = NotificationType.ERROR,
+                            isVisible = true
+                        )
                     )
-                )
+                }
             }
         }
     }
@@ -452,6 +379,41 @@ class AsociacionesViewModel (
                         )
                     }
             }
+        }
+    }
+
+
+    fun createAsociaciones(dto: AsociacionCreateDTO) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+
+            repository.createAsociaciones(dto)
+                .onSuccess {
+                    loadAllAsociaciones()
+                    _state.update {
+                        it.copy(
+                            selectedItem = null,
+                            isDialogOpen = false,
+                            notification = NotificationState(
+                                message = "Asociacion creada exitosamente",
+                                type = NotificationType.SUCCESS,
+                                isVisible = true
+                            )
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            notification = NotificationState(
+                                message = error.message ?: "Error al crear Asociacion",
+                                type = NotificationType.ERROR,
+                                isVisible = true
+                            )
+                        )
+                    }
+                }
         }
     }
 

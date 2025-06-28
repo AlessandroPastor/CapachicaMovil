@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.configuration.role.municipalidad
+package com.example.turismomovile.presentation.screens.configuration.ad.municipalidad
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -39,6 +39,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.MunicipalidadDescription
 import com.example.turismomovile.data.remote.dto.configuracion.formatDateTime
 import com.example.turismomovile.presentation.components.AppDialog
+import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
@@ -168,14 +169,14 @@ fun MunicipalidadScreen(
 
                         // Paginación mejorada
                         if (state.totalPages > 1) {
-                            PaginationControls(
+                            AppPaginationControls(
                                 currentPage = state.currentPage,
                                 totalPages = state.totalPages,
-                                onPrevious = {
+                                onPreviousPage = {
                                     viewModel.loadMunicipalidad(state.currentPage - 1, searchQuery)
                                     viewmodelDescription.loadMunicipalidadDescription(state.currentPage - 1, searchQuery)
                                 },
-                                onNext = {
+                                onNextPage = {
                                     viewModel.loadMunicipalidad(state.currentPage + 1, searchQuery)
                                     viewmodelDescription.loadMunicipalidadDescription(state.currentPage + 1, searchQuery)
                                 },
