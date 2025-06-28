@@ -92,8 +92,27 @@ data class MenuItem(
 
 
 @Serializable
+data class UpdateProfileDTO(
+    val name: String,
+    val last_name: String,
+    val code: String,
+    val username: String,
+    val email: String,
+    val imagen_url: String
+)
+
+@Serializable
 data class MenuResponse(
     val data: List<MenuItem>
+)
+
+data class ProfileForm(
+    val name: String = "",
+    val lastName: String = "",
+    val code: String = "",
+    val username: String = "",
+    val email: String = "",
+    val imagenUrl: String = ""
 )
 
 fun decodeToken(token: String): User? {

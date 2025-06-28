@@ -16,6 +16,7 @@
     import io.ktor.client.request.post
     import io.ktor.client.request.put
     import io.ktor.client.request.setBody
+    import io.ktor.client.statement.bodyAsText
     import io.ktor.http.ContentType
     import io.ktor.http.contentType
 
@@ -44,13 +45,20 @@
         }
 
 
-        suspend fun createAsociacion(dto: AsociacionCreateDTO): Asociacion
-        {
-            return client.post(ApiConstants.Configuration.ASOCIACION_POST) {
+        suspend fun createAsociacion(dto: AsociacionCreateDTO): Asociacion {
+            println("🔄 [CREATE] Iniciando creación de Asociación...")
+            println("📤 Enviando DTO para crear: $dto")
+            val response = client.post(ApiConstants.Configuration.ASOCIACION_POST) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
                 setBody(dto)
-            }.body()
+            }
+            println("⬅️ [RESPONSE] Código: ${response.status}")
+            println("⬅️ [RESPONSE] Body: ${response.bodyAsText()}") // <-- Verás el JSON crudo que devuelve tu backend
+
+            val asociacion = response.body<Asociacion>()
+            println("✅ Asociación creada: $asociacion")
+            return asociacion
         }
 
         suspend fun updateAsociacion(id: String, dto: AsociacionUpdateDTO): Asociacion

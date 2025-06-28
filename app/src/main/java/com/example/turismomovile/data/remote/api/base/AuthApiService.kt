@@ -7,10 +7,15 @@ import com.example.turismomovile.data.remote.dto.LoginDTO
 import com.example.turismomovile.data.remote.dto.LoginInput
 import com.example.turismomovile.data.remote.dto.LoginResponse
 import com.example.turismomovile.data.remote.dto.RegisterResponse
+import com.example.turismomovile.data.remote.dto.UpdateProfileDTO
 import com.example.turismomovile.data.remote.dto.decodeToken
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
+import io.ktor.client.request.forms.formData
+import io.ktor.client.request.forms.submitFormWithBinaryData
+import io.ktor.client.statement.HttpResponse
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 
 class AuthApiService(
@@ -108,30 +113,33 @@ class AuthApiService(
         return registerResponse
     }
 
-    suspend fun logout() {
-        println("Iniciando el proceso de logout...")
-        try {
-            val token = sessionManager.getAuthToken()
-            println("Token de autenticación obtenido: $token")
-
-            val response = client.post(ApiConstants.Configuration.LOGOUT_ENDPOINT) {
-                contentType(ContentType.Application.Json)
-                headers {
-                    append(HttpHeaders.Authorization, "Bearer $token")
-                }
-            }
-
-            println("Respuesta de logout: ${response.status}")
-
-            if (response.status == HttpStatusCode.OK || response.status == HttpStatusCode.Unauthorized) {
-                sessionManager.clearSession()
-                println("Sesión cerrada correctamente.")
-            } else {
-                println("Error al cerrar sesión: ${response.status.description}")
-            }
-        } catch (e: Exception) {
-            println("Excepción al intentar cerrar sesión: ${e.localizedMessage}")
+    suspend fun updateProfile(profile: UpdateProfileDTO): Boolean {
+        println("Iniciando actualización de perfil...")
+        val response = client.put(ApiConstants.Configuration.UPDATE_PROFILE_ENDPOINT) {
+            addAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(profile)
         }
+        println("Respuesta del servidor al actualizar perfil: ${response.status}")
+        return response.status.value in 200..299
+    }
+    suspend fun uploadImage(imageBytes: ByteArray, fileName: String): String? {
+        val token = sessionManager.getAuthToken() ?: return null
+        val response: HttpResponse = client.submitFormWithBinaryData(
+            url = ApiConstants.Configuration.UPLOAD_PHOTO_ENDPOINT,
+            formData = formData {
+                append("photo", imageBytes, Headers.build {
+                    append(HttpHeaders.ContentDisposition, "filename=$fileName")
+                    append(HttpHeaders.ContentType, "image/jpeg")
+                })
+            }
+        ) {
+            header(HttpHeaders.Authorization, "Bearer $token")
+        }
+        val json = response.bodyAsText()
+        val match = "\"url\"\\s*:\\s*\"([^\"]+)\"".toRegex().find(json)
+        // El replace aquí, para limpiar cualquier barra invertida rara
+        return match?.groups?.get(1)?.value?.replace("\\", "")
     }
 
     override suspend fun loadAuthTokenFromStorage() {

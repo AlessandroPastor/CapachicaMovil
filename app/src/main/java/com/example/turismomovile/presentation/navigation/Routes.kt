@@ -10,6 +10,7 @@ object Routes {
     const val DEVICE_INFO = "device_info"
     const val LAND_PAGE = "landpage"
     const val EXPLORATE = "explorate"
+    const val UPDATE_PERFIL = "update_perfil"
     const val PRODUCTS = "products"
     const val SERVICES = "services"
     const val PLACES = "places"

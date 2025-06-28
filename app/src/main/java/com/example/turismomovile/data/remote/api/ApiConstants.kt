@@ -7,7 +7,6 @@ object ApiConstants {
     //const val BASE_URL = "http://192.177.1.13:8000" //PC CRISTIAN
 
     //const val BASE_URL = "AQUI SI SE SUBE ALA NUBE"
-    const val DETAILS_ENDPOINT = "$BASE_URL/details"
     object Configuration {
 
         // ROLES
@@ -35,6 +34,9 @@ object ApiConstants {
         // AUTH
         const val LOGIN_ENDPOINT = "$BASE_URL/login"
         const val REGISTER_ENDPOINT = "$BASE_URL/register"
+        const val UPDATE_PROFILE_ENDPOINT = "$BASE_URL/update-profile"
+        const val UPLOAD_PHOTO_ENDPOINT = "$BASE_URL/upload-photo"
+
         const val REFRESH_ENDPOINT = "$BASE_URL/auth/refresh"
         const val LOGOUT_ENDPOINT = "$BASE_URL/logout"
         const val GET_AUTH_VALID = "$BASE_URL/auth/valid"

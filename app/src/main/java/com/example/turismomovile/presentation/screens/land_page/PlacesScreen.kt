@@ -113,7 +113,6 @@ fun PlacesScreen(
     // Variables para detectar dirección del scroll
     var previousScrollOffset by remember { mutableStateOf(0) }
     var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
-
     // Detectar dirección del scroll mejorado
     LaunchedEffect(lazyListState) {
         snapshotFlow {
@@ -196,13 +195,13 @@ fun PlacesScreen(
                         searchQuery = searchQuery,
                         onQueryChange = { searchQuery = it },
                         onSearch = {
-                            viewModel.loadAsociaciones(name = searchQuery)
+                            viewModel.loadAsociacionesLAND(name = searchQuery)
                         },
                         onToggleSearch = { isSearchVisible = !isSearchVisible },
                         onCloseSearch = {
                             isSearchVisible = false
                             searchQuery = ""
-                            viewModel.loadAsociaciones()
+                            viewModel.loadAsociacionesLAND()
                         },
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
@@ -228,7 +227,7 @@ fun PlacesScreen(
                         isRefreshing = true
                         coroutineScope.launch {
                             try {
-                                viewModel.loadAsociaciones()
+                                viewModel.loadAsociacionesLAND()
                                 viewModel.loadImgAsoaciones()
                             } catch (e: Exception) {
                                 notificationState.showNotification(

@@ -32,6 +32,7 @@ import com.example.turismomovile.domain.usecase.LoginUseCase
 import com.example.turismomovile.domain.usecase.RegisterUseCase
 import com.example.turismomovile.presentation.screens.configuration.ad.asociaciones.AsociacionesViewModel
 import com.example.turismomovile.presentation.screens.configuration.ad.modules.ModuleViewModel
+import com.example.turismomovile.presentation.screens.configuration.ad.modulos_padres.ParentModuleViewModel
 import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadDescriptionViewModel
 import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadViewModel
 import com.example.turismomovile.presentation.screens.configuration.ad.role.RoleViewModel
@@ -40,8 +41,8 @@ import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import com.example.turismomovile.presentation.screens.login.LoginViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import io.dev.kmpventas.data.repository.configuration.ImgAsociacionesRepositoryImpl
-import io.dev.kmpventas.presentation.screens.configuration.role.modulos_padres.ParentModuleViewModel
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.login.ProfileViewModel
 import com.example.turismomovile.presentation.screens.login.RegisterViewModel
 import io.ktor.client.*
 import io.ktor.client.engine.okhttp.*
@@ -141,6 +142,7 @@ val appModule = module {
     single { MunicipalidadViewModel(get()) }
     single { AsociacionesViewModel(get(), get(), get()) }
     single {ServiceViewModel(get())}
+    single {ProfileViewModel(get())}
     viewModel { RegisterViewModel(get(),get()) }
 
 }

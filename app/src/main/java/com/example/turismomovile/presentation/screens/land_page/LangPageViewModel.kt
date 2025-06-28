@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turismomovile.data.remote.api.configuracion.EmprendedorApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
+import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionState
 import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorState
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsoacionesState
@@ -62,7 +63,7 @@ class LangPageViewModel (
 
     init {
         loadMunicipalidad()
-        loadAsociaciones()
+        loadAsociacionesLAND()
         loadImgAsoaciones()
         loadService()
         loadMunicipalidadDescription()
@@ -277,50 +278,39 @@ class LangPageViewModel (
 
 
 
-    fun loadAsociaciones(page: Int = 0, name: String? = null) {
+    fun loadAsociacionesLAND(page: Int = 0, name: String? = null) {
         viewModelScope.launch {
-            _state.value = _state.value.copy(isLoading = true)
+            _stateAso.value = _stateAso.value.copy(isLoading = true)
             try {
-                repositoryAso.getAsociaciones(page = page, name = name)
-                    .onSuccess { response ->
+                var currentPage = 0
+                var totalPages = 1
+                var allAsociaciones = listOf<Asociacion>()
 
-                        // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥
-                        println("🛰️ Asoaciones DEBUG INFO:")
-                        println("   📄 Página actual: ${response.currentPage + 1} / ${response.totalPages}")
-                        println("   📦 Total Asociacones esta página: ${response.content.size}")
-                        println("   🆔 IDs de Asoaciones:")
-                        response.content.forEach { asoaciones ->
-                            println("     ➡️ ID: ${asoaciones.id} | Nombre: ${asoaciones.nombre}")
+                do {
+                    repositoryAso.getAsociaciones(page = currentPage, size = 10, name = name)
+                        .onSuccess { response ->
+                            totalPages = response.totalPages
+                            allAsociaciones += response.content
+                            currentPage++
                         }
-                        println("------------------------------------------------------------")
+                        .onFailure { error ->
+                            throw error
+                        }
+                } while (currentPage < totalPages)
 
-                        _stateAso.value = _stateAso.value.copy(
-                            itemsAso = response.content,
-                            currentPage = response.currentPage,
-                            totalPages = response.totalPages,
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-                    .onFailure { error ->
-                        println("❌ Error al cargar municipalidades: ${error.message}")
-                        _state.value = _state.value.copy(
-                            isLoading = false,
-                            error = error.message,
-                            notification = NotificationState(
-                                message = error.message ?: "Error al cargar municipalidades",
-                                type = NotificationType.ERROR,
-                                isVisible = true
-                            )
-                        )
-                    }
+                _stateAso.value = _stateAso.value.copy(
+                    itemsAso = allAsociaciones,
+                    currentPage = 0,
+                    totalPages = totalPages,
+                    isLoading = false,
+                    error = null
+                )
             } catch (e: Exception) {
-                println("❌ Excepción inesperada: ${e.message}")
-                _state.value = _state.value.copy(
+                _stateAso.value = _stateAso.value.copy(
                     isLoading = false,
                     error = e.message,
                     notification = NotificationState(
-                        message = e.message ?: "Error inesperado",
+                        message = e.message ?: "Error al cargar asociaciones para landing",
                         type = NotificationType.ERROR,
                         isVisible = true
                     )

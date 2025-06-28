@@ -388,7 +388,8 @@ class AsociacionesViewModel (
             _state.update { it.copy(isLoading = true) }
 
             repository.createAsociaciones(dto)
-                .onSuccess {
+                .onSuccess { asociacion ->
+                    println("✅ [VM] Asociación creada: $asociacion") // <-- Log en ViewModel
                     loadAllAsociaciones()
                     _state.update {
                         it.copy(
@@ -403,6 +404,7 @@ class AsociacionesViewModel (
                     }
                 }
                 .onFailure { error ->
+                    println("❌ [VM] Error al crear: ${error.message}")
                     _state.update {
                         it.copy(
                             isLoading = false,

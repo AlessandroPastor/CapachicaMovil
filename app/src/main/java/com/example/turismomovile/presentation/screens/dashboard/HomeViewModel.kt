@@ -8,6 +8,7 @@ import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.repository.AuthRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class HomeUiState(
@@ -75,7 +76,13 @@ class HomeViewModel(
         }
     }
 
-
+    // En tu HomeViewModel
+    fun refreshUser() {
+        viewModelScope.launch {
+            val user = sessionManager.getUser() // O haz una llamada a la API para traer el usuario actualizado
+            _uiState.update { it.copy(user = user) }
+        }
+    }
 
     private suspend fun loadMenuItems() {
         try {

@@ -36,6 +36,7 @@ import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.model.hasProfileImage
 import com.example.turismomovile.domain.model.isAdmin
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
+import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -124,12 +125,13 @@ private fun DrawerContent(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface)
     ) {
-        // 👤 Sección de perfil de usuario
+        // 👤 Sección de perfil de usuario (¡ahora clickable!)
         user?.let { currentUser ->
             Surface(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .clickable { onNavigate(Routes.UPDATE_PERFIL) }, // <-- Aquí navega
                 shape = RoundedCornerShape(16.dp),
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 shadowElevation = 2.dp
@@ -269,8 +271,15 @@ private fun CompactUserProfileSection(
 
         Spacer(modifier = Modifier.width(8.dp)) // Menos espacio entre avatar y nombre
 
-        // 📝 Información compacta del usuario
-        CompactUserInfo(user = user)
+        Column(modifier = Modifier.weight(1f)) {
+            CompactUserInfo(user = user)
+        }
+        Icon(
+            imageVector = Icons.Default.Edit,
+            contentDescription = "Editar perfil",
+            tint = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp)
+        )
     }
 }
 

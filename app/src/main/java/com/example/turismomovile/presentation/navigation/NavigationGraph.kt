@@ -25,12 +25,15 @@ import com.example.turismomovile.presentation.screens.configuration.ad.service.S
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
+import com.example.turismomovile.presentation.screens.login.ProfileEditScreen
+import com.example.turismomovile.presentation.screens.login.ProfileViewModel
 import com.example.turismomovile.presentation.screens.login.RegisterScreen
 import com.example.turismomovile.presentation.screens.navigation.BaseScreenLayout
 import com.example.turismomovile.presentation.screens.navigation.DefaultScreen
 import com.example.turismomovile.presentation.screens.navigation.OnboardingScreen
 import com.example.turismomovile.presentation.screens.navigation.SplashScreen
 import com.example.turismomovile.presentation.screens.navigation.TouristInfoScreen
+import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -126,6 +129,22 @@ fun NavigationGraph(
                 },
                 onBackPressed = {
                     navController.popBackStack()
+                }
+            )
+        }
+
+
+        composable(Routes.UPDATE_PERFIL) {
+            val profileViewModel: ProfileViewModel = koinInject()
+            val homeViewModel: HomeViewModel = koinInject()
+            val sessionManager: SessionManager = koinInject()
+            ProfileEditScreen(
+                viewModel = profileViewModel,
+                sessionManager = sessionManager,
+                navController = navController,
+                onProfileUpdated = {
+                    homeViewModel.refreshUser()
+                    //navController.popBackStack() // Aquí navegas hacia atrás después de editar
                 }
             )
         }

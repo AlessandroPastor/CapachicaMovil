@@ -3,6 +3,7 @@ package com.example.turismomovile.presentation.screens.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turismomovile.data.local.SessionManager
+import com.example.turismomovile.data.remote.api.base.AuthApiService
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.usecase.LoginUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import java.util.concurrent.TimeoutException
 
 class LoginViewModel(
     private val loginUseCase: LoginUseCase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+
 ) : ViewModel() {
 
     private val _loginState = MutableStateFlow<LoginState>(LoginState.Initial)
