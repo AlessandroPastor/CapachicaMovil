@@ -112,7 +112,7 @@ fun NotificationHost(
             ) + fadeOut(animationSpec = tween(250)) +
                     scaleOut(targetScale = 0.95f, animationSpec = tween(250)),
             modifier = Modifier
-                .align(Alignment.TopCenter)
+                .align(Alignment.BottomEnd)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .imePadding()
                 .systemBarsPadding()

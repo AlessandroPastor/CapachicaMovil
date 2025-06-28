@@ -7,18 +7,18 @@ import com.example.turismomovile.presentation.components.NotificationState
 
 @Serializable
 data class ImgAsociacionesResponse(
-    @SerialName("totalpages") val totalPages: Int,
-    @SerialName("currentpage") val currentPage: Int,
-    @SerialName("content") val content: List<ImgAsociaciones>, // O la clase correspondiente
-    @SerialName("totalElements") val totalElements: Int
+    val totalPages: Int,
+    val currentPage: Int,
+    val content: List<ImgAsociaciones>,
+    val totalElements: Int
 )
 
 @Serializable
 data class ImgAsociacionesByAsoacionesResponse(
-    @SerialName("totalpages") val totalPages: Int,
-    @SerialName("currentpage") val currentPage: Int,
-    @SerialName("content") val content: List<ImgAsociaciones>,
-    @SerialName("totalElements") val totalElements: Int
+  val totalPages: Int,
+  val currentPage: Int,
+  val content: List<ImgAsociaciones>,
+  val totalElements: Int
 )
 
 

@@ -6,7 +6,6 @@ object ApiConstants {
     //const val BASE_URL = "http://192.172.2.101:8000" //PC JAMIL
     //const val BASE_URL = "http://192.177.1.13:8000" //PC CRISTIAN
 
-    //const val BASE_URL = "AQUI SI SE SUBE ALA NUBE"
     object Configuration {
 
         // ROLES
@@ -14,7 +13,7 @@ object ApiConstants {
         const val ROLE_BY_ID = "$BASE_URL/role/{id}"
         const val ROLE_BY_MODULE = "$BASE_URL/role/module"
 
-        // MODULES FATHER
+        // PARENTMODULE
         const val GET_PARENT_MODULE_BY_ID = "$BASE_URL/parent-module/{id}"
         const val UPDATE_PARENT_MODULE = "$BASE_URL/parent-module/{id}"
         const val DELETE_PARENT_MODULE = "$BASE_URL/parent-module/{id}"
@@ -28,6 +27,7 @@ object ApiConstants {
         const val MODULE_BY_ID = "$BASE_URL/module/{id}"
         const val MODULE_SELECTED = "$BASE_URL/module/modules-selected/roleId/{roleId}/parentModuleId/{parentModuleId}"
         const val MENU_ENDPOINT = "$BASE_URL/module/menu"
+
         // SERVICE-EMPRENDEDOR
         const val SERVICE_EMPRENDEDOR = "$BASE_URL/emprendedors-services/by-service"
 
@@ -37,10 +37,6 @@ object ApiConstants {
         const val UPDATE_PROFILE_ENDPOINT = "$BASE_URL/update-profile"
         const val UPLOAD_PHOTO_ENDPOINT = "$BASE_URL/upload-photo"
 
-        const val REFRESH_ENDPOINT = "$BASE_URL/auth/refresh"
-        const val LOGOUT_ENDPOINT = "$BASE_URL/logout"
-        const val GET_AUTH_VALID = "$BASE_URL/auth/valid"
-        const val GET_AUTH_ROLES = "$BASE_URL/auth/roles"
 
         // MUNICIPALIDAD
         const val MUNICIPALIDAD_ENDPOINT = "$BASE_URL/municipalidad"
@@ -73,7 +69,6 @@ object ApiConstants {
         const val ASOCIACION_WITH_FAMILY = "$BASE_URL/asociacion/emprendedores/{id}"
 
         // IMAGENES ASOCIACIONES
-
         const val IMG_ASOCIACIONES_GET = "$BASE_URL/img-asociacionesTotal"
         const val IMG_ASOCIACIONES_POST = "$BASE_URL/img-asociacion"
         const val IMG_ASOCIACIONES_PUT = "$BASE_URL/img-asociacion/{id}"

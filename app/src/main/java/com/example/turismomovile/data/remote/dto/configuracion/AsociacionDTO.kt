@@ -31,7 +31,7 @@ data class Asociacion(
 @Serializable
 data class Imagenes(
     val id: String? = null,
-    val asociacion_id: String? = null, // <-- AGREGADO
+    val asociacion_id: String? = null,
     val url_image: String? = null,
     val estado: Boolean? = null,
     val codigo: String? = null,
@@ -48,7 +48,7 @@ data class AsociacionCreateDTO(
     val office_hours: String? = null,
     val url: String? = null,
     val estado: Boolean? = null,
-    val imagenes: List<Imagenes>? = null // En crear, asociacion_id y id pueden ser null
+    val imagenes: List<Imagenes>? = null
 )
 
 @Serializable
@@ -66,8 +66,8 @@ data class AsociacionUpdateDTO(
 
 @Serializable
 data class ImagenUpdateDTO(
-    val id: String?, // Puede ser null para nuevas imágenes
-    val asociacion_id: String, // Siempre debe ir
+    val id: String?,
+    val asociacion_id: String,
     val url_image: String,
     val estado: Boolean,
     val codigo: String,
@@ -90,35 +90,6 @@ fun Asociacion.toCreateDTO(): AsociacionCreateDTO? {
     } else null
 }
 
-// NUEVO: Extension para update DTO
-fun Asociacion.toUpdateDTO(): AsociacionUpdateDTO? {
-    return if (
-        id != null && nombre != null && lugar != null && descripcion != null && municipalidadId != null && imagenes != null
-    ) {
-        AsociacionUpdateDTO(
-            municipalidad_id = municipalidadId,
-            nombre = nombre,
-            descripcion = descripcion,
-            lugar = lugar,
-            phone = phone ?: "",
-            office_hours = office_hours ?: "",
-            url = url ?: "",
-            estado = estado,
-            imagenes = imagenes.map {
-                ImagenUpdateDTO(
-                    id = it.id,
-                    asociacion_id = id, // Siempre va el id de la asociacion
-                    url_image = it.url_image ?: "",
-                    estado = it.estado ?: true,
-                    codigo = it.codigo ?: "",
-                    description = it.description ?: ""
-                )
-            }
-        )
-    } else null
-}
-
-
 
 
 // Extensiones para ImgAsociaciones (modelo para UI/compose)
@@ -135,7 +106,6 @@ fun ImgAsociaciones.toCreateDTO(): ImgAsociacionesCreateDTO? {
     }
 }
 
-// PARA OTRAS COSAS
 @Serializable
 data class AsociacionCODE(
     val id: String? = null,

@@ -101,11 +101,6 @@ data class UpdateProfileDTO(
     val imagen_url: String
 )
 
-@Serializable
-data class MenuResponse(
-    val data: List<MenuItem>
-)
-
 data class ProfileForm(
     val name: String = "",
     val lastName: String = "",

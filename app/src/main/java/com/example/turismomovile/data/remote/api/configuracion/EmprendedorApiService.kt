@@ -48,8 +48,6 @@ class EmprendedorApiService(
         }
     }
 
-
-
     // Obtener un emprendedor por ID
     suspend fun getEmprendedorById(id: String): Emprendedor {
         return client.get(ApiConstants.Configuration.EMPRENDEDORES_GETBYID.replace("{id}", id)) {

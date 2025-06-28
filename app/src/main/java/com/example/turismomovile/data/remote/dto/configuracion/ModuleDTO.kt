@@ -76,23 +76,6 @@ data class ModuleState(
     val notification: NotificationState = NotificationState()
 )
 
-// 📌 Conversión segura de ModuleSelectedDTO a ModuleDTO
-fun ModuleSelectedDTO.toModuleDTO(): ModuleDTO {
-    return ModuleDTO(
-        id = this.id ?: "",
-        title = this.title,
-        subtitle = this.subtitle ?: "",
-        type = this.type ?: "",
-        icon = this.icon ?: "",
-        status = this.status,
-        moduleOrder = this.moduleOrder ?: 0,
-        link = this.link,
-        createdAt = this.createdAt ?: "",
-        updatedAt = this.updatedAt ?: "",
-        deletedAt = this.deletedAt ?: ""
-    )
-}
-
 // 📌 Conversión segura de ModuleCreateDTO a ModuleDTO
 fun ModuleCreateDTO.toModuleDTO(): ModuleDTO {
     return ModuleDTO(

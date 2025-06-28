@@ -2,14 +2,18 @@ package com.example.turismomovile.presentation.screens.configuration.ad.asociaci
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.NavigateBefore
 import androidx.compose.material.icons.automirrored.filled.NavigateNext
@@ -19,7 +23,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -327,12 +333,14 @@ fun AsociacionDialog(
     onDismiss: () -> Unit,
     onSave: (Asociacion) -> Unit
 ) {
+    // Estados (sin cambios)
     var nombre by remember { mutableStateOf(asociacion.nombre ?: "") }
     var lugar by remember { mutableStateOf(asociacion.lugar ?: "") }
     var descripcion by remember { mutableStateOf(asociacion.descripcion ?: "") }
     var selectedMunicipalidadId by remember { mutableStateOf(asociacion.municipalidadId ?: "") }
     var estado by remember { mutableStateOf(asociacion.estado) }
-
+    var phone by remember { mutableStateOf(asociacion.phone ?: "") }
+    var officeHours by remember { mutableStateOf(asociacion.office_hours ?: "") }
     var imagenes: MutableList<ImgAsociaciones> by remember {
         mutableStateOf(
             asociacion.imagenes?.map {
@@ -356,60 +364,106 @@ fun AsociacionDialog(
         title = if (asociacion.id.isNullOrBlank()) "Nueva Asociación" else "Editar Asociación",
         onDismissRequest = onDismiss,
         confirmButton = {
-            TextButton(onClick = {
-                if (nombre.isBlank() || lugar.isBlank() || descripcion.isBlank() || selectedMunicipalidadId.isBlank()) {
-                    errors = mapOf(
-                        "nombre" to nombre.takeIf { it.isBlank() }?.let { "Requerido" },
-                        "lugar" to lugar.takeIf { it.isBlank() }?.let { "Requerido" },
-                        "descripcion" to descripcion.takeIf { it.isBlank() }?.let { "Requerido" },
-                        "municipalidad_id" to selectedMunicipalidadId.takeIf { it.isBlank() }?.let { "Selecciona una" }
-                    ).filterValues { it != null }
-                    return@TextButton
-                }
+            TextButton(
+                onClick = {
+                    if (nombre.isBlank() || lugar.isBlank() || descripcion.isBlank() ||
+                        selectedMunicipalidadId.isBlank() || phone.isBlank() || officeHours.isBlank()) {
+                        errors = mapOf(
+                            "nombre" to nombre.takeIf { it.isBlank() }?.let { "Requerido" },
+                            "lugar" to lugar.takeIf { it.isBlank() }?.let { "Requerido" },
+                            "descripcion" to descripcion.takeIf { it.isBlank() }?.let { "Requerido" },
+                            "municipalidad_id" to selectedMunicipalidadId.takeIf { it.isBlank() }?.let { "Selecciona una" },
+                            "phone" to phone.takeIf { it.isBlank() }?.let { "Requerido" },
+                            "office_hours" to officeHours.takeIf { it.isBlank() }?.let { "Requerido" }
+                        ).filterValues { it != null }
+                        return@TextButton
+                    }
 
-                onSave(
-                    asociacion.copy(
-                        nombre = nombre,
-                        lugar = lugar,
-                        descripcion = descripcion,
-                        municipalidadId = selectedMunicipalidadId,
-                        estado = estado,
+                    onSave(
+                        asociacion.copy(
+                            nombre = nombre,
+                            lugar = lugar,
+                            descripcion = descripcion,
+                            municipalidadId = selectedMunicipalidadId,
+                            estado = estado,
+                            phone = phone,
+                            office_hours = officeHours
+                        )
                     )
-                )
-            }) {
-                Text("Guardar")
+                },
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Guardar", style = MaterialTheme.typography.labelLarge)
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancelar") }
+            TextButton(
+                onClick = onDismiss,
+                modifier = Modifier.padding(8.dp)
+            ) {
+                Text("Cancelar", style = MaterialTheme.typography.labelLarge)
+            }
         }
     ) {
-        Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Sección de información básica
+            Text(
+                text = "Información básica",
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
             var expanded by remember { mutableStateOf(false) }
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .clickable { expanded = true } // Ahora todo el box es clickeable
-            ) {
+            Box(Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = municipalidades.firstOrNull { it.id == selectedMunicipalidadId }?.distrito ?: "",
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Municipalidad") },
+                    label = { Text("Municipalidad *") },
                     trailingIcon = {
                         IconButton(onClick = { expanded = true }) {
                             Icon(Icons.Default.ArrowDropDown, contentDescription = null)
                         }
                     },
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { expanded = true },
                     isError = errors.containsKey("municipalidad_id"),
                     supportingText = {
-                        errors["municipalidad_id"]?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-                    }
+                        errors["municipalidad_id"]?.let {
+                            Text(it, color = MaterialTheme.colorScheme.error)
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    )
                 )
                 DropdownMenu(
                     expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                    onDismissRequest = { expanded = false },
+                    modifier = Modifier
+                        .widthIn(min = 200.dp, max = 280.dp) // Ancho controlado
+                        .background(
+                            MaterialTheme.colorScheme.surfaceContainer,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                            shape = MaterialTheme.shapes.medium
+                        )
+                        .shadow(
+                            elevation = 8.dp,
+                            shape = MaterialTheme.shapes.medium,
+                            clip = true
+                        )
                 ) {
                     municipalidades.forEach { muni ->
                         DropdownMenuItem(
@@ -424,68 +478,175 @@ fun AsociacionDialog(
                 }
             }
 
-            OutlinedTextField(
-                value = nombre,
-                onValueChange = {
-                    nombre = it
-                    if (it.isNotBlank()) errors = errors - "nombre"
-                },
-                label = { Text("Nombre *") },
-                isError = errors.containsKey("nombre"),
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Campos de texto agrupados
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedTextField(
+                    value = nombre,
+                    onValueChange = {
+                        nombre = it
+                        if (it.isNotBlank()) errors = errors - "nombre"
+                    },
+                    label = { Text("Nombre *") },
+                    isError = errors.containsKey("nombre"),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
 
-            OutlinedTextField(
-                value = lugar,
-                onValueChange = {
-                    lugar = it
-                    if (it.isNotBlank()) errors = errors - "lugar"
-                },
-                label = { Text("Lugar *") },
-                isError = errors.containsKey("lugar"),
-                modifier = Modifier.fillMaxWidth()
-            )
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = {
+                        phone = it
+                        if (it.isNotBlank()) errors = errors - "phone"
+                    },
+                    label = { Text("Teléfono *") },
+                    isError = errors.containsKey("phone"),
+                    modifier = Modifier.fillMaxWidth(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    singleLine = true
+                )
 
-            OutlinedTextField(
-                value = descripcion,
-                onValueChange = {
-                    descripcion = it
-                    if (it.isNotBlank()) errors = errors - "descripcion"
-                },
-                label = { Text("Descripción *") },
-                isError = errors.containsKey("descripcion"),
-                modifier = Modifier.fillMaxWidth(),
-                maxLines = 3
-            )
+                OutlinedTextField(
+                    value = officeHours,
+                    onValueChange = {
+                        officeHours = it
+                        if (it.isNotBlank()) errors = errors - "office_hours"
+                    },
+                    label = { Text("Horario de atención *") },
+                    isError = errors.containsKey("office_hours"),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
 
-            // ESTADO
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Estado:", Modifier.padding(end = 8.dp))
-                Switch(checked = estado, onCheckedChange = { estado = it })
-                Text(if (estado) "Activo" else "Inactivo")
+                OutlinedTextField(
+                    value = lugar,
+                    onValueChange = {
+                        lugar = it
+                        if (it.isNotBlank()) errors = errors - "lugar"
+                    },
+                    label = { Text("Lugar *") },
+                    isError = errors.containsKey("lugar"),
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+
+                OutlinedTextField(
+                    value = descripcion,
+                    onValueChange = {
+                        descripcion = it
+                        if (it.isNotBlank()) errors = errors - "descripcion"
+                    },
+                    label = { Text("Descripción *") },
+                    isError = errors.containsKey("descripcion"),
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 3
+                )
             }
 
-            // IMÁGENES
-            Text("Imágenes:", style = MaterialTheme.typography.labelLarge)
+            // Sección de estado
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Estado:",
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(end = 16.dp)
+                )
+                Switch(
+                    checked = estado,
+                    onCheckedChange = { estado = it },
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.primary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primaryContainer,
+                    )
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = if (estado) "Activo" else "Inactivo",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (estado) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.error
+                )
+            }
+
+            // Sección de imágenes (mejorada visualmente)
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                imagenes.forEachIndexed { index, img ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("• ${img.codigo ?: "Sin código"}", Modifier.weight(1f))
-                        IconButton(onClick = {
-                            imagenes.removeAt(index)
-                        }) {
-                            Icon(Icons.Default.Delete, contentDescription = "Eliminar imagen", tint = MaterialTheme.colorScheme.error)
-                        }
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Imágenes",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Button(
+                        onClick = {
+                            tempImagen = null
+                            showImageDialog = true
+                        },
+                        modifier = Modifier.height(36.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp)
+                    ) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(Modifier.width(4.dp))
+                        Text("Agregar", style = MaterialTheme.typography.labelMedium)
                     }
                 }
 
-                Button(onClick = {
-                    tempImagen = null
-                    showImageDialog = true
-                }) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(Modifier.width(4.dp))
-                    Text("Agregar Imagen")
+                if (imagenes.isEmpty()) {
+                    Text(
+                        text = "No hay imágenes agregadas",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                        modifier = Modifier.padding(vertical = 8.dp)
+                    )
+                } else {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            imagenes.forEachIndexed { index, img ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 4.dp)
+                                ) {
+                                    Text(
+                                        text = "• ${img.codigo ?: "Sin código"}",
+                                        modifier = Modifier.weight(1f),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    IconButton(
+                                        onClick = { imagenes.removeAt(index) },
+                                        modifier = Modifier.size(24.dp)
+                                    ) {
+                                        Icon(
+                                            Icons.Default.Delete,
+                                            contentDescription = "Eliminar imagen",
+                                            tint = MaterialTheme.colorScheme.error,
+                                            modifier = Modifier.size(18.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -493,14 +654,14 @@ fun AsociacionDialog(
 
     if (showImageDialog) {
         ImgAsociacionDialog(
-            imgAsociacion = tempImagen, // Aquí asegúrate que tempImagen sea de tipo ImgAsociaciones
+            imgAsociacion = tempImagen,
             onDismiss = { showImageDialog = false },
             onSave = { nuevaImg ->
                 imagenes = imagenes.toMutableList().apply {
                     val imgConAsocId = if (asociacion.id != null) {
                         nuevaImg.copy(asociacion_id = asociacion.id)
                     } else {
-                        nuevaImg.copy(asociacion_id = "") // o null, según tu modelo
+                        nuevaImg.copy(asociacion_id = "")
                     }
                     add(imgConAsocId)
                 }

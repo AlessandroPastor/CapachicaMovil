@@ -356,10 +356,10 @@ private fun LoginFormContent(
             AppTextFieldWithKeyboard(
                 value = email,
                 onValueChange = onEmailChange,
-                label = "Correo electrónico",
+                label = "Usuario",
                 leadingIcon = {
                     Icon(
-                        Icons.Default.Email,
+                        Icons.Default.AccountCircle,
                         contentDescription = null,
                         tint = if (isDarkMode)
                             MaterialTheme.colorScheme.onSurface

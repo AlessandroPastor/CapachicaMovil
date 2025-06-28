@@ -96,7 +96,7 @@ data class AsignarServiciosRequest(
 data class AsignarServiciosResponse(
     val message: String,
     val emprendedor_id: String,
-    val assigned_services: List<EmprendedorByUserResponse>  // Aquí puedes mapearlo bien si deseas los detalles
+    val assigned_services: List<EmprendedorByUserResponse>
 )
 
 @Serializable

@@ -61,13 +61,24 @@
             return asociacion
         }
 
-        suspend fun updateAsociacion(id: String, dto: AsociacionUpdateDTO): Asociacion
-        {
-            return client.put(ApiConstants.Configuration.ASOCIACION_PUT.replace("{id}", id)) {
+        suspend fun updateAsociacion(id: String, dto: AsociacionUpdateDTO): Asociacion {
+            println("🔄 [UPDATE] Iniciando actualización de Asociación...")
+            println("📤 Enviando ID: $id")
+            println("📤 Enviando DTO para actualización: $dto")
+
+            val response = client.put(ApiConstants.Configuration.ASOCIACION_PUT.replace("{id}", id)) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
                 setBody(dto)
-            }.body()
+            }
+
+            println("⬅️ [RESPONSE] Código: ${response.status}")
+            val rawBody = response.bodyAsText()
+            println("⬅️ [RESPONSE] Body: $rawBody")
+
+            val asociacion = response.body<Asociacion>()
+            println("✅ Asociación actualizada: $asociacion")
+            return asociacion
         }
 
         suspend fun deleteAsociacion(id: String) {
