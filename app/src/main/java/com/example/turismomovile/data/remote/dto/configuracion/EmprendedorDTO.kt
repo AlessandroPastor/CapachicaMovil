@@ -23,6 +23,7 @@ data class Emprendedor(
     val description: String? = null,
     val lugar: String? = null,
     val img_logo: String? = null,
+    val phone: String? = null,
     val name_family: String? = null,
     val status: Int,
     val asociacionId: String? = null,
@@ -81,7 +82,8 @@ data class EmprendedorCreateDTO(
     val status: Boolean? = true
 )
 
-
+// ******************************* PARA X COSAS *************************
+// SERVICIOS
 @Serializable
 data class AsignarServiciosRequest(
     val service_id: List<String>,

@@ -34,16 +34,13 @@ import com.example.turismomovile.R
 import com.example.turismomovile.presentation.theme.LocalAppDimens
 import kotlinx.coroutines.delay
 
-private const val SPLASH_TOTAL_DURATION = 2500L
 private const val INITIAL_DELAY = 300L
 
 @Composable
 fun SplashScreen(
     onSplashFinished: () -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val colorScheme = MaterialTheme.colorScheme
-    val dimens = LocalAppDimens.current
     val configuration = LocalConfiguration.current
 
     // Obtener dimensiones de la pantalla
@@ -184,18 +181,15 @@ fun SplashScreen(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .windowInsetsPadding(WindowInsets.systemBars) // Ocupa toda la pantalla incluyendo área de status bar
+        modifier = Modifier
+            .fillMaxSize() // ¡Esto cubre todo!
             .background(
                 Brush.verticalGradient(
                     colors = listOf(
-                        colorScheme.primary,
-                        colorScheme.primary.copy(alpha = 0.9f),
-                        colorScheme.primaryContainer
-                    ),
-                    startY = 0f,
-                    endY = Float.POSITIVE_INFINITY
+                        Color(0xFF6750A4),
+                        Color(0xFF1976D2),
+                        Color(0xFF03DAC5)
+                    )
                 )
             ),
         contentAlignment = Alignment.Center

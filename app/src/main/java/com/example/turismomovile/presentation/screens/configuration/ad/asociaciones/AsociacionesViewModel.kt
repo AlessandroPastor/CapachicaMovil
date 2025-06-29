@@ -257,7 +257,7 @@ class AsociacionesViewModel (
                     val response = repositoryImgAso.getImgAsoaciones(page = currentPage, name = searchQuery)
 
                     response.onSuccess { res ->
-                        totalPages = res.totalPages // Asignamos el valor real de totalPages
+                        totalPages = res.totalpages // Asignamos el valor real de totalPages
                         val content = res.content
 
                         // Concatenar las imágenes de la página actual

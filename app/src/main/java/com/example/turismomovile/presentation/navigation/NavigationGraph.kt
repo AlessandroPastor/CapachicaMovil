@@ -101,8 +101,7 @@ fun NavigationGraph(
                             }
                         }
                     }
-                },
-                modifier = Modifier.fillMaxSize() // Asegura que ocupe toda la pantalla
+                }
             )
         }
         // Onboarding Screen

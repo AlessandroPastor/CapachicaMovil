@@ -331,7 +331,7 @@ class LangPageViewModel (
 
                         // 🔥 DEPURACIÓN COMPLETA AQUÍ 🔥
                         println("🛰️ Respuesta de la API recibida:")
-                        println("   📄 Página actual: ${response.currentPage + 1} / ${response.totalPages}")
+                        println("   📄 Página actual: ${response.currentpage + 1} / ${response.totalpages}")
                         println("   📦 Total imágenes de asociaciones en esta página: ${response.content.size}")
                         println("   🆔 IDs de asociaciones:")
                         response.content.forEachIndexed { index, imgAsociacion ->
@@ -342,8 +342,8 @@ class LangPageViewModel (
                         // Actualizar estado con los datos de la respuesta
                         _stateImgAso.value = _stateImgAso.value.copy(
                             items = response.content,
-                            currentPage = response.currentPage,
-                            totalPages = response.totalPages,
+                            currentPage = response.currentpage,
+                            totalPages = response.totalpages,
                             isLoading = false,
                             error = null
                         )

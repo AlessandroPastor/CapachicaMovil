@@ -7,8 +7,8 @@ import com.example.turismomovile.presentation.components.NotificationState
 
 @Serializable
 data class ImgAsociacionesResponse(
-    val totalPages: Int,
-    val currentPage: Int,
+    val currentpage: Int,
+    val totalpages: Int,
     val content: List<ImgAsociaciones>,
     val totalElements: Int
 )

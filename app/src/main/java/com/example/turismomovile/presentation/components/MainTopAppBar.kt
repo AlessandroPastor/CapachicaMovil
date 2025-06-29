@@ -54,7 +54,9 @@ fun MainTopAppBar(
     val colors = MaterialTheme.colorScheme
 
     Surface(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .windowInsetsPadding(WindowInsets.statusBars),
         color = colors.surface,
         shadowElevation = 4.dp,
         tonalElevation = 2.dp,
