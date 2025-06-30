@@ -1,11 +1,9 @@
 package com.example.turismomovile.presentation.screens.configuration.ad.modules
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -13,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -24,18 +21,15 @@ import com.example.turismomovile.data.remote.dto.configuracion.ModuleDTO
 import com.example.turismomovile.data.remote.dto.configuracion.ParentModule
 import com.example.turismomovile.data.remote.dto.configuracion.toModuleDTO
 import com.example.turismomovile.data.remote.dto.formatDateTime
-import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppDialog
 import com.example.turismomovile.presentation.components.AppEmptyState
 import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.AppTextField
 import com.example.turismomovile.presentation.components.ConfirmDialog
 import com.example.turismomovile.presentation.components.NotificationHost
-import com.example.turismomovile.presentation.components.StatisticCard
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
-import com.example.turismomovile.presentation.theme.LocalAppDimens
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
 

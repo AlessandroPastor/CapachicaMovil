@@ -63,7 +63,6 @@ import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.zIndex
 import coil.compose.rememberAsyncImagePainter
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
-import com.example.turismomovile.presentation.components.InfoRow
 import org.koin.compose.koinInject
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid

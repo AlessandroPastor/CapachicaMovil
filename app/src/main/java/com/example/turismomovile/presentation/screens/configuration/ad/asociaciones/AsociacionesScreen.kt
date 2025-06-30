@@ -1,6 +1,5 @@
 package com.example.turismomovile.presentation.screens.configuration.ad.asociaciones
 
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -15,8 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.NavigateBefore
-import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -31,7 +28,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
-import com.example.turismomovile.data.remote.dto.configuracion.Imagenes
 import com.example.turismomovile.data.remote.dto.configuracion.ImgAsociaciones
 import com.example.turismomovile.data.remote.dto.configuracion.Municipalidad
 import com.example.turismomovile.data.remote.dto.configuracion.toCreateDTO
@@ -39,14 +35,12 @@ import com.example.turismomovile.presentation.components.AppDialog
 import com.example.turismomovile.presentation.components.AppEmptyState
 import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.NotificationHost
-import com.example.turismomovile.presentation.components.SearchBarSimple
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import org.koin.compose.koinInject
 
 
 // Pantalla AsociacionesScreen adaptada con componentes reutilizables
-
 @Composable
 fun AsociacionesScreen(
     navController: NavHostController,

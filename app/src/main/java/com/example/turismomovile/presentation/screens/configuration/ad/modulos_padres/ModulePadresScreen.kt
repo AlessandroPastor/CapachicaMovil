@@ -9,14 +9,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-
 import com.example.turismomovile.data.remote.dto.configuracion.ParentModule
 import com.example.turismomovile.presentation.components.AppPaginationControls
-
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.StatisticCard
 import com.example.turismomovile.presentation.components.rememberNotificationState
