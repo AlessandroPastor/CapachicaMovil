@@ -29,6 +29,7 @@ roomRuntime = "2.7.1"
 composeFoundation = "1.6.1"
 ksp = "2.0.21-1.0.27"
 
+
 [libraries]
 accompanist-swiperefresh = { module = "com.google.accompanist:accompanist-swiperefresh", version.ref = "accompanistSwiperefresh" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }

@@ -248,7 +248,8 @@ fun WelcomeScreen(
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
-                        onToggleTheme = { themeViewModel.toggleTheme() }
+                        onToggleTheme = { themeViewModel.toggleTheme() },
+                        searchPlaceholder = "Busca datos de Municipalidad"
                     )
                 },
                 bottomBar = {

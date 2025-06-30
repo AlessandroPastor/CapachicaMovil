@@ -62,7 +62,6 @@ import com.example.turismomovile.presentation.components.AppTextFieldWithKeyboar
 import com.example.turismomovile.presentation.components.ShowLoadingDialog
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
-import com.example.turismomovile.presentation.components.RotatingBackgroundLoginScreen
 import com.example.turismomovile.presentation.components.AppCard
 import com.example.turismomovile.presentation.components.FloatingBubblesBackground
 import com.example.turismomovile.presentation.components.ShowRegisterLoadingDialog

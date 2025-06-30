@@ -158,11 +158,13 @@ fun BaseScreenLayout(
                             navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
                             actionIconContentColor = MaterialTheme.colorScheme.onSurface
                         ),
-                        modifier = Modifier.shadow(
-                            elevation = 4.dp,
-                            spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
-                            ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
-                        )
+                        modifier = Modifier
+                            .statusBarsPadding()
+                            .shadow(
+                                elevation = 4.dp,
+                                spotColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f),
+                                ambientColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)
+                            )
                     )
                 },
                 containerColor = MaterialTheme.colorScheme.background,

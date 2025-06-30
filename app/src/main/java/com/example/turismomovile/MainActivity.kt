@@ -17,7 +17,9 @@ class MainActivity : ComponentActivity() {
 
         // ¡ESTA línea es la clave para que el fondo suba hasta el notch!
         WindowCompat.setDecorFitsSystemWindows(window, false)
-
+        // Hace transparentes las barras del sistema
+        window.statusBarColor = android.graphics.Color.TRANSPARENT
+        window.navigationBarColor = android.graphics.Color.TRANSPARENT
         setContent {
             val otorgarp = rememberMultiplePermissionsState(
                 permissions = listOf(

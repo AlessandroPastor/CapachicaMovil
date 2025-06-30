@@ -64,7 +64,6 @@ import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppCard
 import com.example.turismomovile.presentation.components.AppTextFieldWithKeyboard
 import com.example.turismomovile.presentation.components.FloatingBubblesBackground
-import com.example.turismomovile.presentation.components.RotatingBackgroundLoginScreen
 import com.example.turismomovile.presentation.components.ShowLoadingDialog
 import com.example.turismomovile.presentation.theme.AppColors
 import com.example.turismomovile.presentation.theme.AppTheme

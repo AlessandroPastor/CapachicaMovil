@@ -25,6 +25,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -49,14 +51,14 @@ fun MainTopAppBar(
     onStartClick: () -> Unit,
     isDarkMode: Boolean,
     onToggleTheme: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    searchPlaceholder: String = "Buscar..." // <-- NUEVO
 ) {
     val colors = MaterialTheme.colorScheme
 
     Surface(
         modifier = modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars),
+            .fillMaxWidth(),
         color = colors.surface,
         shadowElevation = 4.dp,
         tonalElevation = 2.dp,
@@ -68,6 +70,7 @@ fun MainTopAppBar(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
+                .statusBarsPadding()
                 .padding(horizontal = 16.dp, vertical = 12.dp)
         ) {
             // Search Bar
@@ -82,7 +85,9 @@ fun MainTopAppBar(
                     onSearch = onSearch,
                     onClose = onCloseSearch,
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = "Buscar"
+                    placeholder = searchPlaceholder,
+                    autoFocus = true
+
                 )
             }
 
@@ -250,12 +255,25 @@ fun SearchBar(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     placeholder: String,
-    enabled: Boolean = true
+    enabled: Boolean = true,
+    autoFocus: Boolean = false
+
 ) {
+    val focusRequester = remember { FocusRequester() }
+    var isFocused by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
     val colorScheme = MaterialTheme.colorScheme
+    var alreadyRequested by remember { mutableStateOf(false) }
 
-    var isFocused by remember { mutableStateOf(false) }
+    LaunchedEffect(autoFocus) {
+        if (autoFocus && !alreadyRequested) {
+            alreadyRequested = true
+            kotlinx.coroutines.delay(100)
+            focusRequester.requestFocus()
+        } else if (!autoFocus) {
+            alreadyRequested = false
+        }
+    }
     val hasContent = query.isNotEmpty()
 
     val animatedElevation by animateDpAsState(
@@ -281,7 +299,9 @@ fun SearchBar(
             isFocused = isFocused,
             enabled = enabled,
             focusManager = focusManager,
-            colorScheme = colorScheme
+            colorScheme = colorScheme,
+            focusRequester = focusRequester
+
         )
     }
 }
@@ -326,7 +346,9 @@ private fun SearchBarContent(
     isFocused: Boolean,
     enabled: Boolean,
     focusManager: FocusManager,
-    colorScheme: ColorScheme
+    colorScheme: ColorScheme,
+    focusRequester: FocusRequester
+
 ) {
     Row(
         modifier = Modifier
@@ -350,7 +372,9 @@ private fun SearchBarContent(
             enabled = enabled,
             focusManager = focusManager,
             colorScheme = colorScheme,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            focusRequester = focusRequester, // <-- AÑADE ESTO
+
         )
 
         // Acciones (limpiar/cancelar)
@@ -391,11 +415,12 @@ private fun SearchTextField(
     enabled: Boolean,
     focusManager: FocusManager,
     colorScheme: ColorScheme,
+    focusRequester: FocusRequester,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
-        // Placeholder
-        if (query.isEmpty() && !isFocused) {
+        // El placeholder SIEMPRE se muestra si está vacío, sin importar el foco
+        if (query.isEmpty()) {
             Text(
                 text = placeholder,
                 style = MaterialTheme.typography.bodyMedium,
@@ -406,12 +431,12 @@ private fun SearchTextField(
             )
         }
 
-        // TextField
         BasicTextField(
             value = query,
             onValueChange = onQueryChange,
             modifier = Modifier
                 .fillMaxWidth()
+                .focusRequester(focusRequester)
                 .onFocusChanged { focusState ->
                     onFocusChange(focusState.isFocused)
                 },
@@ -446,7 +471,7 @@ private fun SearchActions(
     Row(
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Botón limpiar
+        // Botón limpiar SIEMPRE visible si hay contenido
         AnimatedVisibility(
             visible = hasContent,
             enter = fadeIn() + scaleIn(),
@@ -465,7 +490,7 @@ private fun SearchActions(
             }
         }
 
-        // Botón cancelar
+        // Botón cancelar SOLO visible si está enfocado
         AnimatedVisibility(
             visible = isFocused,
             enter = slideInHorizontally(

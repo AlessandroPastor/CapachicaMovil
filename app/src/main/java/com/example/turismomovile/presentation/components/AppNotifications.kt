@@ -13,15 +13,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,10 +25,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 enum class NotificationType {
-    SUCCESS,
-    ERROR,
-    WARNING,
-    INFO
+    SUCCESS, ERROR, WARNING, INFO
 }
 
 data class NotificationState(
@@ -69,14 +62,13 @@ fun MutableState<NotificationState>.showNotification(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationHost(
     state: MutableState<NotificationState>,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val hapticFeedback = LocalHapticFeedback.current
-
     Box(modifier = modifier.fillMaxSize()) {
         content()
 
@@ -84,13 +76,6 @@ fun NotificationHost(
 
         LaunchedEffect(currentState) {
             if (currentState.isVisible) {
-                // Haptic feedback cuando aparece la notificación
-                when (currentState.type) {
-                    NotificationType.SUCCESS -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    NotificationType.ERROR -> hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                    else -> hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                }
-
                 delay(currentState.duration)
                 state.value = state.value.copy(isVisible = false)
             }
@@ -112,22 +97,35 @@ fun NotificationHost(
             ) + fadeOut(animationSpec = tween(250)) +
                     scaleOut(targetScale = 0.95f, animationSpec = tween(250)),
             modifier = Modifier
-                .align(Alignment.BottomEnd)
+                .align(Alignment.TopCenter)
                 .padding(horizontal = 16.dp, vertical = 12.dp)
                 .imePadding()
                 .systemBarsPadding()
         ) {
-            ModernNotification(
-                message = currentState.message,
-                type = currentState.type,
-                title = currentState.title,
-                actionLabel = currentState.actionLabel,
-                onAction = currentState.onAction,
-                onDismiss = {
-                    hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                    state.value = state.value.copy(isVisible = false)
+            val swipeState = rememberSwipeToDismissBoxState(
+                confirmValueChange = { value ->
+                    if (value != SwipeToDismissBoxValue.EndToStart) {
+                        state.value = state.value.copy(isVisible = false)
+                        true
+                    } else false
                 }
             )
+            SwipeToDismissBox(
+                state = swipeState,
+                backgroundContent = {},
+                modifier = Modifier
+            ) {
+                ModernNotification(
+                    message = currentState.message,
+                    type = currentState.type,
+                    title = currentState.title,
+                    actionLabel = currentState.actionLabel,
+                    onAction = currentState.onAction,
+                    onDismiss = {
+                        state.value = state.value.copy(isVisible = false)
+                    }
+                )
+            }
         }
     }
 }
@@ -164,7 +162,7 @@ private fun ModernNotification(
     val notificationConfig = getNotificationConfig(type)
 
     // Animación de pulso para el ícono
-    val pulseScale by rememberInfiniteTransition("pulse").animateFloat(
+    val pulseScale by rememberInfiniteTransition().animateFloat(
         initialValue = 1f,
         targetValue = 1.1f,
         animationSpec = infiniteRepeatable(
@@ -177,32 +175,23 @@ private fun ModernNotification(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .shadow(12.dp, RoundedCornerShape(20.dp))
+            .shadow(16.dp, RoundedCornerShape(20.dp))
             .clickable(
                 onClick = { isPaused = !isPaused }
             ),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
-            containerColor = notificationConfig.containerColor
+            containerColor = Color.Transparent
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
     ) {
-        Box {
-            // Fondo con gradiente sutil
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(
-                        brush = Brush.horizontalGradient(
-                            colors = listOf(
-                                notificationConfig.containerColor,
-                                notificationConfig.containerColor.copy(alpha = 0.8f),
-                                notificationConfig.containerColor
-                            )
-                        )
-                    )
+        Box(
+            Modifier.background(
+                brush = Brush.horizontalGradient(
+                    colors = notificationConfig.gradient
+                )
             )
-
+        ) {
             Column {
                 Row(
                     modifier = Modifier
@@ -214,12 +203,11 @@ private fun ModernNotification(
                     Box(
                         modifier = Modifier
                             .size(48.dp)
-                            .scale(if (type == NotificationType.SUCCESS) pulseScale else 1f)
+                            .scale(pulseScale)
                             .background(
                                 brush = Brush.radialGradient(
                                     colors = listOf(
                                         notificationConfig.accentColor.copy(alpha = 0.2f),
-                                        notificationConfig.accentColor.copy(alpha = 0.1f),
                                         Color.Transparent
                                     )
                                 ),
@@ -237,7 +225,6 @@ private fun ModernNotification(
 
                     // Contenido del texto
                     Column(modifier = Modifier.weight(1f)) {
-                        // Título (si existe) o tipo por defecto
                         Text(
                             text = title ?: notificationConfig.defaultTitle,
                             style = MaterialTheme.typography.titleMedium.copy(
@@ -297,7 +284,7 @@ private fun ModernNotification(
                     }
                 }
 
-                // Barra de progreso mejorada
+                // Barra de progreso animada
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -329,7 +316,7 @@ private fun ModernNotification(
 
 private data class NotificationConfig(
     val icon: ImageVector,
-    val containerColor: Color,
+    val gradient: List<Color>,
     val contentColor: Color,
     val accentColor: Color,
     val defaultTitle: String
@@ -340,28 +327,28 @@ private fun getNotificationConfig(type: NotificationType): NotificationConfig {
     return when (type) {
         NotificationType.SUCCESS -> NotificationConfig(
             icon = Icons.Default.CheckCircle,
-            containerColor = Color(0xFFE8F7ED),
+            gradient = listOf(Color(0xFFB2FF59), Color(0xFF388E3C)),
             contentColor = Color(0xFF1B5E20),
             accentColor = Color(0xFF2E7D32),
             defaultTitle = "¡Éxito!"
         )
         NotificationType.ERROR -> NotificationConfig(
             icon = Icons.Default.ErrorOutline,
-            containerColor = Color(0xFFFFEBEE),
+            gradient = listOf(Color(0xFFFF8A80), Color(0xFFD32F2F)),
             contentColor = Color(0xFFB71C1C),
             accentColor = Color(0xFFD32F2F),
             defaultTitle = "Error"
         )
         NotificationType.WARNING -> NotificationConfig(
             icon = Icons.Default.Warning,
-            containerColor = Color(0xFFFFF8E1),
+            gradient = listOf(Color(0xFFFFF176), Color(0xFFFBC02D)),
             contentColor = Color(0xFFE65100),
             accentColor = Color(0xFFFF9800),
             defaultTitle = "Advertencia"
         )
         NotificationType.INFO -> NotificationConfig(
             icon = Icons.Default.Info,
-            containerColor = Color(0xFFE3F2FD),
+            gradient = listOf(Color(0xFF81D4FA), Color(0xFF1565C0)),
             contentColor = Color(0xFF0D47A1),
             accentColor = Color(0xFF1976D2),
             defaultTitle = "Información"
@@ -369,9 +356,7 @@ private fun getNotificationConfig(type: NotificationType): NotificationConfig {
     }
 }
 
-
 // Extensiones de utilidad para usar fácilmente
-@Composable
 fun MutableState<NotificationState>.showSuccess(
     message: String,
     title: String? = null,
@@ -379,7 +364,6 @@ fun MutableState<NotificationState>.showSuccess(
     onAction: (() -> Unit)? = null
 ) = showNotification(message, NotificationType.SUCCESS, 3000L, title, actionLabel, onAction)
 
-@Composable
 fun MutableState<NotificationState>.showError(
     message: String,
     title: String? = null,
@@ -387,7 +371,6 @@ fun MutableState<NotificationState>.showError(
     onAction: (() -> Unit)? = null
 ) = showNotification(message, NotificationType.ERROR, 4000L, title, actionLabel, onAction)
 
-@Composable
 fun MutableState<NotificationState>.showWarning(
     message: String,
     title: String? = null,
@@ -395,7 +378,6 @@ fun MutableState<NotificationState>.showWarning(
     onAction: (() -> Unit)? = null
 ) = showNotification(message, NotificationType.WARNING, 3500L, title, actionLabel, onAction)
 
-@Composable
 fun MutableState<NotificationState>.showInfo(
     message: String,
     title: String? = null,
