@@ -23,7 +23,7 @@ fun App() {
     )
 
     AppTheme(darkTheme = isDarkMode) {
-        // Mueve todo dentro del KoinContext
+        // Muevetodo dentro del KoinContext
         KoinContext {
             val navController = rememberNavController() // ✅ aquí adentro
             val sessionManager: SessionManager = koinInject()

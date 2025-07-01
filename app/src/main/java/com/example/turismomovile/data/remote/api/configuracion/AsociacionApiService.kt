@@ -7,7 +7,6 @@
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionCreateDTO
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionResponse
     import com.example.turismomovile.data.remote.dto.configuracion.AsociacionUpdateDTO
-    import com.example.turismomovile.data.remote.dto.configuracion.AsociacionWithFamily
     import io.ktor.client.HttpClient
     import io.ktor.client.call.body
     import io.ktor.client.request.delete
@@ -34,12 +33,6 @@
 
         suspend fun getAsociacionByid(id: String): Asociacion {
             return client.get(ApiConstants.Configuration.ASOCIACION_GETBYID.replace("{id}", id)) {
-                addAuthHeader()
-            }.body()
-        }
-
-        suspend fun getAsociacionWithEmprendedor(id: String): AsociacionWithFamily {
-            return client.get(ApiConstants.Configuration.ASOCIACION_WITH_FAMILY.replace("{id}", id)) {
                 addAuthHeader()
             }.body()
         }

@@ -33,5 +33,18 @@ object Routes {
             const val ROLE = "$SETUP/role"
             const val ASOCIACIONES = "$SETUP/asociaciones"
         }
+
+        // Sale
+        object Sales {
+            private const val SETUP = "$HOME_PREFIX/sales"
+            const val PAYMENTS = "$SETUP/payment"
+        }
+        // Sale
+        object Product {
+            private const val SETUP = "$HOME_PREFIX/product"
+            const val RESERVAS = "$SETUP/reservas"
+            const val PRODUCTOS = "$SETUP/product"
+
+        }
     }
 }

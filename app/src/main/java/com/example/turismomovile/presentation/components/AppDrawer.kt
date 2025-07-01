@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -34,7 +33,6 @@ import coil.compose.AsyncImage
 import com.example.turismomovile.data.remote.dto.MenuItem
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.model.hasProfileImage
-import com.example.turismomovile.domain.model.isAdmin
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
 import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
@@ -669,7 +667,7 @@ private fun getIconForTitle(title: String): ImageVector {
     return when (title.lowercase()) {
         // Secciones principales
         "configuración" -> Icons.Default.Settings
-        "catálogo" -> Icons.Default.ViewList
+        "catálogo" -> Icons.AutoMirrored.Filled.ViewList
         "contabilidad" -> Icons.Default.Calculate
         "clientes" -> Icons.Default.People
         "compras" -> Icons.Default.ShoppingCart
@@ -687,7 +685,8 @@ private fun getIconForTitle(title: String): ImageVector {
         "municipalidad" -> Icons.Default.Domain
         "asociaciones" -> Icons.Default.Business
         "configuración página"-> Icons.Default.Pages
-
+        "reservas"-> Icons.Default.Receipt
+        "productos ofrecidos"-> Icons.Default.ProductionQuantityLimits
         // Catálogo
         "unidad medida" -> Icons.Default.Straighten
         "categoría" -> Icons.Default.Category
@@ -696,7 +695,7 @@ private fun getIconForTitle(title: String): ImageVector {
 
         // Contabilidad
         "tipo de documento" -> Icons.Default.Description
-        "tipo de afectacion" -> Icons.Default.Assignment
+        "tipo de afectacion" -> Icons.AutoMirrored.Filled.Assignment
         "clase cuenta contable" -> Icons.Default.AccountBalance
         "areas" -> Icons.Default.Apartment
         "plan de contable" -> Icons.Default.RequestQuote
@@ -705,24 +704,19 @@ private fun getIconForTitle(title: String): ImageVector {
 
         // Clientes
         "clientes y proveedores" -> Icons.Default.Groups
-        "tipo de documento" -> Icons.Default.Badge
         "tipo de entidad" -> Icons.Default.CorporateFare
         "servicios" -> Icons.Default.RoomService
         "entidades" -> Icons.Default.BusinessCenter
 
         // Compras
-        "compras" -> Icons.Default.ShoppingBasket
         "proveedores" -> Icons.Default.LocalShipping
 
         // Ventas
-        "ventas" -> Icons.Default.PointOfSale
         "lista de precios" -> Icons.Default.PriceCheck
         "lista de precios detalle" -> Icons.Default.Receipt
-        "clientes" -> Icons.Default.People
         "código de barras" -> Icons.Default.QrCodeScanner
 
         // Movimientos de Almacén
-        "movimiento de almacén" -> Icons.Default.Warehouse
         "inventario" -> Icons.Default.Inventory
         "kardex" -> Icons.Default.Assessment
 
@@ -730,11 +724,10 @@ private fun getIconForTitle(title: String): ImageVector {
         "tipo de operación" -> Icons.Default.SwapHoriz
         "tipo de pago" -> Icons.Default.Payments
         "metodos de pago" -> Icons.Default.Payment
-        "pagos" -> Icons.Default.Money
 
         // Reportes
         "garantías" -> Icons.Default.Verified
-        "rentabilidad" -> Icons.Default.TrendingUp
+        "rentabilidad" -> Icons.AutoMirrored.Filled.TrendingUp
 
         else -> Icons.Default.Circle
     }

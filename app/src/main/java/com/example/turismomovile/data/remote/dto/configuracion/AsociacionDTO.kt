@@ -74,6 +74,18 @@ data class ImagenUpdateDTO(
     val description: String
 )
 
+data class AsociacionState(
+    val itemsAso: List<Asociacion> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val currentPage: Int = 0,
+    val totalPages: Int = 0,
+    val totalElements: Int = 0,
+    val selectedItem: Role? = null,
+    val isDialogOpen: Boolean = false,
+    val notification: NotificationState = NotificationState()
+)
+
 fun Asociacion.toCreateDTO(): AsociacionCreateDTO? {
     return if (nombre != null && lugar != null && descripcion != null && municipalidadId != null) {
         AsociacionCreateDTO(
@@ -105,48 +117,4 @@ fun ImgAsociaciones.toCreateDTO(): ImgAsociacionesCreateDTO? {
         null
     }
 }
-
-@Serializable
-data class AsociacionCODE(
-    val id: String? = null,
-    val nombre : String?,
-    val description: String?,
-    val lugar : String?,
-    val codigo : String?,
-    val estado: String? = null,
-    val municipalidadId: String? = null
-)
-
-@Serializable
-data class EmprendedorCODE(
-    val id: String? = null,
-    val razon_social : String?,
-    val familia: String?,
-    val asociacion_id : String?,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-)
-
-
-@Serializable
-data class AsociacionWithFamily(
-    val asociacion: List<AsociacionCODE>,
-    val emprendedores: List<EmprendedorCODE>,
-)
-
-
-data class AsociacionState(
-    val itemsAso: List<Asociacion> = emptyList(),
-    val isLoading: Boolean = false,
-    val error: String? = null,
-    val currentPage: Int = 0,
-    val totalPages: Int = 0,
-    val totalElements: Int = 0,
-    val selectedItem: Role? = null,
-    val isDialogOpen: Boolean = false,
-    val notification: NotificationState = NotificationState()
-)
-
-
-
 

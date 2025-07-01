@@ -5,7 +5,6 @@ import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionCreateDTO
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionResponse
 import com.example.turismomovile.data.remote.dto.configuracion.AsociacionUpdateDTO
-import com.example.turismomovile.data.remote.dto.configuracion.AsociacionWithFamily
 import com.example.turismomovile.domain.repository.configuration.AsociacionesRepository
 
 class AsociacionesRepositoryImpl(
@@ -57,12 +56,4 @@ class AsociacionesRepositoryImpl(
         }
     }
 
-    // Obtener asociación con emprendedores/familias
-    override suspend fun getAsociacionWithEmprendedor(id: String): Result<AsociacionWithFamily> {
-        return try {
-            Result.success(apiService.getAsociacionWithEmprendedor(id)) // Llamamos al servicio correspondiente
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 }

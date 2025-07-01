@@ -56,6 +56,7 @@ fun NavigationGraph(
         Routes.REGISTER
     )
 
+
     LaunchedEffect(navController) {
         snapshotFlow { navController.currentBackStackEntry }
             .collect { backStackEntry ->
@@ -309,7 +310,10 @@ private fun setupMenuRoutes(
         Routes.HomeScreen.Setup.ASOCIACIONES to "Asociaciones",
         Routes.HomeScreen.Setup.USUARIOS to "Usuarios",
         Routes.HomeScreen.Setup.SEPTIONS to "Secciones",
-        Routes.HomeScreen.Setup.SERVICE to "Servicios"
+        Routes.HomeScreen.Setup.SERVICE to "Servicios",
+        Routes.HomeScreen.Product.PRODUCTOS to "Productos",
+        Routes.HomeScreen.Product.RESERVAS to "Reservas",
+        Routes.HomeScreen.Sales.PAYMENTS to "Pagos" // Esta ruta está aquí, ¡pero asegúrate de que esté registrada también en el NavHost!
     )
 
     implementedRoutes.forEach { (route, title) ->
