@@ -365,7 +365,7 @@ private fun EmprendedoresListContent(
 private fun EmprendedoresFilterSection(
     viewModel: LangPageViewModel = koinInject()
 ) {
-    var selectedFilter by remember { mutableStateOf("Todos") }
+    val selectedFilter by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories
     val scrollState = rememberScrollState()
 
@@ -427,9 +427,7 @@ private fun EmprendedoresFilterSection(
                             shape = RoundedCornerShape(16.dp)
                         )
                         .clickable {
-                            selectedFilter = category
-                            val value = if (category == "Todos") null else category
-                            viewModel.loadEmprendedores(category = value)
+                            viewModel.setCategory(category)
                         }
                         .padding(horizontal = 16.dp, vertical = 10.dp)
                 ) {

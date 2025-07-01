@@ -20,6 +20,7 @@ import com.example.turismomovile.domain.repository.configuration.MunicipalidadRe
 import com.example.turismomovile.presentation.components.NotificationState
 import com.example.turismomovile.presentation.components.NotificationType
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -171,6 +172,7 @@ class LangPageViewModel (
         name: String? = null,
         category: String? = null
     ) {
+
         viewModelScope.launch {
             // Indicador de carga
             _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)
@@ -273,7 +275,15 @@ class LangPageViewModel (
         }
     }
 
+    // En LangPageViewModel
+    private val _selectedCategory = MutableStateFlow<String>("Todos")
+    val selectedCategory: StateFlow<String> = _selectedCategory
 
+    // 2. Cambia la función para cargar emprendedores usando la categoría (y actualiza el filtro)
+    fun setCategory(category: String) {
+        _selectedCategory.value = category
+        loadEmprendedores(category = if (category == "Todos") null else category)
+    }
 
 
 
