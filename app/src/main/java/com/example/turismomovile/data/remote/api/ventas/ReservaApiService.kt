@@ -3,7 +3,7 @@ package com.example.turismomovile.data.remote.api.ventas
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
-import com.example.turismomovile.data.remote.dto.ventas.ReservaCreateDTO
+import com.example.turismomovile.data.remote.dto.ventas.ReservaDetalleCreateDTO
 import com.example.turismomovile.data.remote.dto.ventas.ReservaListResponse
 import com.example.turismomovile.data.remote.dto.ventas.ReservaResponse
 import io.ktor.client.HttpClient
@@ -33,7 +33,7 @@ class ReservaApiService(
            }.body()
        }
 
-       suspend fun createReserva(reserva: ReservaCreateDTO): ReservaResponse {
+       suspend fun createReserva(reserva: ReservaDetalleCreateDTO): ReservaResponse {
            val response = client.post(ApiConstants.Configuration.RESERVA_POST) {
                addAuthHeader()
                contentType(ContentType.Application.Json)
@@ -42,7 +42,7 @@ class ReservaApiService(
            return response.body()
        }
 
-       suspend fun updateReserva(id: String, reserva: ReservaCreateDTO): ReservaResponse {
+       suspend fun updateReserva(id: String, reserva: ReservaDetalleCreateDTO): ReservaResponse {
            val endpoint = ApiConstants.Configuration.RESERVA_PUT.replace("{id}", id)
            val response = client.put(endpoint) {
                addAuthHeader()

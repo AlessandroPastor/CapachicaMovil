@@ -103,11 +103,6 @@ data class ReservaDetalleCreateDTO(
 )
 
 @Serializable
-data class ReservaCreateDTO(
-    val details: List<ReservaDetalleCreateDTO>
-)
-
-@Serializable
 data class ReservaDetalleResponse(
     val id: String,
     val emprendedor_service_id: String,
