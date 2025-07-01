@@ -5,17 +5,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.turismomovile.presentation.screens.land_page.CartItem
-
 
 @Composable
 fun ShoppingCart(
@@ -31,20 +32,31 @@ fun ShoppingCart(
         modifier = modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.background)
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
-            "Tu carrito",
-            style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(bottom = 8.dp)
+            text = "Tu carrito",
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(bottom = 12.dp, top = 8.dp)
         )
+
         if (items.isEmpty()) {
-            Text("Tu carrito está vacío.", color = Color.Gray)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 32.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Tu carrito está vacío",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .weight(1f, false)
-                    .padding(bottom = 16.dp)
             ) {
                 items(items.size) { index ->
                     val item = items[index]
@@ -53,26 +65,49 @@ fun ShoppingCart(
                         onChangeQuantity = { newQty ->
                             onItemQuantityChange(item, newQty)
                         },
-                        onRemove = {
-                            onRemoveItem(item)
-                        }
+                        onRemove = { onRemoveItem(item) }
                     )
                     if (index < items.lastIndex) {
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Divider(
+                            modifier = Modifier.padding(vertical = 8.dp),
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.surfaceVariant
+                        )
                     }
                 }
             }
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Total section with better visual hierarchy
+            Surface(
+                tonalElevation = 2.dp,
+                shape = RoundedCornerShape(12.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    "Total: S/. ${"%.2f".format(total)}",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
-                )
-                checkoutButton?.invoke()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Total:",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                    )
+                    Text(
+                        text = "S/. ${"%.2f".format(total)}",
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            checkoutButton?.invoke()
         }
     }
 }
@@ -85,38 +120,73 @@ private fun CartItemRow(
 ) {
     Card(
         shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        modifier = Modifier
-            .fillMaxWidth()
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+        modifier = Modifier.fillMaxWidth()
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(8.dp)
+            modifier = Modifier.padding(12.dp)
         ) {
-            val imageUrl = item.producto.service_code // Usa el campo que corresponda a la imagen del producto (ajusta si corresponde)
-                ?: item.producto.productCode // Si tienes una URL de imagen real, ponla aquí
+            // Product image
+            val imageUrl = item.producto.service_code ?: item.producto.productCode
             if (!imageUrl.isNullOrEmpty()) {
                 AsyncImage(
                     model = imageUrl,
-                    contentDescription = item.producto.name,
+                    contentDescription = "Imagen de ${item.producto.name}",
                     modifier = Modifier
-                        .size(48.dp)
-                        .padding(end = 8.dp)
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp))
                 )
+                Spacer(modifier = Modifier.width(12.dp))
             }
+
+            // Product details
             Column(modifier = Modifier.weight(1f)) {
-                Text(item.producto.name ?: "Producto", fontWeight = FontWeight.SemiBold)
-                Text("S/. ${"%.2f".format(item.producto.costo ?: 0.0)}", color = Color.Gray)
+                Text(
+                    text = item.producto.name ?: "Producto",
+                    style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.SemiBold),
+                    maxLines = 2,
+                    modifier = Modifier.padding(bottom = 2.dp)
+                )
+
+                Text(
+                    text = "S/. ${"%.2f".format(item.producto.costo ?: 0.0)}",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
+                )
+
                 item.lugar?.let { lugar ->
-                    Text("Lugar: $lugar", style = MaterialTheme.typography.labelMedium)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "Lugar: $lugar",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
                 }
             }
-            QuantitySelector(
-                quantity = item.cantidadSeleccionada,
-                onQuantityChange = onChangeQuantity
-            )
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+
+            // Quantity selector and delete button
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                QuantitySelector(
+                    quantity = item.cantidadSeleccionada,
+                    onQuantityChange = onChangeQuantity
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Eliminar producto",
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
             }
         }
     }
@@ -129,27 +199,37 @@ private fun QuantitySelector(
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(horizontal = 8.dp)
+        horizontalArrangement = Arrangement.Center
     ) {
-        Button(
+        IconButton(
             onClick = { if (quantity > 1) onQuantityChange(quantity - 1) },
             enabled = quantity > 1,
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(32.dp)
         ) {
-            Text("-", fontWeight = FontWeight.Bold)
+            Icon(
+                imageVector = Icons.Default.Remove,
+                contentDescription = "Reducir cantidad",
+                tint = if (quantity > 1) MaterialTheme.colorScheme.primary
+                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)
+            )
         }
+
         Text(
-            quantity.toString(),
+            text = quantity.toString(),
+            style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.width(24.dp),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
-        Button(
+
+        IconButton(
             onClick = { onQuantityChange(quantity + 1) },
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.size(24.dp)
+            modifier = Modifier.size(32.dp)
         ) {
-            Text("+", fontWeight = FontWeight.Bold)
+            Icon(
+                imageVector = Icons.Default.Add,
+                contentDescription = "Aumentar cantidad",
+                tint = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

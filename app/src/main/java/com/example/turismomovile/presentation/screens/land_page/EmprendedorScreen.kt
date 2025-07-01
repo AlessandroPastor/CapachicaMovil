@@ -161,7 +161,9 @@ fun EmprendedoresScreen(
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
-                        onToggleTheme = { themeViewModel.toggleTheme() }
+                        onToggleTheme = { themeViewModel.toggleTheme() },
+                        searchPlaceholder = "Busca emprendedor"
+
                     )
                 },
                 bottomBar = {
@@ -217,10 +219,16 @@ fun EmprendedoresScreen(
                             onDismiss = { selectedEmprendedor = null },
                             onContactClick = {
                                 // Lógica para abrir contacto con el emprendedor
+                            },
+                            onAddToCart = { producto, lugar ->
+                                reservaViewModel.agregarAlCarrito(
+                                    producto = producto,
+                                    cantidad = 1,
+                                    lugar = lugar
+                                )
                             }
                         )
                     }
-
                     // Log de depuración visible cada vez que cambia currentPage o totalPages
                     LaunchedEffect(currentPage, totalPages) {
                         println("🧭 [UI] currentPage = $currentPage | totalPages = $totalPages")
@@ -497,7 +505,8 @@ private fun LoadingOverlay() {
 fun EmprendedorDetailModal(
     emprendedor: Emprendedor,
     onDismiss: () -> Unit,
-    onContactClick: () -> Unit
+    onContactClick: () -> Unit,
+    onAddToCart: (Producto, String?) -> Unit
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -564,7 +573,12 @@ fun EmprendedorDetailModal(
             // Recorremos los productos y los mostramos
             if (emprendedor.products.isNotEmpty()) {
                 emprendedor.products.forEach { product ->
-                    ProductItem(product = product)
+                    ProductItem(
+                        product = product,
+                        onAddToCart = {
+                            onAddToCart(product, emprendedor.lugar)
+                        }
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
             } else {
@@ -731,7 +745,10 @@ private fun EmprendedorBasicInfo(emprendedor: Emprendedor) {
 }
 
 @Composable
-private fun ProductItem(product: Producto) {
+private fun ProductItem(
+    product: Producto,
+    onAddToCart: (Producto) -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -799,6 +816,20 @@ private fun ProductItem(product: Producto) {
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)
                 )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = { onAddToCart(product) },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AddShoppingCart,
+                    contentDescription = "Añadir al carrito"
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Añadir al carrito")
             }
         }
     }
