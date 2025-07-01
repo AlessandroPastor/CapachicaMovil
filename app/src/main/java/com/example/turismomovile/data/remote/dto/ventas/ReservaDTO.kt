@@ -131,7 +131,7 @@ data class ReservaDetalleResponse(
 
 
 data class ReservaState(
-    val items: List<Service> = emptyList(),
+    val items: List<ReservaUsuarioDTO> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val currentPage: Int = 0,

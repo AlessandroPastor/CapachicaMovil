@@ -1,36 +1,21 @@
 package com.example.turismomovile.presentation.components
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.material3.Button
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.Icon
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.Alignment
+import coil.compose.AsyncImage
+import com.example.turismomovile.presentation.screens.land_page.CartItem
 
-// Modelo de item de carrito
-data class CartItem(
-    val id: String,
-    val name: String,
-    val price: Double,
-    val imageRes: Int? = null,
-    val quantity: Int = 1
-)
 
 @Composable
 fun ShoppingCart(
@@ -40,7 +25,7 @@ fun ShoppingCart(
     modifier: Modifier = Modifier,
     checkoutButton: @Composable (() -> Unit)? = null
 ) {
-    val total = items.sumOf { it.price * it.quantity }
+    val total = items.sumOf { (it.producto.costo ?: 0.0) * it.cantidadSeleccionada }
 
     Column(
         modifier = modifier
@@ -83,7 +68,7 @@ fun ShoppingCart(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    "Total: $${"%.2f".format(total)}",
+                    "Total: S/. ${"%.2f".format(total)}",
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                 )
                 checkoutButton?.invoke()
@@ -108,22 +93,26 @@ private fun CartItemRow(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(8.dp)
         ) {
-            item.imageRes?.let {
-                Image(
-                    painter = painterResource(id = it),
-                    contentDescription = item.name,
+            val imageUrl = item.producto.service_code // Usa el campo que corresponda a la imagen del producto (ajusta si corresponde)
+                ?: item.producto.productCode // Si tienes una URL de imagen real, ponla aquí
+            if (!imageUrl.isNullOrEmpty()) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = item.producto.name,
                     modifier = Modifier
                         .size(48.dp)
-                        .padding(end = 8.dp),
-                    contentScale = ContentScale.Crop
+                        .padding(end = 8.dp)
                 )
             }
             Column(modifier = Modifier.weight(1f)) {
-                Text(item.name, fontWeight = FontWeight.SemiBold)
-                Text("$${"%.2f".format(item.price)}", color = Color.Gray)
+                Text(item.producto.name ?: "Producto", fontWeight = FontWeight.SemiBold)
+                Text("S/. ${"%.2f".format(item.producto.costo ?: 0.0)}", color = Color.Gray)
+                item.lugar?.let { lugar ->
+                    Text("Lugar: $lugar", style = MaterialTheme.typography.labelMedium)
+                }
             }
             QuantitySelector(
-                quantity = item.quantity,
+                quantity = item.cantidadSeleccionada,
                 onQuantityChange = onChangeQuantity
             )
             IconButton(onClick = onRemove) {

@@ -36,6 +36,8 @@ import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
 
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EmprendedoresScreen(
     onStartClick: () -> Unit,
@@ -47,11 +49,12 @@ fun EmprendedoresScreen(
     // Estados para el LazyColumn y scroll
     val lazyListState = rememberLazyListState()
     var isBottomNavVisible by remember { mutableStateOf(true) }
-
+    val reservaViewModel: ReservaViewModel = koinInject()
+    val carrito by reservaViewModel.carrito.collectAsState()
     // Variables para detectar dirección del scroll
     var previousScrollOffset by remember { mutableStateOf(0) }
     var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
-
+    var showCart by remember { mutableStateOf(false) }
     // Detectar dirección del scroll mejorado
     LaunchedEffect(lazyListState) {
         snapshotFlow {
@@ -223,6 +226,46 @@ fun EmprendedoresScreen(
                         println("🧭 [UI] currentPage = $currentPage | totalPages = $totalPages")
                     }
 
+                    // ----- INTEGRACIÓN DEL CARRITO ------
+                    // Botón flotante para mostrar el carrito si hay items
+                    if (carrito.isNotEmpty()) {
+                        FloatingActionButton(
+                            onClick = { showCart = true },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(bottom = 110.dp, end = 12.dp)
+                        ) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = "Ver carrito")
+                        }
+                    }
+                    // Modal del carrito
+                    if (showCart) {
+                        ModalBottomSheet(
+                            onDismissRequest = { showCart = false },
+                        ) {
+                            ShoppingCart(
+                                items = carrito,
+                                onItemQuantityChange = { item, qty ->
+                                    reservaViewModel.actualizarCantidad(item, qty)
+                                },
+                                onRemoveItem = { item ->
+                                    reservaViewModel.quitarDelCarrito(item)
+                                },
+                                checkoutButton = {
+                                    Button(
+                                        onClick = {
+                                            reservaViewModel.reservarAhora()
+                                            showCart = false
+                                        },
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text("Reservar")
+                                    }
+                                }
+                            )
+                        }
+                    }
+                    // ----- FIN DE INTEGRACIÓN DEL CARRITO ------
                     Box(
                         modifier = Modifier
                             .fillMaxSize()

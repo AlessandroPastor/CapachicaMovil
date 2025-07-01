@@ -15,6 +15,7 @@ import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadDesc
 import com.example.turismomovile.data.remote.api.configuracion.ParentModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.RoleApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
+import com.example.turismomovile.data.remote.api.ventas.ReservaApiService
 import com.example.turismomovile.data.repository.AuthRepositoryImpl
 import com.example.turismomovile.data.repository.configuration.AsociacionesRepositoryImpl
 import com.example.turismomovile.data.repository.configuration.ModuleRepositoryImpl
@@ -42,6 +43,7 @@ import com.example.turismomovile.presentation.screens.login.LoginViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import io.dev.kmpventas.data.repository.configuration.ImgAsociacionesRepositoryImpl
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.land_page.ReservaViewModel
 import com.example.turismomovile.presentation.screens.login.ProfileViewModel
 import com.example.turismomovile.presentation.screens.login.RegisterViewModel
 import io.ktor.client.*
@@ -108,6 +110,7 @@ val appModule = module {
     single { AsociacionApiService(get(),get()) }
     single { ImgAsociacionesApiService(get(),get()) }
     single { EmprendedorApiService (get(),get())}
+    single { ReservaApiService (get(),get())}
 
 
     // =====================================
@@ -131,18 +134,19 @@ val appModule = module {
     // =====================================
     // ViewModels
     // =====================================
-    single { ThemeViewModel(get()) }
+    viewModel { ThemeViewModel(get()) }
     viewModel { LoginViewModel(get(), get()) }
-    single { HomeViewModel(get(), get()) }
-    single { LangPageViewModel(get(), get(), get(),get(),get()) }
-    single { RoleViewModel(get(), get(), get()) }
-    single { ModuleViewModel(get(), get()) }
-    single { ParentModuleViewModel(get()) }
-    single { MunicipalidadDescriptionViewModel(get()) }
-    single { MunicipalidadViewModel(get()) }
-    single { AsociacionesViewModel(get(), get(), get()) }
-    single {ServiceViewModel(get())}
-    single {ProfileViewModel(get())}
+    viewModel { HomeViewModel(get(), get()) }
+    viewModel { LangPageViewModel(get(), get(), get(),get(),get()) }
+    viewModel { RoleViewModel(get(), get(), get()) }
+    viewModel { ModuleViewModel(get(), get()) }
+    viewModel { ParentModuleViewModel(get()) }
+    viewModel { MunicipalidadDescriptionViewModel(get()) }
+    viewModel { MunicipalidadViewModel(get()) }
+    viewModel { AsociacionesViewModel(get(), get(), get()) }
+    viewModel {ServiceViewModel(get())}
+    viewModel {ProfileViewModel(get())}
+    viewModel {ReservaViewModel(get())}
     viewModel { RegisterViewModel(get(),get()) }
 
 }
