@@ -30,7 +30,6 @@ import com.example.turismomovile.data.remote.dto.configuracion.EmprendedorState
 import com.example.turismomovile.data.remote.dto.configuracion.Imagen
 import com.example.turismomovile.data.remote.dto.configuracion.Producto
 import com.example.turismomovile.presentation.components.*
-import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedoresStatsCard
 import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedoresStatsCardPremium
 import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.LogoDeFamilia
 import com.example.turismomovile.presentation.theme.AppTheme

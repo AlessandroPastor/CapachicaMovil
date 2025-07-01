@@ -3,9 +3,11 @@ package com.example.turismomovile.data.remote.api.ventas
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.remote.api.ApiConstants
 import com.example.turismomovile.data.remote.api.base.BaseApiService
+import com.example.turismomovile.data.remote.dto.ventas.ReservaCreateDTO
 import com.example.turismomovile.data.remote.dto.ventas.ReservaDetalleCreateDTO
+import com.example.turismomovile.data.remote.dto.ventas.ReservaDetalleResponse
 import com.example.turismomovile.data.remote.dto.ventas.ReservaListResponse
-import com.example.turismomovile.data.remote.dto.ventas.ReservaResponse
+import com.example.turismomovile.data.remote.dto.ventas.ReservaUsuarioDTO
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
 import io.ktor.client.request.*
@@ -26,14 +28,14 @@ class ReservaApiService(
             return response.body()
         }
 
-       suspend fun getReservaById(id: String): ReservaResponse {
+       suspend fun getReservaById(id: String): ReservaUsuarioDTO {
            val endpoint = ApiConstants.Configuration.RESERVA_GET_BYID.replace("{id}", id)
            return client.get(endpoint) {
                addAuthHeader()
            }.body()
        }
 
-       suspend fun createReserva(reserva: ReservaDetalleCreateDTO): ReservaResponse {
+       suspend fun createReserva(reserva: ReservaCreateDTO): ReservaDetalleResponse {
            val response = client.post(ApiConstants.Configuration.RESERVA_POST) {
                addAuthHeader()
                contentType(ContentType.Application.Json)
@@ -42,7 +44,7 @@ class ReservaApiService(
            return response.body()
        }
 
-       suspend fun updateReserva(id: String, reserva: ReservaDetalleCreateDTO): ReservaResponse {
+       suspend fun updateReserva(id: String, reserva: ReservaDetalleCreateDTO): ReservaDetalleResponse {
            val endpoint = ApiConstants.Configuration.RESERVA_PUT.replace("{id}", id)
            val response = client.put(endpoint) {
                addAuthHeader()
