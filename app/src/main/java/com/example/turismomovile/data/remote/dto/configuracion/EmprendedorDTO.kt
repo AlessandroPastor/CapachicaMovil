@@ -47,7 +47,7 @@ data class Imagen(
 // Productos (tabla emprendedor_service)
 @Serializable
 data class Producto(
-    val id_service_emprendedor: String? = null,
+    val emprendedor_service_id: String? = null,
     val productCode: String? = null,
     val productStatus: Int? = null,
     val cantidad: Int? = null,
