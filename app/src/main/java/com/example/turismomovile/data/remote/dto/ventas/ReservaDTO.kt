@@ -107,24 +107,39 @@ data class ReservaDetalleCreateDTO(
     val cantidad: Int,
     val lugar: String? = null
 )
-
 @Serializable
 data class ReservaDetalleResponse(
-    val id: String? = null,
+    val message: String,
+    val reserva: ReservaResponse
+)
+@Serializable
+data class ReservaResponse(
+    val user_id: Int,
+    val code: String,
+    val total: Double,
+    val bi: Double,
+    val igv: Double,
+    val id: String,
+    val updated_at: String,
+    val created_at: String,
+    val reserve_details: List<ReservaDetalleDResponse>
+)
+@Serializable
+data class ReservaDetalleDResponse(
+    val id: String,
     val emprendedor_service_id: String,
     val reserva_id: String,
-    val costo: String? = null,
-    val cantidad: String? = null,
-    val IGV: String? = null,
-    val BI: String? = null,
-    val total: String? = null,
-    val lugar: String? = null,
-    val description: String? = null,
-    val created_at: String? = null,
-    val updated_at: String? = null,
-    val deleted_at: String? = null,
+    val costo: String,
+    val cantidad: String,
+    val IGV: String,
+    val BI: String,
+    val total: String,
+    val lugar: String,
+    val description: String,
+    val created_at: String,
+    val updated_at: String,
+    val deleted_at: String? = null
 )
-
 
 data class ReservaState(
     val items: List<ReservaUsuarioDTO> = emptyList(),
