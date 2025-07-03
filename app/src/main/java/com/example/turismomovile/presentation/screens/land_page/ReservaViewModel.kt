@@ -33,11 +33,11 @@ class ReservaViewModel(
         loadReservas()
     }
 
-    fun loadReservas(page: Int = 0) {
+    fun loadReservas(page: Int = 0,searchQuery: String? = null) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val response = reservaApiService.getReservas(page = page)
+                val response = reservaApiService.getReservas(page = page, search = searchQuery)
                 _state.update {
                     it.copy(
                         items = response.content, // O mapea según tu modelo de dominio

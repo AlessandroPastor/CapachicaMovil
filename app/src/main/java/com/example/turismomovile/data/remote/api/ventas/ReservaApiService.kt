@@ -19,11 +19,12 @@ class ReservaApiService(
     sessionManager: SessionManager
     ) : BaseApiService(client, sessionManager) {
 
-        suspend fun getReservas(page: Int = 0, size: Int = 10): ReservaListResponse {
+        suspend fun getReservas(page: Int = 0, size: Int = 10,search: String?): ReservaListResponse {
             val response = client.get(ApiConstants.Configuration.RESERVA_ENDPOINT) {
                 addAuthHeader()
                 parameter("page", page)
                 parameter("size", size)
+                search?.let { parameter("search", it) }
               }
             return response.body()
         }
@@ -35,16 +36,26 @@ class ReservaApiService(
            }.body()
        }
 
-       suspend fun createReserva(reserva: ReservaCreateDTO): ReservaDetalleResponse {
-           val response = client.post(ApiConstants.Configuration.RESERVA_POST) {
-               addAuthHeader()
-               contentType(ContentType.Application.Json)
-               setBody(reserva)
-           }
-           return response.body()
-       }
+    suspend fun createReserva(reserva: ReservaCreateDTO): ReservaDetalleResponse {
+        println("Iniciando la solicitud POST para crear la reserva...")
 
-       suspend fun updateReserva(id: String, reserva: ReservaDetalleCreateDTO): ReservaDetalleResponse {
+        val response = client.post(ApiConstants.Configuration.RESERVA_POST) {
+            addAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(reserva)
+        }
+
+        // Imprimir detalles de la respuesta recibida
+        println("Respuesta recibida: ${response.status}")
+
+        val bodyResponse = response.body<ReservaDetalleResponse>()
+        println("Cuerpo de la respuesta: $bodyResponse")
+
+        return bodyResponse
+    }
+
+
+    suspend fun updateReserva(id: String, reserva: ReservaDetalleCreateDTO): ReservaDetalleResponse {
            val endpoint = ApiConstants.Configuration.RESERVA_PUT.replace("{id}", id)
            val response = client.put(endpoint) {
                addAuthHeader()
