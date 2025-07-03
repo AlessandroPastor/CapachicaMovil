@@ -8,6 +8,7 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.NavigateNext
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -364,7 +365,7 @@ fun EmprendedoresScreen(
                                 },
                                 modifier = Modifier.alpha(if (currentPage < totalPages - 1) 1f else 0.5f)
                             ) {
-                                Icon(imageVector = Icons.Default.NavigateNext, contentDescription = "Siguiente")
+                                Icon(imageVector = Icons.AutoMirrored.Filled.NavigateNext, contentDescription = "Siguiente")
                             }
                         }
                     }

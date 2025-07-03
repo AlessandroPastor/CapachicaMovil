@@ -144,9 +144,11 @@ class ReservaViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 val reservaResponse = reservaApiService.createReserva(dto)
-                val reservaDetail = reservaApiService.getReservaById(reservaResponse.reserva.toString())
+                val reservaId = reservaResponse.reserva.id
+                val reservaDetail = reservaApiService.getReservaById(reservaId)
+
                 val paymentResponse = paymentApiService.createPayment(
-                    PaymentCreateDTO(reservaResponse.reserva.toString())
+                    PaymentCreateDTO(reservaId)
                 )
                 limpiarCarrito() // Limpia el carrito al reservar
                 loadReservas()
@@ -160,7 +162,7 @@ class ReservaViewModel(
                         isLoading = false,
                         isDialogOpen = true,
                         selectedItem = null,
-                        lastCreatedReservaId = reservaResponse.reserva.toString(),
+                        lastCreatedReservaId = reservaId,
                         lastCreatedReservaCode = reservaDetail.code
                     )
                 }
