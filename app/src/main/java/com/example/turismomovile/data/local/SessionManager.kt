@@ -24,6 +24,8 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
         private val KEY_ACCESS_TOKEN = stringPreferencesKey("access_token")
         private val KEY_IS_LOGGED_IN = booleanPreferencesKey("is_logged_in")
         private val ONBOARDING_KEY = booleanPreferencesKey("onboarding_completed")
+        private val KEY_PENDING_ROUTE = stringPreferencesKey("pending_route")
+
     }
 
     // ✅ Guardar toda la información relevante del usuario
@@ -120,7 +122,22 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs[ONBOARDING_KEY] ?: false
         }.first()
     }
+    suspend fun setPendingRoute(route: String) {
+        dataStore.edit { prefs ->
+            prefs[KEY_PENDING_ROUTE] = route
+        }
+    }
 
+    suspend fun getPendingRoute(): String? {
+        val prefs = dataStore.data.first()
+        return prefs[KEY_PENDING_ROUTE]
+    }
+
+    suspend fun clearPendingRoute() {
+        dataStore.edit { prefs ->
+            prefs.remove(KEY_PENDING_ROUTE)
+        }
+    }
     // ✅ Guardar solo el token (útil en ciertas situaciones)
     suspend fun saveAuthToken(token: String) {
         dataStore.edit { prefs ->

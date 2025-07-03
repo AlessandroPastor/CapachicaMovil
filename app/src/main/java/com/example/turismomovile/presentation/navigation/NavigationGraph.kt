@@ -62,7 +62,7 @@ fun NavigationGraph(
                 scope.launch {
                     val route = backStackEntry.destination.route
                     val token = sessionManager.getUser()?.token
-                                    // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
+                    // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
                     if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
                         navController.navigate(Routes.HOME) {
                             popUpTo(Routes.LOGIN) { inclusive = true }
@@ -70,20 +70,20 @@ fun NavigationGraph(
                     }
                     // Si no tiene token y la ruta no está en las rutas públicas, cierra sesión y redirige a la página de inicio
                     if (token.isNullOrEmpty() && route !in publicRoutes) {
+                        if (route != null) {
+                            sessionManager.setPendingRoute(route)
+                        }
                         onLogout()
-                        navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(0) // Aseguramos que todas las pantallas previas se borren
+
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(0)
+                            }
                         }
-                    }
-                    // Si ya está autenticado y entra a la Land Page, ir directo al HOME
-                    if (!token.isNullOrEmpty() && route == Routes.LAND_PAGE) {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                        }
+                        // Si el usuario está autenticado y navega a la Land Page
+                        // simplemente permanece allí manteniendo la sesión
                     }
                 }
             }
-    }
 
 
 
@@ -135,13 +135,20 @@ fun NavigationGraph(
             RegisterScreen(
                 navController = navController,
                 onRegisterSuccess = { user ->
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.REGISTER) { inclusive = true }
-                    }
-                },
-                onBackPressed = {
-                    navController.popBackStack()
-                }
+                    scope.launch {
+                        val pending = sessionManager.getPendingRoute()
+                        if (!pending.isNullOrEmpty()) {
+                            sessionManager.clearPendingRoute()
+                            navController.navigate(pending) {
+                                popUpTo(Routes.REGISTER) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.REGISTER) { inclusive = true }
+                            }
+                        }
+                    } },
+                onBackPressed = { navController.popBackStack() }
             )
         }
 
@@ -166,15 +173,20 @@ fun NavigationGraph(
             LoginScreen(
                 navController = navController,
                 onLoginSuccess = { user ->
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                },
-                onBackPressed = {
-                    navController.navigate(Routes.LAND_PAGE) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
-                    }
-                }
+                    scope.launch {
+                        val pending = sessionManager.getPendingRoute()
+                        if (!pending.isNullOrEmpty()) {
+                            sessionManager.clearPendingRoute()
+                            navController.navigate(pending) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.LOGIN) { inclusive = true }
+                            }
+                        }
+                    } },
+                onBackPressed = { navController.navigate(Routes.LAND_PAGE) { popUpTo(Routes.LOGIN) { inclusive = true } } }
             )
         }
 
