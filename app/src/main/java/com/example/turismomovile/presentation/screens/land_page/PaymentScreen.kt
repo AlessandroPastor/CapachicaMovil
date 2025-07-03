@@ -78,7 +78,21 @@ fun PaymentScreen(
         user = withContext(Dispatchers.IO) { sessionManager.getUser() }
         viewModel.loadReserva(reservaId)
     }
+// Mostrar notificaciones provenientes del ViewModel
+    LaunchedEffect(state.notification) {
+        state.notification.takeIf { it.isVisible }?.let {
+            notificationState.showNotification(
+                message = it.message,
+                type = it.type,
+                duration = it.duration
+            )
+        }
+    }
 
+    // Avanzar al paso de confirmación cuando se genere el pago
+    LaunchedEffect(state.payment) {
+        state.payment?.let { paymentStep = 3 }
+    }
     LaunchedEffect(reserva) {
         // Si la reserva ya está pagada, mostrar directamente la confirmación
         if (reserva?.status?.lowercase() == "pagada") {
