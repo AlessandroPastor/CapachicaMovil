@@ -41,6 +41,9 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import com.example.turismomovile.data.remote.dto.ventas.Payments
 import com.example.turismomovile.data.remote.dto.ventas.VentasResponse
+import androidx.core.content.FileProvider
+import android.content.Intent
+import java.io.File
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -656,7 +659,8 @@ private fun PaymentConfirmationStep(
     sale: VentasResponse?,
     ) {
     val context = LocalContext.current
-    LaunchedEffect(payment) { payment?.let { BoletaGenerator.generateBoleta(context, reserva, it) } }
+    var boletaFile by remember { mutableStateOf<File?>(null) }
+    LaunchedEffect(payment) { payment?.let { boletaFile = BoletaGenerator.generateBoleta(context, reserva, it) } }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -693,13 +697,22 @@ private fun PaymentConfirmationStep(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
         )
-        sale?.code?.let {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "Código de venta: $it",
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center
-            )
+        boletaFile?.let { file ->
+            Spacer(modifier = Modifier.height(24.dp))
+            Button(onClick = {
+                val uri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.provider",
+                    file
+                )
+                val intent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }
+                context.startActivity(intent)
+            }) {
+                Text(text = "Ver boleta")
+            }
         }
         Spacer(modifier = Modifier.height(32.dp))
     }
