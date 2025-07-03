@@ -201,7 +201,9 @@ fun RecommendationsScreen(
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
-                        onToggleTheme = { themeViewModel.toggleTheme() }
+                        onToggleTheme = { themeViewModel.toggleTheme() },
+                        searchPlaceholder = "Busca Recomendados"
+
                     )
                 },
                 bottomBar = {

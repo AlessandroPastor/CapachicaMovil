@@ -172,7 +172,6 @@ class LangPageViewModel (
         name: String? = null,
         category: String? = null
     ) {
-
         viewModelScope.launch {
             // Indicador de carga
             _stateEmprendedor.value = _stateEmprendedor.value.copy(isLoading = true)

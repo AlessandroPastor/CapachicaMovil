@@ -35,14 +35,14 @@ data class ReservaDetalleResponseDTO(
     val reserva_id: String? = null,
     val costo: String? = null,
     val cantidad: String? = null,
-    val igv: String? = null,
-    val bi: String? = null,
+    val IGV: String? = null,
+    val BI: String? = null,
     val total: String? = null,
     val lugar: String? = null,
     val description: String? = null,
-    val createdAt: String? = null,
-    val updatedAt: String? = null,
-    val deletedAt: String? = null,
+    val created_at: String? = null,
+    val updated_at: String? = null,
+    val deleted_at: String? = null,
     val emprendimiento_service: EmprendimientoServiceDTO? = null
 )
 

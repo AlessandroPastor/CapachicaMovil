@@ -52,7 +52,12 @@ fun NavigationGraph(
         Routes.LAND_PAGE,
         Routes.LOGIN,
         Routes.EXPLORATE,
-        Routes.REGISTER
+        Routes.REGISTER,
+        Routes.PRODUCTS,
+        Routes.SERVICES,
+        Routes.PLACES,
+        Routes.EVENTS,
+        Routes.RECOMMENDATIONS
     )
 
 

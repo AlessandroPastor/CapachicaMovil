@@ -264,7 +264,8 @@ fun ServiceScreen(
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
-                        onToggleTheme = { themeViewModel.toggleTheme() }
+                        onToggleTheme = { themeViewModel.toggleTheme() },
+                        searchPlaceholder = "Busca Servicios turisticos"
                     )
                 },
                 bottomBar = {

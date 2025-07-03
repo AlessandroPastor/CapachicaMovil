@@ -162,7 +162,8 @@ fun EventsScreen(
                         onClickExplorer = onClickExplorer,
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
-                        onToggleTheme = { themeViewModel.toggleTheme() }
+                        onToggleTheme = { themeViewModel.toggleTheme() },
+                        searchPlaceholder = "Busca Servicios"
                     )
                 },
                 bottomBar = {

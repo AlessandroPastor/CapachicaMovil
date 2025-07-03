@@ -163,8 +163,7 @@ fun EmprendedoresScreen(
                         onStartClick = onStartClick,
                         isDarkMode = isDarkMode,
                         onToggleTheme = { themeViewModel.toggleTheme() },
-                        searchPlaceholder = "Busca emprendedor"
-
+                        searchPlaceholder = "Busca emprendedores"
                     )
                 },
                 bottomBar = {
