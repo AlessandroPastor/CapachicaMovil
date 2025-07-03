@@ -196,7 +196,7 @@ fun NavigationGraph(
                         val tokenValid = sessionManager.isTokenValid()
                         if (tokenValid) {
                             navController.navigate(Routes.HOME) {
-                                popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                                popUpTo(Routes.LAND_PAGE) { inclusive = false }
                             }
                         } else {
                             navController.navigate(Routes.LOGIN) {

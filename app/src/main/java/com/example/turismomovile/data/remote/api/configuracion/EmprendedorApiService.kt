@@ -35,12 +35,15 @@ class EmprendedorApiService(
                 name?.let { parameter("name", it) }
                 category?.let { parameter("category", it) }
             }
-            return response.body()
+            val responseBody = response.body<EmprendedorResponse>()
+            return responseBody
         } catch (e: Exception) {
+            println("❌ Ocurrió un error al obtener emprendedores:")
             e.printStackTrace()
             throw e
         }
     }
+
 
     // Obtener un emprendedor por ID
     suspend fun getEmprendedorById(id: String): Emprendedor {
