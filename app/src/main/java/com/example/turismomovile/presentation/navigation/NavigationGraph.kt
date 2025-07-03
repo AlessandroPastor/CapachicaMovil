@@ -255,15 +255,10 @@ fun NavigationGraph(
 
         // Places -> PlacesScreen
         composable(Routes.PLACES) {
-            PlacesScreen(navController = navController,
-                onStartClick = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                    }
-                },
-                onClickExplorer = {
-                    navController.navigate(Routes.EXPLORATE)
-                })
+            PlacesScreen(navController = navController, onStartClick = {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                } }, onClickExplorer = { navController.navigate(Routes.EXPLORATE) })
         }
 
         // Events -> EventsScreen

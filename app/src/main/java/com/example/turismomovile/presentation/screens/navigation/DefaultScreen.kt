@@ -24,6 +24,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.turismomovile.presentation.theme.LocalAppDimens
 import com.example.turismomovile.data.local.SessionManager
 import io.dev.kmpventas.presentation.navigation.Routes
@@ -43,8 +44,9 @@ fun DefaultScreen(
     val sessionManager: SessionManager = koinInject()
     var token by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
+    val backStackEntry by navController.currentBackStackEntryAsState()
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(backStackEntry?.destination?.route) {
         token = sessionManager.getUser()?.token
     }
     var isRotating by remember { mutableStateOf(false) }
@@ -166,6 +168,7 @@ fun DefaultScreen(
                 )
             }
 
+
             Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
             // Tarjeta informativa
@@ -189,10 +192,10 @@ fun DefaultScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
 
-                    Divider(
-                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                    HorizontalDivider(
+                        modifier = Modifier.padding(vertical = 8.dp),
                         thickness = 1.dp,
-                        modifier = Modifier.padding(vertical = 8.dp)
+                        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f)
                     )
 
                     Text(
@@ -218,7 +221,8 @@ fun DefaultScreen(
             Button(
                 onClick = {
                     scope.launch {
-                        val tk = token
+                        val tk = sessionManager.getUser()?.token
+                        token = tk
                         if (!tk.isNullOrEmpty()) {
                             navController.navigate(Routes.HOME) {
                                 popUpTo(Routes.HOME) { inclusive = true }
