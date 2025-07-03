@@ -18,9 +18,6 @@ class MenuApiService(client: HttpClient, sessionManager: SessionManager) : BaseA
 ) {
 
     suspend fun getMenuItems(): List<MenuItem> {
-        println("📡 Llamando a ${ApiConstants.Configuration.MENU_ENDPOINT}")
-        println("🔐 Token enviado: ${authToken}")
-
         return try {
             val response = client.get(ApiConstants.Configuration.MENU_ENDPOINT) {
                 addAuthHeader()
@@ -36,17 +33,13 @@ class MenuApiService(client: HttpClient, sessionManager: SessionManager) : BaseA
             response.body()
         } catch (e: io.ktor.client.plugins.ResponseException) {
             val errorText = e.response.bodyAsText()
-            println("⚠️ ResponseException atrapada: $errorText")
             try {
                 val parsed = Json.parseToJsonElement(errorText).jsonObject
                 val message = parsed["message"]?.jsonPrimitive?.content
-                println("🚨 Mensaje del backend: $message")
             } catch (jsonEx: Exception) {
-                println("❗ No se pudo parsear el mensaje de error JSON: ${jsonEx.message}")
             }
             emptyList()
         } catch (e: Exception) {
-            println("❌ Error inesperado al obtener menús: ${e.message}")
             e.printStackTrace()
             emptyList()
         }

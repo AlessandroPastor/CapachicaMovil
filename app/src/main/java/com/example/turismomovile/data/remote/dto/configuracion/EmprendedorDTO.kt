@@ -58,13 +58,10 @@ data class Producto(
     val cantidad: Int? = null,
     val name: String? = null,
     val description: String? = null,
-
     @Serializable(with = DoubleSerializer::class)
     val costo: Double? = null,
-
     @Serializable(with = DoubleSerializer::class)
     val costoUnidad: Double? = null,
-
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val service_id: String? = null,
@@ -76,17 +73,7 @@ data class Producto(
     val imagenes: List<ImagenProducto> = emptyList(),
 )
 
-object DoubleSerializer : KSerializer<Double> {
-    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Double", PrimitiveKind.STRING)
 
-    override fun serialize(encoder: Encoder, value: Double) {
-        encoder.encodeString(value.toString())
-    }
-
-    override fun deserialize(decoder: Decoder): Double {
-        return decoder.decodeString().toDouble()
-    }
-}
 
 @Serializable
 data class ImagenProducto(
@@ -95,7 +82,6 @@ data class ImagenProducto(
     val estado: Boolean? = null,
     val code: String? = null,
 )
-
 
 // Para crear un nuevo emprendedor
 @Serializable
@@ -126,3 +112,15 @@ data class EmprendedorState(
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState()
 )
+
+object DoubleSerializer : KSerializer<Double> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Double", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Double) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): Double {
+        return decoder.decodeString().toDouble()
+    }
+}

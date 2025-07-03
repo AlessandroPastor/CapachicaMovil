@@ -21,61 +21,37 @@ class ImgAsociacionesApiService (client: HttpClient,
 
 
     suspend fun getImgAsoaciones(): ImgAsociacionesResponse {
-        println("🔄 Iniciando solicitud para obtener imágenes de asociaciones...")
-
-        // Agrega detalles de la solicitud
-        println("   🌐 URL: ${ApiConstants.Configuration.IMG_ASOCIACIONES_GET}")
-
         val response = try {
             // Realizar la solicitud HTTP GET
             client.get(ApiConstants.Configuration.IMG_ASOCIACIONES_GET) {
                 // Puedes agregar parámetros si es necesario
             }.body<ImgAsociacionesResponse>().also {
                 // Imprimir la respuesta cruda para depuración
-                println("   📥 Respuesta recibida:")
-                println("   ${it}")
             }
         } catch (e: Exception) {
             // Si ocurre un error, imprimir el mensaje de error
-            println("❌ Error al intentar obtener las imágenes de asociaciones: ${e.message}")
             throw e
         }
-
-        // Imprimir la respuesta final para verificar los datos
-        println("✔️ Respuesta de imágenes de asociaciones recibida correctamente")
         return response
     }
 
-
     suspend fun getImgAsoacionesByAsoaciones(asociacionId: String): ImgAsociacionesByAsoacionesResponse {
-        println("🔄 Iniciando solicitud para obtener imágenes de asociaciones por asociación...")
-
         // Agregar detalles de la solicitud con el 'asociacionId' en la URL
         val url = "${ApiConstants.Configuration.IMG_ASOCIACIONES_GET_ASOCIACIONES}/$asociacionId"
-        println("   🌐 URL: $url")
-
         val response = try {
             // Realizar la solicitud HTTP GET con el 'asociacionId' en la URL
             client.get(url) {
                 // Aquí puedes agregar otros parámetros si es necesario
             }.body<ImgAsociacionesByAsoacionesResponse>().also {
                 // Imprimir la respuesta cruda para depuración
-                println("   📥 Respuesta recibida:")
-                println("   ${it}")
             }
         } catch (e: Exception) {
             // Si ocurre un error, imprimir el mensaje de error
-            println("❌ Error al intentar obtener las imágenes de asociaciones por asociación: ${e.message}")
             throw e
         }
-
         // Imprimir la respuesta final para verificar los datos
-        println("✔️ Respuesta de imágenes de asociaciones por asociación recibida correctamente")
         return response
     }
-
-
-
 
     suspend fun getImgAsoacionesById(id: String): ImgAsociaciones {
         return client.get(ApiConstants.Configuration.IMG_ASOCIACIONES_GET_BYID.replace("{id}", id)) {
@@ -84,7 +60,6 @@ class ImgAsociacionesApiService (client: HttpClient,
     }
 
     suspend fun createImgAsoaciones(imgAsociaciones: ImgAsociacionesCreateDTO): ImgAsociaciones
-
     {
         return client.post(ApiConstants.Configuration.IMG_ASOCIACIONES_POST) {
             addAuthHeader()

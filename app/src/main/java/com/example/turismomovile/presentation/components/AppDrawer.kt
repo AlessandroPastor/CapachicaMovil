@@ -364,40 +364,6 @@ private fun CompactUserRolesSection(roles: List<String>) {
     }
 }
 
-
-
-// 📅 FECHA DE REGISTRO
-@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-private fun UserRegistrationDate(dateString: String) {
-    val formattedDate = remember(dateString) {
-        runCatching {
-            ZonedDateTime.parse(dateString)
-                .format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale("es", "ES")))
-        }.getOrNull()
-    }
-
-    formattedDate?.let { date ->
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.CalendarToday,
-                contentDescription = "Fecha",
-                tint = MaterialTheme.colorScheme.outline,
-                modifier = Modifier.size(12.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Registrado: $date",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.outline
-            )
-        }
-    }
-}
-
 // 🔴 BOTÓN DE LOGOUT MEJORADO
 @Composable
 private fun LogoutButton(
@@ -708,26 +674,6 @@ private fun getIconForTitle(title: String): ImageVector {
         "servicios" -> Icons.Default.RoomService
         "entidades" -> Icons.Default.BusinessCenter
 
-        // Compras
-        "proveedores" -> Icons.Default.LocalShipping
-
-        // Ventas
-        "lista de precios" -> Icons.Default.PriceCheck
-        "lista de precios detalle" -> Icons.Default.Receipt
-        "código de barras" -> Icons.Default.QrCodeScanner
-
-        // Movimientos de Almacén
-        "inventario" -> Icons.Default.Inventory
-        "kardex" -> Icons.Default.Assessment
-
-        // Pagos
-        "tipo de operación" -> Icons.Default.SwapHoriz
-        "tipo de pago" -> Icons.Default.Payments
-        "metodos de pago" -> Icons.Default.Payment
-
-        // Reportes
-        "garantías" -> Icons.Default.Verified
-        "rentabilidad" -> Icons.AutoMirrored.Filled.TrendingUp
 
         else -> Icons.Default.Circle
     }

@@ -39,38 +39,22 @@
 
 
         suspend fun createAsociacion(dto: AsociacionCreateDTO): Asociacion {
-            println("🔄 [CREATE] Iniciando creación de Asociación...")
-            println("📤 Enviando DTO para crear: $dto")
             val response = client.post(ApiConstants.Configuration.ASOCIACION_POST) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
                 setBody(dto)
             }
-            println("⬅️ [RESPONSE] Código: ${response.status}")
-            println("⬅️ [RESPONSE] Body: ${response.bodyAsText()}") // <-- Verás el JSON crudo que devuelve tu backend
-
             val asociacion = response.body<Asociacion>()
-            println("✅ Asociación creada: $asociacion")
             return asociacion
         }
 
         suspend fun updateAsociacion(id: String, dto: AsociacionUpdateDTO): Asociacion {
-            println("🔄 [UPDATE] Iniciando actualización de Asociación...")
-            println("📤 Enviando ID: $id")
-            println("📤 Enviando DTO para actualización: $dto")
-
             val response = client.put(ApiConstants.Configuration.ASOCIACION_PUT.replace("{id}", id)) {
                 addAuthHeader()
                 contentType(ContentType.Application.Json)
                 setBody(dto)
             }
-
-            println("⬅️ [RESPONSE] Código: ${response.status}")
-            val rawBody = response.bodyAsText()
-            println("⬅️ [RESPONSE] Body: $rawBody")
-
             val asociacion = response.body<Asociacion>()
-            println("✅ Asociación actualizada: $asociacion")
             return asociacion
         }
 

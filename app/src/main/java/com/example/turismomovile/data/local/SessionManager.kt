@@ -99,7 +99,6 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs.remove(KEY_ACCESS_TOKEN)
             prefs[KEY_IS_LOGGED_IN] = false
         }
-        println("✅ Sesión eliminada correctamente.")
     }
 
     // ✅ Comprobar si el usuario ha iniciado sesión
@@ -138,6 +137,7 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs.remove(KEY_PENDING_ROUTE)
         }
     }
+
     // ✅ Guardar solo el token (útil en ciertas situaciones)
     suspend fun saveAuthToken(token: String) {
         dataStore.edit { prefs ->

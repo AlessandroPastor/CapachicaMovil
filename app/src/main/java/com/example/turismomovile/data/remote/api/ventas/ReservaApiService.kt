@@ -37,20 +37,12 @@ class ReservaApiService(
     }
 
     suspend fun createReserva(reserva: ReservaCreateDTO): ReservaDetalleResponse {
-        println("Iniciando la solicitud POST para crear la reserva...")
-
         val response = client.post(ApiConstants.Configuration.RESERVA_POST) {
             addAuthHeader()
             contentType(ContentType.Application.Json)
             setBody(reserva)
         }
-
-        // Imprimir detalles de la respuesta recibida
-        println("Respuesta recibida: ${response.status}")
-
         val bodyResponse = response.body<ReservaDetalleResponse>()
-        println("Cuerpo de la respuesta: $bodyResponse")
-
         return bodyResponse
     }
 

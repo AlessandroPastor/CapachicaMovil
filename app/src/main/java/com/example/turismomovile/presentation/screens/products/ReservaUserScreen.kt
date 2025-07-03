@@ -205,7 +205,7 @@ fun ReservaCard(
 
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(
-                        text = "📍 ${detalle.lugar ?: "Lugar no especificado"}",
+                        text = "${detalle.lugar ?: "Lugar no especificado"}",
                         style = MaterialTheme.typography.bodyLarge
                     )
 
