@@ -48,6 +48,7 @@ import com.example.turismomovile.presentation.components.AppPaginationControls
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
+import com.example.turismomovile.presentation.navigation.Routes
 import com.example.turismomovile.presentation.screens.land_page.ReservaViewModel
 import org.koin.compose.koinInject
 
@@ -116,8 +117,14 @@ fun ReservaUserScreen(
                                     items(state.items, key = { it.id ?: "" }) { reserva ->
                                         ReservaCard(
                                             reserva = reserva,
-                                            onClick = {},
-                                            onDelete = {},
+                                            onClick = {
+                                                reserva.id?.let { id ->
+                                                    navController.navigate("${Routes.HomeScreen.Sales.PAYMENTS}/$id")
+                                                }
+                                            },
+                                            onDelete = {
+                                                reserva.id?.let { viewModel.deleteReserva(it) }
+                                            },
                                             onAddImage = {}
                                         )
                                     }

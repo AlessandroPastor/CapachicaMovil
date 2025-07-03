@@ -9,9 +9,8 @@ data class PaymentCreateDTO(
 
 @Serializable
 data class PaymentResponse(
-    val id: String? = null,
     val message: String? = null,
-    val payment : List<Payments>
+    val payment: Payments? = null
 )
 
 @Serializable
@@ -22,5 +21,5 @@ data class Payments(
     val igv: String? = null,
     val reserva_id: String? = null,
     val updated_at: String? = null,
-    val created_at: String? = null,
+    val created_at: String? = null
 )
