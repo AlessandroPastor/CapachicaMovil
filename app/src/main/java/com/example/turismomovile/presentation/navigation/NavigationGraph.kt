@@ -57,10 +57,10 @@ fun NavigationGraph(
 
 
     LaunchedEffect(navController) {
-        snapshotFlow { navController.currentBackStackEntry }
+        navController.currentBackStackEntryFlow
             .collectLatest { backStackEntry ->
                 scope.launch {
-                    val route = backStackEntry?.destination?.route
+                    val route = backStackEntry.destination.route
                     val token = sessionManager.getUser()?.token
                                     // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
                     if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {

@@ -37,17 +37,9 @@ class LoginViewModel(
                     .onSuccess { user ->
                         // Depuración: Exito en login
                         println("Login success: User ID = ${user.id}, Name = ${user.name}, Email = ${user.email}")
-
-                        // Guardar usuario en el SessionManager
-                        try {
-                            sessionManager.saveUser(user)
-                            println("User data saved in sessionManager. User ID: ${user.id}")
-                        } catch (e: Exception) {
-                            println("Error saving user session: ${e.message}")
-                            _loginState.value = LoginState.Error("No se pudo guardar la sesión. Intenta nuevamente.")
-                            return@onSuccess
-                        }
-
+                        // El AuthRepository ya maneja el guardado del usuario
+                        // y del token en el SessionManager, por lo que aquí
+                        // solo actualizamos el estado a Success
                         // Actualizar el estado a Success
                         _loginState.value = LoginState.Success(user)
 

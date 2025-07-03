@@ -15,8 +15,8 @@ import java.io.IOException
 import java.util.concurrent.TimeoutException
 
 class RegisterViewModel(
-    private val registerUseCase: RegisterUseCase,
-    private val sessionManager: SessionManager
+    private val registerUseCase: RegisterUseCase
+
 ) : ViewModel() {
 
     private val _registerState = MutableStateFlow<RegisterState>(RegisterState.Initial)
@@ -31,31 +31,6 @@ class RegisterViewModel(
 
                 if (result.isSuccess) {
                     val response = result.getOrNull()!!
-
-                    response.data?.let { data ->
-                        val decoded = decodeToken(data.token)
-
-                        val user = User(
-                            id = data.user.id.toString(),
-                            email = data.user.email,
-                            name = data.user.username,
-                            last_name = decoded?.last_name ?: "",
-                            fullName = decoded?.fullName,
-                            username = decoded?.username ?: data.user.username,
-                            code = decoded?.code,
-                            imagenUrl = decoded?.imagenUrl,
-                            roles = decoded?.roles ?: emptyList(),
-                            permissions = decoded?.permissions ?: emptyList(),
-                            created_at = decoded?.created_at,
-                            token = data.token
-                        )
-
-                        sessionManager.saveUser(user)
-                        sessionManager.saveAuthToken(data.token)
-
-                        println("✅ Registro exitoso para: ${user.username}")
-                    }
-
                     _registerState.value = RegisterState.Success(response)
                 } else {
                     val errorMsg = result.exceptionOrNull()?.message ?: "Error al registrar el usuario. Inténtalo de nuevo."

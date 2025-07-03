@@ -147,6 +147,6 @@ val appModule = module {
     viewModel {ServiceViewModel(get())}
     viewModel {ProfileViewModel(get())}
     viewModel {ReservaViewModel(get())}
-    viewModel { RegisterViewModel(get(),get()) }
+    viewModel { RegisterViewModel(get()) }
 
 }
