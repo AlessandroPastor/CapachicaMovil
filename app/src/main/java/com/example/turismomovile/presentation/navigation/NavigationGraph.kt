@@ -195,13 +195,9 @@ fun NavigationGraph(
                     scope.launch {
                         val tokenValid = sessionManager.isTokenValid()
                         if (tokenValid) {
-                            navController.navigate(Routes.HOME) {
-                                popUpTo(Routes.LAND_PAGE) { inclusive = false }
-                            }
+                            navController.navigate(Routes.HOME)
                         } else {
-                            navController.navigate(Routes.LOGIN) {
-                                popUpTo(Routes.LAND_PAGE) { inclusive = false }
-                            }
+                            navController.navigate(Routes.LOGIN)
                         }
                     }
                 },
