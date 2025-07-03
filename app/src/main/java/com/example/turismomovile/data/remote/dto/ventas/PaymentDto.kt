@@ -1,4 +1,5 @@
 package com.example.turismomovile.data.remote.dto.ventas
+import com.example.turismomovile.data.remote.dto.ventas.VentasResponse
 
 import com.example.turismomovile.presentation.components.NotificationState
 import kotlinx.serialization.Serializable
@@ -29,5 +30,6 @@ data class PaymentState(
     val successMessage: String? = null,
     val error: String? = null,
     val notification: NotificationState = NotificationState(),
-    val payment: Payments? = null
+    val payment: Payments? = null,
+    val sale: VentasResponse? = null
 )

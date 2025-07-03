@@ -40,6 +40,7 @@ import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
 import com.example.turismomovile.data.remote.dto.ventas.Payments
+import com.example.turismomovile.data.remote.dto.ventas.VentasResponse
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -161,7 +162,7 @@ fun PaymentScreen(
                                 isLoading = state.isLoading,
                                 total = reserva?.total
                             )
-                            3 -> PaymentConfirmationStep(reserva, state.payment)
+                            3 -> PaymentConfirmationStep(reserva, state.payment, state.sale)
                         }
                     }
                 }
@@ -651,8 +652,9 @@ private fun PaymentMethodStep(
 @Composable
 private fun PaymentConfirmationStep(
     reserva: ReservaUsuarioDTO?,
-    payment: Payments?
-) {
+    payment: Payments?,
+    sale: VentasResponse?,
+    ) {
     val context = LocalContext.current
     LaunchedEffect(payment) { payment?.let { BoletaGenerator.generateBoleta(context, reserva, it) } }
     Column(
@@ -691,6 +693,14 @@ private fun PaymentConfirmationStep(
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
         )
+        sale?.code?.let {
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = "Código de venta: $it",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+        }
         Spacer(modifier = Modifier.height(32.dp))
     }
 }

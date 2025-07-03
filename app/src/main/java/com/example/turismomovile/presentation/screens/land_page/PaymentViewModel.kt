@@ -131,7 +131,8 @@ class PaymentViewModel(
                             type = NotificationType.SUCCESS,
                             isVisible = true
                         ),
-                        payment = paymentResponse.payment
+                        payment = paymentResponse.payment,
+                        sale = saleResponse.ventas?.firstOrNull()
                     )
                 }
             } catch (e: Exception) {
@@ -150,7 +151,7 @@ class PaymentViewModel(
     }
 
     fun clearSuccess() {
-        _state.update { it.copy(successMessage = null, payment = null) }
+        _state.update { it.copy(successMessage = null, payment = null, sale = null) }
     }
 }
 
