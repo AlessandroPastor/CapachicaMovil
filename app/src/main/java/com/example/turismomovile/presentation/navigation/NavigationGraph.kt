@@ -210,7 +210,10 @@ fun NavigationGraph(
             ExplorerScreen(
             )
         }
-
+        composable("${Routes.HomeScreen.Sales.PAYMENTS}/{reservaId}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("reservaId") ?: return@composable
+            PaymentScreen(reservaId = id, navController = navController)
+        }
 
         // Home / Menu
         composable(Routes.HOME) {

@@ -145,7 +145,7 @@ class ReservaViewModel(
             try {
                 val reservaResponse = reservaApiService.createReserva(dto)
                 val paymentResponse = paymentApiService.createPayment(
-                    PaymentCreateDTO(reservaResponse.reservaId)
+                    PaymentCreateDTO(reservaResponse.reserva_id)
                 )
                 limpiarCarrito() // Limpia el carrito al reservar
                 loadReservas()
@@ -159,7 +159,7 @@ class ReservaViewModel(
                         isLoading = false,
                         isDialogOpen = false,
                         selectedItem = null,
-                        lastCreatedReservaId = reservaResponse.reservaId
+                        lastCreatedReservaId = reservaResponse.reserva_id
                     )
                 }
             } catch (e: Exception) {

@@ -110,23 +110,19 @@ data class ReservaDetalleCreateDTO(
 
 @Serializable
 data class ReservaDetalleResponse(
-    val id: String,
-    @SerialName("emprendedor_service_id")
-    val emprendedorServiceId: String,
-    @SerialName("reserva_id")
-    val reservaId: String,
-    val description: String? = null,
-    val cantidad: String,
-    val costo: String,
-    @SerialName("BI")
-    val bi: String,
-    @SerialName("IGV")
-    val igv: String,
-    val total: String,
+    val id: String? = null,
+    val emprendedor_service_id: String,
+    val reserva_id: String,
+    val costo: String? = null,
+    val cantidad: String? = null,
+    val IGV: String? = null,
+    val BI: String? = null,
+    val total: String? = null,
     val lugar: String? = null,
+    val description: String? = null,
     val created_at: String? = null,
     val updated_at: String? = null,
-    val deleted_at: String? = null
+    val deleted_at: String? = null,
 )
 
 
@@ -140,5 +136,9 @@ data class ReservaState(
     val selectedItem: Service? = null,
     val isDialogOpen: Boolean = false,
     val notification: NotificationState = NotificationState(),
-    val lastCreatedReservaId: String? = null
+    val lastCreatedReservaId: String? = null,
+    // Nuevos estados para el proceso de reserva
+    val isReservaInProgress: Boolean = false,
+    val reservaSuccess: Boolean = false,
+    val reservaError: String? = null
 )
