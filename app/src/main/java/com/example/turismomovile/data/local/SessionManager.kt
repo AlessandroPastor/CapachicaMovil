@@ -40,7 +40,7 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs[KEY_USER_ROLES] = user.roles.joinToString(",")
             prefs[KEY_USER_PERMISSIONS] = user.permissions.joinToString(",")
             prefs[KEY_USER_CREATED_AT] = user.created_at ?: ""
-            prefs[KEY_ACCESS_TOKEN] = user.token
+            prefs[KEY_ACCESS_TOKEN] = user.token       // token almacenado
             prefs[KEY_IS_LOGGED_IN] = true
         }
     }

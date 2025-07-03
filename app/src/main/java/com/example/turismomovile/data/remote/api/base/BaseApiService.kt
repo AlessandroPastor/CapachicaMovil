@@ -15,7 +15,7 @@ open class BaseApiService(
     // No suspend, solo añade el header con token ya cargado
     protected suspend fun HttpRequestBuilder.addAuthHeader() {
         if (authToken == null) {
-            loadAuthTokenFromStorage()
+            loadAuthTokenFromStorage()          // obtiene el token de SessionManager
         }
         authToken?.let {
             header("Authorization", "Bearer $it")

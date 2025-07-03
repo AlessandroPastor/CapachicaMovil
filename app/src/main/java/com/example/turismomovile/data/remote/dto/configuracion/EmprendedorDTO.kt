@@ -65,6 +65,7 @@ data class Producto(
     val service_status: Int? = null
 )
 
+
 // Para crear un nuevo emprendedor
 @Serializable
 data class EmprendedorCreateDTO(

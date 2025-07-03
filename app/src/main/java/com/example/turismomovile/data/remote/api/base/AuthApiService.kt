@@ -61,6 +61,7 @@ class AuthApiService(
 
             println("Usuario creado: $user")
             sessionManager.saveUser(user)
+            updateAuthToken(token)             // token en memoria para futuras llamadas
             println("Usuario guardado en la sesión.")
         }
 
