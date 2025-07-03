@@ -1,6 +1,5 @@
 package com.example.turismomovile.presentation.screens.login
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts.GetContent
@@ -13,12 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.AccountCircle
-import androidx.compose.material.icons.filled.Code
-import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -35,7 +28,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImage
@@ -47,7 +39,7 @@ import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
-import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
+import com.example.turismomovile.presentation.screens.login.ProfileViewModel
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import kotlinx.coroutines.Dispatchers
@@ -141,244 +133,231 @@ fun ProfileEditScreen(
 
     AppTheme(darkTheme = isDarkMode) {
         NotificationHost(state = notificationState) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
-                                MaterialTheme.colorScheme.background
-                            )
-                        )
-                    )
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp)
-                ) {
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    // Header con título
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(8.dp, RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(24.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = {
                             Text(
                                 text = "Editar Perfil",
-                                style = MaterialTheme.typography.headlineMedium.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 28.sp
-                                ),
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = TextAlign.Center
+                                style = MaterialTheme.typography.titleLarge.copy(
+                                    fontWeight = FontWeight.Bold
+                                )
                             )
-
-                            Text(
-                                text = "Actualiza tu información personal",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
-                    }
-
-                    // Sección de imagen de perfil mejorada
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(8.dp, RoundedCornerShape(20.dp)),
-                        shape = RoundedCornerShape(20.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(
+                                    imageVector = Icons.Default.ArrowBack,
+                                    contentDescription = "Regresar"
+                                )
+                            }
+                        },
+                        colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(4.dp),
+                            titleContentColor = MaterialTheme.colorScheme.onSurface,
+                            navigationIconContentColor = MaterialTheme.colorScheme.primary
                         )
+                    )
+                },
+                containerColor = MaterialTheme.colorScheme.background
+            ) { paddingValues ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .background(
+                            brush = Brush.verticalGradient(
+                                colors = listOf(
+                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f),
+                                    MaterialTheme.colorScheme.background
+                                )
+                            )
+                        )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 20.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(20.dp)
                     ) {
-                        Box(
+                        // Sección de imagen de perfil mejorada
+                        Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
-                            contentAlignment = Alignment.Center
+                                .shadow(8.dp, RoundedCornerShape(20.dp)),
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
                         ) {
-                            // Contenedor de imagen con efecto
                             Box(
                                 modifier = Modifier
-                                    .size(160.dp)
-                                    .shadow(12.dp, CircleShape)
-                                    .background(
-                                        brush = Brush.radialGradient(
-                                            colors = listOf(
-                                                MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-                                            )
-                                        ),
-                                        shape = CircleShape
-                                    ),
+                                    .fillMaxWidth()
+                                    .padding(32.dp),
                                 contentAlignment = Alignment.Center
                             ) {
-                                if (selectedImageUri != null) {
-                                    AsyncImage(
-                                        model = selectedImageUri,
-                                        contentDescription = "Imagen seleccionada",
-                                        modifier = Modifier
-                                            .size(150.dp)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else if (form.imagenUrl.isNotBlank()) {
-                                    AsyncImage(
-                                        model = form.imagenUrl,
-                                        contentDescription = "Imagen actual",
-                                        modifier = Modifier
-                                            .size(150.dp)
-                                            .clip(CircleShape),
-                                        contentScale = ContentScale.Crop
-                                    )
-                                } else {
-                                    Image(
-                                        painter = painterResource(R.drawable.logo_capachica),
-                                        contentDescription = "Imagen por defecto",
-                                        modifier = Modifier
-                                            .size(150.dp)
-                                            .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                                        contentScale = ContentScale.Crop
+                                // Contenedor de imagen con efecto
+                                Box(
+                                    modifier = Modifier
+                                        .size(160.dp)
+                                        .shadow(12.dp, CircleShape)
+                                        .background(
+                                            brush = Brush.radialGradient(
+                                                colors = listOf(
+                                                    MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                                    MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                                                )
+                                            ),
+                                            shape = CircleShape
+                                        ),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (selectedImageUri != null) {
+                                        AsyncImage(
+                                            model = selectedImageUri,
+                                            contentDescription = "Imagen seleccionada",
+                                            modifier = Modifier
+                                                .size(150.dp)
+                                                .clip(CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else if (form.imagenUrl.isNotBlank()) {
+                                        AsyncImage(
+                                            model = form.imagenUrl,
+                                            contentDescription = "Imagen actual",
+                                            modifier = Modifier
+                                                .size(150.dp)
+                                                .clip(CircleShape),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    } else {
+                                        Image(
+                                            painter = painterResource(R.drawable.logo_capachica),
+                                            contentDescription = "Imagen por defecto",
+                                            modifier = Modifier
+                                                .size(150.dp)
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.surfaceVariant),
+                                            contentScale = ContentScale.Crop
+                                        )
+                                    }
+                                }
+
+                                // Botón flotante mejorado
+                                FloatingActionButton(
+                                    onClick = { imagePickerLauncher.launch("image/*") },
+                                    modifier = Modifier
+                                        .align(Alignment.BottomEnd)
+                                        .offset((-8).dp, (-8).dp)
+                                        .shadow(8.dp, CircleShape),
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.CameraAlt,
+                                        contentDescription = "Cambiar imagen",
+                                        modifier = Modifier.size(24.dp)
                                     )
                                 }
                             }
 
-                            // Botón flotante mejorado
-                            FloatingActionButton(
-                                onClick = { imagePickerLauncher.launch("image/*") },
-                                modifier = Modifier
-                                    .align(Alignment.BottomEnd)
-                                    .offset((-8).dp, (-8).dp)
-                                    .shadow(8.dp, CircleShape),
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CameraAlt,
-                                    contentDescription = "Cambiar imagen",
-                                    modifier = Modifier.size(24.dp)
-                                )
+                            // Mensaje de subida mejorado
+                            uploadResult?.let { result ->
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = if (result.startsWith("Error"))
+                                            MaterialTheme.colorScheme.errorContainer
+                                        else MaterialTheme.colorScheme.primaryContainer
+                                    ),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text(
+                                        text = result,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = if (result.startsWith("Error"))
+                                            MaterialTheme.colorScheme.onErrorContainer
+                                        else MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.padding(12.dp),
+                                        textAlign = TextAlign.Center
+                                    )
+                                }
                             }
                         }
 
-                        // Mensaje de subida mejorado
-                        uploadResult?.let { result ->
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = if (result.startsWith("Error"))
-                                        MaterialTheme.colorScheme.errorContainer
-                                    else MaterialTheme.colorScheme.primaryContainer
-                                ),
-                                shape = RoundedCornerShape(12.dp)
+                        // Campos del formulario mejorados
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .shadow(6.dp, RoundedCornerShape(16.dp)),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(20.dp),
+                                verticalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 Text(
-                                    text = result,
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = if (result.startsWith("Error"))
-                                        MaterialTheme.colorScheme.onErrorContainer
-                                    else MaterialTheme.colorScheme.onPrimaryContainer,
-                                    modifier = Modifier.padding(12.dp),
-                                    textAlign = TextAlign.Center
+                                    text = "Información Personal",
+                                    style = MaterialTheme.typography.titleLarge.copy(
+                                        fontWeight = FontWeight.SemiBold
+                                    ),
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+
+                                StyledTextField(
+                                    value = form.name,
+                                    onValueChange = { form = form.copy(name = it) },
+                                    label = "Nombre",
+                                    icon = Icons.Default.Person
+                                )
+
+                                StyledTextField(
+                                    value = form.lastName,
+                                    onValueChange = { form = form.copy(lastName = it) },
+                                    label = "Apellido",
+                                    icon = Icons.Default.Person
+                                )
+
+                                StyledTextField(
+                                    value = form.code,
+                                    onValueChange = { form = form.copy(code = it) },
+                                    label = "Código",
+                                    icon = Icons.Default.Code
+                                )
+
+                                StyledTextField(
+                                    value = form.username,
+                                    onValueChange = { form = form.copy(username = it) },
+                                    label = "Nombre de usuario",
+                                    icon = Icons.Default.AccountCircle
+                                )
+
+                                StyledTextField(
+                                    value = form.email,
+                                    onValueChange = { form = form.copy(email = it) },
+                                    label = "Correo electrónico",
+                                    icon = Icons.Default.Email,
+                                    keyboardType = KeyboardType.Email
+                                )
+
+                                StyledTextField(
+                                    value = form.imagenUrl,
+                                    onValueChange = { form = form.copy(imagenUrl = it) },
+                                    label = "URL de la imagen",
+                                    icon = Icons.Default.Image,
+                                    readOnly = true
                                 )
                             }
                         }
-                    }
 
-                    // Campos del formulario mejorados
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(6.dp, RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(20.dp),
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                text = "Información Personal",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.SemiBold
-                                ),
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            )
-
-                            StyledTextField(
-                                value = form.name,
-                                onValueChange = { form = form.copy(name = it) },
-                                label = "Nombre",
-                                icon = Icons.Default.Person
-                            )
-
-                            StyledTextField(
-                                value = form.lastName,
-                                onValueChange = { form = form.copy(lastName = it) },
-                                label = "Apellido",
-                                icon = Icons.Default.Person
-                            )
-
-                            StyledTextField(
-                                value = form.code,
-                                onValueChange = { form = form.copy(code = it) },
-                                label = "Código",
-                                icon = Icons.Default.Code
-                            )
-
-                            StyledTextField(
-                                value = form.username,
-                                onValueChange = { form = form.copy(username = it) },
-                                label = "Nombre de usuario",
-                                icon = Icons.Default.AccountCircle
-                            )
-
-                            StyledTextField(
-                                value = form.email,
-                                onValueChange = { form = form.copy(email = it) },
-                                label = "Correo electrónico",
-                                icon = Icons.Default.Email,
-                                keyboardType = KeyboardType.Email
-                            )
-
-                            StyledTextField(
-                                value = form.imagenUrl,
-                                onValueChange = { form = form.copy(imagenUrl = it) },
-                                label = "URL de la imagen",
-                                icon = Icons.Default.Image,
-                                readOnly = true
-                            )
-                        }
-                    }
-
-                    // Botón de guardar mejorado
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .shadow(8.dp, RoundedCornerShape(16.dp)),
-                        shape = RoundedCornerShape(16.dp)
-                    ) {
+                        // Botón de guardar mejorado
                         Button(
                             onClick = {
                                 viewModel.updateProfile(
@@ -394,13 +373,13 @@ fun ProfileEditScreen(
                             },
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(64.dp),
+                                .height(56.dp),
                             enabled = !state.isLoading,
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary,
                                 contentColor = MaterialTheme.colorScheme.onPrimary
                             ),
-                            shape = RoundedCornerShape(16.dp)
+                            shape = RoundedCornerShape(12.dp)
                         ) {
                             if (state.isLoading) {
                                 Row(
@@ -423,15 +402,14 @@ fun ProfileEditScreen(
                                 Text(
                                     "Guardar Cambios",
                                     style = MaterialTheme.typography.titleMedium.copy(
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 18.sp
+                                        fontWeight = FontWeight.Bold
                                     )
                                 )
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 }
             }
         }

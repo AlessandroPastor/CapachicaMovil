@@ -144,19 +144,22 @@ class ReservaViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 val reservaResponse = reservaApiService.createReserva(dto)
-                paymentApiService.createPayment(PaymentCreateDTO(reservaResponse.reservaId))
+                val paymentResponse = paymentApiService.createPayment(
+                    PaymentCreateDTO(reservaResponse.reservaId)
+                )
                 limpiarCarrito() // Limpia el carrito al reservar
                 loadReservas()
                 _state.update {
                     it.copy(
                         notification = NotificationState(
-                            message = "Reserva creada exitosamente",
+                            message = paymentResponse.message ?: "Reserva y pago creados exitosamente",
                             type = NotificationType.SUCCESS,
                             isVisible = true
                         ),
                         isLoading = false,
                         isDialogOpen = false,
-                        selectedItem = null
+                        selectedItem = null,
+                        lastCreatedReservaId = reservaResponse.reservaId
                     )
                 }
             } catch (e: Exception) {
@@ -203,5 +206,8 @@ class ReservaViewModel(
                 }
             }
         }
+    }
+    fun clearNavigationState() {
+        _state.update { it.copy(lastCreatedReservaId = null) }
     }
 }

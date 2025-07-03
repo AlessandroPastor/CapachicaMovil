@@ -34,6 +34,8 @@ import com.example.turismomovile.presentation.components.*
 import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.EmprendedoresStatsCardPremium
 import com.example.turismomovile.presentation.screens.land_page.componentsEmprendedor.LogoDeFamilia
 import com.example.turismomovile.presentation.theme.AppTheme
+import com.example.turismomovile.presentation.navigation.Routes
+
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import org.koin.compose.koinInject
 
@@ -56,6 +58,14 @@ fun EmprendedoresScreen(
     var previousScrollOffset by remember { mutableStateOf(0) }
     var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
     var showCart by remember { mutableStateOf(false) }
+    val reservaState by reservaViewModel.state.collectAsState()
+    // Navegar a pantalla de pago cuando se cree una reserva
+    LaunchedEffect(reservaState.lastCreatedReservaId) {
+        reservaState.lastCreatedReservaId?.let { id ->
+            navController.navigate("${Routes.HomeScreen.Sales.PAYMENTS}/$id")
+            reservaViewModel.clearNavigationState()
+        }
+    }
     // Detectar dirección del scroll mejorado
     LaunchedEffect(lazyListState) {
         snapshotFlow {

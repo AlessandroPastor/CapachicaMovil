@@ -43,6 +43,7 @@ import com.example.turismomovile.presentation.screens.login.LoginViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import io.dev.kmpventas.data.repository.configuration.ImgAsociacionesRepositoryImpl
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
+import com.example.turismomovile.presentation.screens.land_page.PaymentViewModel
 import com.example.turismomovile.presentation.screens.land_page.ReservaViewModel
 import com.example.turismomovile.presentation.screens.login.ProfileViewModel
 import com.example.turismomovile.presentation.screens.login.RegisterViewModel
@@ -147,5 +148,6 @@ val appModule = module {
     viewModel {ProfileViewModel(get())}
     viewModel { ReservaViewModel(get(), get()) }
     viewModel { RegisterViewModel(get()) }
+    viewModel { PaymentViewModel(get()) }
 
 }

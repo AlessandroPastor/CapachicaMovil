@@ -139,5 +139,6 @@ data class ReservaState(
     val totalElements: Int = 0,
     val selectedItem: Service? = null,
     val isDialogOpen: Boolean = false,
-    val notification: NotificationState = NotificationState()
+    val notification: NotificationState = NotificationState(),
+    val lastCreatedReservaId: String? = null
 )

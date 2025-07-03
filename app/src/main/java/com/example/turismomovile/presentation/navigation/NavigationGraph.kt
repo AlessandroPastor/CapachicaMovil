@@ -18,6 +18,7 @@ import com.example.turismomovile.presentation.screens.land_page.EventsScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import com.example.turismomovile.presentation.screens.configuration.ad.service.ServiceHomeScreen
+import com.example.turismomovile.presentation.screens.land_page.PaymentScreen
 import com.example.turismomovile.presentation.screens.land_page.PlacesScreen
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
@@ -127,6 +128,15 @@ fun NavigationGraph(
                 }
             )
         }
+
+        // Payment Screen after creating a reservation
+        composable("${Routes.HomeScreen.Sales.PAYMENTS}/{reservaId}") { backStackEntry ->
+            val id = backStackEntry.arguments?.getString("reservaId") ?: return@composable
+            PaymentScreen(reservaId = id, navController = navController)
+        }
+
+
+
         // Register
         composable(Routes.REGISTER) {
             RegisterScreen(
