@@ -1,4 +1,4 @@
-package com.example.turismomovile.presentation.screens.land_page
+package com.example.turismomovile.Utils
 
 import android.content.Context
 import android.graphics.Canvas
