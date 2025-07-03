@@ -8,7 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Receipt
@@ -42,6 +44,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import com.example.turismomovile.data.remote.dto.ventas.Payments
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,7 +58,7 @@ fun PaymentScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notificationState = rememberNotificationState()
     var user by remember { mutableStateOf<User?>(null) }
-    var paymentStep by remember { mutableStateOf(1) } // 1: Detalles, 2: Pago, 3: Confirmación
+    var paymentStep by remember { mutableStateOf(1) }
     var cardNumber by remember { mutableStateOf("") }
     var cardExpiry by remember { mutableStateOf("") }
     var cardCvv by remember { mutableStateOf("") }
@@ -76,83 +80,201 @@ fun PaymentScreen(
         viewModel.loadReserva(reservaId)
     }
 
-    LaunchedEffect(state.notification) {
-        if (state.notification.isVisible) {
-            notificationState.showNotification(
-                message = state.notification.message,
-                type = state.notification.type,
-                duration = state.notification.duration
-            )
-        }
-    }
-
-    LaunchedEffect(state.successMessage) {
-        if (state.successMessage != null) {
+    LaunchedEffect(reserva) {
+        // Si la reserva ya está pagada, mostrar directamente la confirmación
+        if (reserva?.status?.lowercase() == "pagada") {
             paymentStep = 3
-            delay(2000) // Mostrar confirmación antes de navegar
-            viewModel.clearSuccess()
-            navController.navigate(Routes.HomeScreen.Product.RESERVAS) {
-                popUpTo(Routes.HOME)
-            }
         }
     }
 
-    NotificationHost(state = notificationState) {
-        Scaffold(
-            topBar = {
-                CenterAlignedTopAppBar(
-                    title = { Text("Proceso de Pago") },
-                    navigationIcon = {
-                        IconButton(onClick = { navController.popBackStack() }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+        // Resto del código permanece igual...
+        NotificationHost(state = notificationState) {
+            Scaffold(
+                topBar = {
+                    CenterAlignedTopAppBar(
+                        title = { Text("Proceso de Pago") },
+                        navigationIcon = {
+                            IconButton(onClick = { navController.popBackStack() }) {
+                                Icon(Icons.Default.ArrowBack, contentDescription = "Atrás")
+                            }
+                        }
+                    )
+                }
+            ) { innerPadding ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
+                        .background(MaterialTheme.colorScheme.background)
+                ) {
+                    when (reserva?.status?.lowercase()) {
+                        "pagada" -> {
+                            AlreadyPaidConfirmation(
+                                modifier = Modifier.fillMaxSize(),
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+                        "cancelada" -> {
+                            ReservationCancelled(
+                                modifier = Modifier.fillMaxSize(),
+                                onBackClick = { navController.popBackStack() }
+                            )
+                        }
+                        else -> {
+                            // Flujo normal de pago para estado "pendiente"
+                            LinearProgressIndicator(
+                                progress = animatedProgress,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(8.dp),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        when (paymentStep) {
+                            1 -> PaymentDetailsStep(
+                                reserva = reserva,
+                                user = user,
+                                onContinue = { paymentStep = 2 }
+                            )
+                            2 -> PaymentMethodStep(
+                                cardNumber = cardNumber,
+                                cardExpiry = cardExpiry,
+                                cardCvv = cardCvv,
+                                cardHolder = cardHolder,
+                                onCardNumberChange = { cardNumber = it },
+                                onCardExpiryChange = { cardExpiry = it },
+                                onCardCvvChange = { cardCvv = it },
+                                onCardHolderChange = { cardHolder = it },
+                                onPayClick = { viewModel.createPayment(reservaId) },
+                                isLoading = state.isLoading,
+                                total = reserva?.total
+                            )
+                            3 -> PaymentConfirmationStep(state.payment)
                         }
                     }
-                )
-            }
-        ) { innerPadding ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .background(MaterialTheme.colorScheme.background)
-            ) {
-                // Barra de progreso
-                LinearProgressIndicator(
-                    progress = animatedProgress,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(8.dp),
-                    color = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                when (paymentStep) {
-                    1 -> PaymentDetailsStep(
-                        reserva = reserva,
-                        user = user,
-                        onContinue = { paymentStep = 2 }
-                    )
-                    2 -> PaymentMethodStep(
-                        cardNumber = cardNumber,
-                        cardExpiry = cardExpiry,
-                        cardCvv = cardCvv,
-                        cardHolder = cardHolder,
-                        onCardNumberChange = { cardNumber = it },
-                        onCardExpiryChange = { cardExpiry = it },
-                        onCardCvvChange = { cardCvv = it },
-                        onCardHolderChange = { cardHolder = it },
-                        onPayClick = { viewModel.createPayment(reservaId) },
-                        isLoading = state.isLoading,
-                        total = reserva?.total
-                    )
-                    3 -> PaymentConfirmationStep()
                 }
             }
         }
     }
 }
+
+@Composable
+private fun AlreadyPaidConfirmation(
+        modifier: Modifier = Modifier,
+        onBackClick: () -> Unit
+    ) {
+        Column(
+            modifier = modifier.padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CheckCircle,
+                    contentDescription = "Ya pagado",
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Reserva ya pagada",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Esta reserva ya ha sido pagada anteriormente. No es necesario realizar otro pago.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text("Volver atrás", style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+}
+
+    @Composable
+    private fun ReservationCancelled(
+        modifier: Modifier = Modifier,
+        onBackClick: () -> Unit
+    ) {
+        Column(
+            modifier = modifier.padding(32.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.2f)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Cancel,
+                    contentDescription = "Cancelada",
+                    modifier = Modifier.size(60.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Reserva cancelada",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.error
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "Esta reserva ha sido cancelada y no puede ser pagada.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onBackClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.error,
+                    contentColor = MaterialTheme.colorScheme.onError
+                )
+            ) {
+                Text("Volver atrás", style = MaterialTheme.typography.bodyLarge)
+            }
+        }
+    }
+
 
 @Composable
 private fun PaymentDetailsStep(
@@ -518,15 +640,14 @@ private fun PaymentMethodStep(
 }
 
 @Composable
-private fun PaymentConfirmationStep() {
+private fun PaymentConfirmationStep(payment: Payments?) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Icono de confirmación principal
+    ) { // Icono de confirmación principal
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -545,70 +666,34 @@ private fun PaymentConfirmationStep() {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "¡Pago Completado!",
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.primary
+                text = "¡Pago Completado!",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
         )
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Text(
-            text = "Tu reserva ha sido confirmada. Hemos enviado los detalles a tu correo electrónico.",
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+                text = "Tu reserva ha sido confirmada.",
+                style = MaterialTheme.typography.bodyLarge,
+                textAlign = TextAlign.Center
         )
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        // Sección de iconos de confirmación (reemplazando la imagen estática)
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Outlined.Email,
-                    contentDescription = "Email enviado",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+        payment?.let {
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Código: ${it.code}",
+                style = MaterialTheme.typography.bodyMedium
+            )
+            it.total?.let { total ->
                 Text(
-                    text = "Email",
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Outlined.Receipt,
-                    contentDescription = "Recibo generado",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Recibo",
-                    style = MaterialTheme.typography.labelMedium
-                )
-            }
-
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Outlined.CalendarMonth,
-                    contentDescription = "Reserva confirmada",
-                    modifier = Modifier.size(48.dp),
-                    tint = MaterialTheme.colorScheme.secondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = "Reserva",
-                    style = MaterialTheme.typography.labelMedium
+                    text = "Total: S/ $total",
+                    style = MaterialTheme.typography.bodyMedium
                 )
             }
         }
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
+
 
 // Funciones de formato
 private fun formatCardNumber(input: String): String {

@@ -130,7 +130,8 @@ class PaymentViewModel(
                             message = "Transacción completada. Código: ${paymentResponse.payment.code}",
                             type = NotificationType.SUCCESS,
                             isVisible = true
-                        )
+                        ),
+                        payment = paymentResponse.payment
                     )
                 }
             } catch (e: Exception) {
@@ -148,10 +149,8 @@ class PaymentViewModel(
         }
     }
 
-
-
     fun clearSuccess() {
-        _state.update { it.copy(successMessage = null) }
+        _state.update { it.copy(successMessage = null, payment = null) }
     }
 }
 

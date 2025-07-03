@@ -28,5 +28,6 @@ data class PaymentState(
     val isLoading: Boolean = false,
     val successMessage: String? = null,
     val error: String? = null,
-    val notification: NotificationState = NotificationState()
+    val notification: NotificationState = NotificationState(),
+    val payment: Payments? = null
 )
