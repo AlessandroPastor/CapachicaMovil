@@ -2,6 +2,12 @@ package com.example.turismomovile.data.remote.dto.configuracion
 
 import kotlinx.serialization.Serializable
 import com.example.turismomovile.presentation.components.NotificationState
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 
 // Respuesta paginada general
 @Serializable
@@ -20,13 +26,13 @@ data class Emprendedor(
     val address: String? = null,
     val code: String? = null,
     val ruc: String? = null,
+    val phone: String? = null,
     val description: String? = null,
     val lugar: String? = null,
     val img_logo: String? = null,
-    val phone: String? = null,
     val name_family: String? = null,
     val status: Int,
-    val asociacionId: String? = null,
+    val asociacion_id: String? = null,
     val nombre_asociacion: String? = null,
     val createdAt: String? = null,
     val updatedAt: String? = null,
@@ -44,7 +50,6 @@ data class Imagen(
     val code: String? = null
 )
 
-// Productos (tabla emprendedor_service)
 @Serializable
 data class Producto(
     val emprendedor_service_id: String? = null,
@@ -53,8 +58,13 @@ data class Producto(
     val cantidad: Int? = null,
     val name: String? = null,
     val description: String? = null,
+
+    @Serializable(with = DoubleSerializer::class)
     val costo: Double? = null,
+
+    @Serializable(with = DoubleSerializer::class)
     val costoUnidad: Double? = null,
+
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val service_id: String? = null,
@@ -62,7 +72,28 @@ data class Producto(
     val service_description: String? = null,
     val service_code: String? = null,
     val service_category: String? = null,
-    val service_status: Int? = null
+    val service_status: Int? = null,
+    val imagenes: List<ImagenProducto> = emptyList(),
+)
+
+object DoubleSerializer : KSerializer<Double> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Double", PrimitiveKind.STRING)
+
+    override fun serialize(encoder: Encoder, value: Double) {
+        encoder.encodeString(value.toString())
+    }
+
+    override fun deserialize(decoder: Decoder): Double {
+        return decoder.decodeString().toDouble()
+    }
+}
+
+@Serializable
+data class ImagenProducto(
+    val id: String? = null,
+    val url_image: String? = null,
+    val estado: Boolean? = null,
+    val code: String? = null,
 )
 
 

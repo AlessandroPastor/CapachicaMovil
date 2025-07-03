@@ -17,47 +17,47 @@ data class ReservaUsuarioDTO(
     val id: String,
     val user_id: Int? = null,
     val code: String? = null,
-    val bi: Double ? = null,
-    val igv: Double ? = null,
-    val total: Double ? = null,
+    val bi: String? = null,
+    val igv: String? = null,
+    val total: String? = null,
     val status: String? = null,
     val created_at: String? = null,
     val updated_at: String? = null,
     val deleted_at: String? = null,
-    val reserveDetails: List<ReservaDetalleResponseDTO>,
-    val user: UserReservaDTO ? = null
+    val reserve_details: List<ReservaDetalleResponseDTO>,
+    val user: UserReservaDTO? = null
 )
 
 @Serializable
 data class ReservaDetalleResponseDTO(
     val id: String,
-    val emprendedor_service_id: String?= null,
-    val reserva_id: String?= null,
-    val costo: Double?= null,
-    val cantidad: Int?= null,
-    val IGV: Double?=  null,
-    val BI: Double?= null,
-    val total: Double?= null,
-    val lugar: String?= null,
+    val emprendedor_service_id: String? = null,
+    val reserva_id: String? = null,
+    val costo: String? = null,
+    val cantidad: String? = null,
+    val igv: String? = null,
+    val bi: String? = null,
+    val total: String? = null,
+    val lugar: String? = null,
     val description: String? = null,
-    val created_at: String? = null,
-    val updated_at: String? = null,
-    val deleted_at: String? = null,
+    val createdAt: String? = null,
+    val updatedAt: String? = null,
+    val deletedAt: String? = null,
     val emprendimiento_service: EmprendimientoServiceDTO? = null
 )
 
 @Serializable
 data class EmprendimientoServiceDTO(
     val id: String,
-    val service_id: String?= null,
-    val emprendedor_id: String?= null,
-    val cantidad: Int?= null,
-    val name: String?= null,
-    val description: String?= null,
-    val costo: Double? = null,
-    val costo_unidad: Double? = null,
+    val service_id: String? = null,
+    val emprendedor_id: String? = null,
+    val cantidad: Int? = null,
+    val name: String? = null,
+    val description: String? = null,
+    val costo: String? = null,
+    val costo_unidad: String? = null,
     val code: String? = null,
-    val status: Int?= null,
+    val status: Int? = null,
     val created_at: String? = null,
     val updated_at: String? = null,
     val deleted_at: String? = null,
@@ -71,12 +71,11 @@ data class ServiceDTO(
     val description: String? = null,
     val code: String? = null,
     val category: String? = null,
-    val status: Int?= null,
+    val status: Int? = null,
     val created_at: String? = null,
     val updated_at: String? = null,
     val deleted_at: String? = null
 )
-
 
 @Serializable
 data class UserReservaDTO(
@@ -92,6 +91,7 @@ data class UserReservaDTO(
     val updated_at: String? = null,
     val deleted_at: String? = null,
 )
+
 
 
 

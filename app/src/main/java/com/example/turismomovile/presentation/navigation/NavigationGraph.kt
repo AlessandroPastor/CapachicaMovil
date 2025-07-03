@@ -19,8 +19,6 @@ import com.example.turismomovile.presentation.screens.land_page.EventsScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
 import PlacesScreen
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
 import com.example.turismomovile.presentation.screens.configuration.ad.service.ServiceHomeScreen
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
@@ -33,9 +31,10 @@ import com.example.turismomovile.presentation.screens.navigation.DefaultScreen
 import com.example.turismomovile.presentation.screens.navigation.OnboardingScreen
 import com.example.turismomovile.presentation.screens.navigation.SplashScreen
 import com.example.turismomovile.presentation.screens.navigation.TouristInfoScreen
-import com.example.turismomovile.presentation.theme.ThemeViewModel
+import com.example.turismomovile.presentation.screens.products.ReservaUserScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import kotlinx.coroutines.flow.collectLatest
 
 @Composable
 fun NavigationGraph(
@@ -59,20 +58,28 @@ fun NavigationGraph(
 
     LaunchedEffect(navController) {
         snapshotFlow { navController.currentBackStackEntry }
-            .collect { backStackEntry ->
-                val route = backStackEntry?.destination?.route
-                val token = sessionManager.getUser()?.token
-                // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
-                if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
-                    navController.navigate(Routes.HOME) {
-                        popUpTo(Routes.LOGIN) { inclusive = true }
+            .collectLatest { backStackEntry ->
+                scope.launch {
+                    val route = backStackEntry?.destination?.route
+                    val token = sessionManager.getUser()?.token
+                                    // Si el usuario tiene token y está intentando acceder a registro o login, redirige al HOME
+                    if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LOGIN) { inclusive = true }
+                        }
                     }
-                }
-                // Si no tiene token y la ruta no está en las rutas públicas, cierra sesión y redirige a la página de inicio
-                if (token.isNullOrEmpty() && route !in publicRoutes) {
-                    onLogout()
-                    navController.navigate(Routes.LAND_PAGE) {
-                        popUpTo(0) // Aseguramos que todas las pantallas previas se borren
+                    // Si no tiene token y la ruta no está en las rutas públicas, cierra sesión y redirige a la página de inicio
+                    if (token.isNullOrEmpty() && route !in publicRoutes) {
+                        onLogout()
+                        navController.navigate(Routes.LAND_PAGE) {
+                            popUpTo(0) // Aseguramos que todas las pantallas previas se borren
+                        }
+                    }
+                    // Si ya está autenticado y entra a la Land Page, ir directo al HOME
+                    if (!token.isNullOrEmpty() && route == Routes.LAND_PAGE) {
+                        navController.navigate(Routes.HOME) {
+                            popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                        }
                     }
                 }
             }
@@ -91,20 +98,25 @@ fun NavigationGraph(
             SplashScreen(
                 onSplashFinished = {
                     scope.launch {
+                        val token = sessionManager.getUser()?.token
                         val isFirstTime = !sessionManager.isOnboardingCompleted()
-                        if (isFirstTime) {
-                            navController.navigate(Routes.ONBOARDING) {
-                                popUpTo(Routes.SPLASH) { inclusive = true }
-                            }
-                        } else {
-                            navController.navigate(Routes.LAND_PAGE) {
-                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            if (!token.isNullOrEmpty()) {
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(Routes.SPLASH) { inclusive = true }
+                                }
+                            } else if (isFirstTime) {
+                                navController.navigate(Routes.ONBOARDING) {
+                                    popUpTo(Routes.SPLASH) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Routes.LAND_PAGE) {
+                                    popUpTo(Routes.SPLASH) { inclusive = true }
+                                }
                             }
                         }
                     }
+                    )
                 }
-            )
-        }
         // Onboarding Screen
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
@@ -171,13 +183,22 @@ fun NavigationGraph(
             WelcomeScreen(
                 navController = navController,
                 onStartClick = {
-                    navController.navigate(Routes.LOGIN) {
-                        popUpTo(Routes.LAND_PAGE) { inclusive = false }
+                    scope.launch {
+                        val token = sessionManager.getUser()?.token
+                            if (!token.isNullOrEmpty()) {
+                                navController.navigate(Routes.HOME) {
+                                    popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate(Routes.LOGIN) {
+                                    popUpTo(Routes.LAND_PAGE) { inclusive = false }
+                                }
+                            }
+                        }
+                    },
+                    onClickExplorer = {
+                        navController.navigate(Routes.EXPLORATE)
                     }
-                },
-                onClickExplorer = {
-                    navController.navigate(Routes.EXPLORATE)
-                }
             )
         }
 
@@ -347,6 +368,10 @@ private fun setupMenuRoutes(
                         paddingValues = paddingValues
                     )
                     Routes.HomeScreen.Setup.SERVICE -> ServiceHomeScreen(
+                        navController = navController,
+                        paddingValues = paddingValues
+                    )
+                    Routes.HomeScreen.Product.RESERVAS -> ReservaUserScreen(
                         navController = navController,
                         paddingValues = paddingValues
                     )

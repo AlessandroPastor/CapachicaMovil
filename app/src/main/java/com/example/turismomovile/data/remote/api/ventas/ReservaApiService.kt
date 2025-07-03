@@ -19,7 +19,7 @@ class ReservaApiService(
     sessionManager: SessionManager
     ) : BaseApiService(client, sessionManager) {
 
-        suspend fun getReservas(page: Int = 0, size: Int = 10,search: String?): ReservaListResponse {
+        suspend fun getReservas(page: Int = 0, size: Int = 5,search: String?): ReservaListResponse {
             val response = client.get(ApiConstants.Configuration.RESERVA_ENDPOINT) {
                 addAuthHeader()
                 parameter("page", page)
@@ -29,12 +29,12 @@ class ReservaApiService(
             return response.body()
         }
 
-       suspend fun getReservaById(id: String): ReservaUsuarioDTO {
-           val endpoint = ApiConstants.Configuration.RESERVA_GET_BYID.replace("{id}", id)
-           return client.get(endpoint) {
-               addAuthHeader()
-           }.body()
-       }
+    suspend fun getReservaById(id: String): ReservaUsuarioDTO {
+        val endpoint = ApiConstants.Configuration.RESERVA_GET_BYID.replace("{id}", id)
+        return client.get(endpoint) {
+            addAuthHeader()
+        }.body()
+    }
 
     suspend fun createReserva(reserva: ReservaCreateDTO): ReservaDetalleResponse {
         println("Iniciando la solicitud POST para crear la reserva...")

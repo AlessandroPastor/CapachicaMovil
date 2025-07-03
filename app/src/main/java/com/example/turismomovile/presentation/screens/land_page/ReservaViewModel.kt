@@ -33,11 +33,22 @@ class ReservaViewModel(
         loadReservas()
     }
 
-    fun loadReservas(page: Int = 0,searchQuery: String? = null) {
+    fun loadReservas(page: Int = 0, searchQuery: String? = null) {
         viewModelScope.launch {
+            // Mostrar el estado de carga
             _state.update { it.copy(isLoading = true) }
+
+            // Imprime los parámetros antes de realizar la solicitud
+            println("Cargando reservas: Página $page, Búsqueda: $searchQuery")
+
             try {
+                // Realiza la llamada a la API
                 val response = reservaApiService.getReservas(page = page, search = searchQuery)
+
+                // Imprime la respuesta recibida
+                println("Respuesta recibida: ${response.content.size} elementos, Página actual: ${response.currentPage}, Total de páginas: ${response.totalPages}")
+
+                // Actualiza el estado con los resultados
                 _state.update {
                     it.copy(
                         items = response.content, // O mapea según tu modelo de dominio
@@ -49,6 +60,10 @@ class ReservaViewModel(
                     )
                 }
             } catch (e: Exception) {
+                // Imprime el error si ocurre una excepción
+                println("Error al cargar reservas: ${e.message}")
+
+                // Actualiza el estado con el error
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -63,6 +78,7 @@ class ReservaViewModel(
             }
         }
     }
+
 
     // ---- NUEVO: Métodos para manejar el carrito ---- //
     fun agregarAlCarrito(producto: Producto, cantidad: Int, lugar: String? = null) {

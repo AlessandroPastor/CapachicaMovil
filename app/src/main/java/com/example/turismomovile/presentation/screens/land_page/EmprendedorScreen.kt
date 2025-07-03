@@ -19,6 +19,7 @@ import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.*
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -229,6 +230,7 @@ fun EmprendedoresScreen(
                             }
                         )
                     }
+
                     // Log de depuración visible cada vez que cambia currentPage o totalPages
                     LaunchedEffect(currentPage, totalPages) {
                         println("🧭 [UI] currentPage = $currentPage | totalPages = $totalPages")
@@ -237,15 +239,50 @@ fun EmprendedoresScreen(
                     // ----- INTEGRACIÓN DEL CARRITO ------
                     // Botón flotante para mostrar el carrito si hay items
                     if (carrito.isNotEmpty()) {
-                        FloatingActionButton(
-                            onClick = { showCart = true },
+                        Box(
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
                                 .padding(bottom = 110.dp, end = 12.dp)
                         ) {
-                            Icon(Icons.Default.ShoppingCart, contentDescription = "Ver carrito")
+                            FloatingActionButton(
+                                onClick = { showCart = true },
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            ) {
+                                Icon(
+                                    Icons.Default.ShoppingCart,
+                                    contentDescription = "Ver carrito"
+                                )
+                            }
+
+                            // Badge/contador chevere
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 8.dp, y = (-8).dp)
+                                    .size(24.dp)
+                                    .background(
+                                        color = Color.Red,
+                                        shape = CircleShape
+                                    )
+                                    .border(
+                                        width = 2.dp,
+                                        color = Color.White,
+                                        shape = CircleShape
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = carrito.sumOf { it.cantidadSeleccionada }.toString(),
+                                    color = Color.White,
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
                         }
                     }
+
                     // Modal del carrito
                     if (showCart) {
                         ModalBottomSheet(

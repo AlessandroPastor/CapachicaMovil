@@ -200,7 +200,6 @@ fun AsociacionesScreen(
 
 
 // Componentes mejorados
-
 @Composable
 fun AsociacionCard(
     asociacion: Asociacion,
