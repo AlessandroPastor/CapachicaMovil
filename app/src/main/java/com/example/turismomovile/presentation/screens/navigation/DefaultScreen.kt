@@ -12,7 +12,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Build
-import androidx.compose.material.icons.filled.Construction
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -22,14 +21,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.turismomovile.presentation.theme.LocalAppDimens
+import com.example.turismomovile.data.local.SessionManager
+import io.dev.kmpventas.presentation.navigation.Routes
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DefaultScreen(
     title: String,
@@ -39,7 +40,13 @@ fun DefaultScreen(
     paddingValues: PaddingValues
 ) {
     val dimens = LocalAppDimens.current
+    val sessionManager: SessionManager = koinInject()
+    var token by remember { mutableStateOf<String?>(null) }
+    val scope = rememberCoroutineScope()
 
+    LaunchedEffect(Unit) {
+        token = sessionManager.getUser()?.token
+    }
     var isRotating by remember { mutableStateOf(false) }
     var showContent by remember { mutableStateOf(false) }
 
@@ -149,6 +156,16 @@ fun DefaultScreen(
                 }
             }
 
+            if (!token.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(dimens.spacing_16.dp))
+                Text(
+                    text = "Token: ${token!!.take(10)}…",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
             // Tarjeta informativa
@@ -199,7 +216,21 @@ fun DefaultScreen(
             Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
 
             Button(
-                onClick = { navController.navigateUp() },
+                onClick = {
+                    scope.launch {
+                        val tk = token
+                        if (!tk.isNullOrEmpty()) {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.HOME) { inclusive = true }
+                            }
+                        } else {
+                            onLogout()
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.HOME) { inclusive = true }
+                            }
+                        }
+                    }
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
