@@ -181,6 +181,7 @@ fun NavigationGraph(
         composable(Routes.LAND_PAGE) {
             WelcomeScreen(
                 navController = navController,
+                viewModel = viewModelLangPage,
                 onStartClick = {
                     scope.launch {
                         val tokenValid = sessionManager.isTokenValid()
@@ -236,6 +237,7 @@ fun NavigationGraph(
         composable(Routes.PRODUCTS) {
             EmprendedoresScreen(
                 navController = navController,
+                viewModel = viewModelLangPage,
                 onStartClick = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.LAND_PAGE) { inclusive = true }
@@ -249,7 +251,7 @@ fun NavigationGraph(
 
         // Services -> ServiceScreen
         composable(Routes.SERVICES) {
-            ServiceScreen(navController = navController,
+            ServiceScreen(navController = navController,viewModel = viewModelLangPage,
                 onStartClick = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.LAND_PAGE) { inclusive = true }
@@ -259,39 +261,42 @@ fun NavigationGraph(
                     navController.navigate(Routes.EXPLORATE)
                 })
         }
+
 
         // Places -> PlacesScreen
         composable(Routes.PLACES) {
-            PlacesScreen(navController = navController, onStartClick = {
-                navController.navigate(Routes.LOGIN) {
-                    popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                } }, onClickExplorer = { navController.navigate(Routes.EXPLORATE) })
-        }
-
-        // Events -> EventsScreen
-        composable(Routes.EVENTS) {
-            EventsScreen(navController = navController,
+            PlacesScreen(
+                navController = navController,
+                viewModel = viewModelLangPage,
                 onStartClick = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                    }
-                },
-                onClickExplorer = {
-                    navController.navigate(Routes.EXPLORATE)
-                })
+            }
+        }, onClickExplorer = { navController.navigate(Routes.EXPLORATE) })
+    }
+
+
+        // Events -> EventsScreen
+        composable(Routes.EVENTS) {
+            EventsScreen(
+                navController = navController,
+                viewModel = viewModelLangPage,
+                onStartClick = { navController.navigate(Routes.LOGIN) { popUpTo(Routes.LAND_PAGE) { inclusive = true } } },
+                onClickExplorer = { navController.navigate(Routes.EXPLORATE) }
+            )
         }
 
         // Recommendations -> RecommendationsScreen
         composable(Routes.RECOMMENDATIONS) {
-            RecommendationsScreen(navController = navController,
+            RecommendationsScreen(
+                navController = navController,
+                viewModel = viewModelLangPage,
                 onStartClick = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                    }
-                },
-                onClickExplorer = {
-                    navController.navigate(Routes.EXPLORATE)
-                })
+                    } },
+                onClickExplorer = { navController.navigate(Routes.EXPLORATE) }
+            )
         }
 
 

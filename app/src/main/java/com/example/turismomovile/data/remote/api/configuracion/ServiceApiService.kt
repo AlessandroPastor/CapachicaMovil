@@ -17,7 +17,7 @@ import io.ktor.http.*
 class ServiceApiService (client: HttpClient, sessionManager: SessionManager
 ) : BaseApiService(client, sessionManager){
 
-    suspend fun getService(page: Int? = 0, size: Int = 5, category: String? = null,search : String?): ServiceResponse {
+    suspend fun getService(page: Int? = 0, size: Int = 10, category: String? = null,search : String?): ServiceResponse {
         val response = client.get(ApiConstants.Configuration.SERVICE_ENDPOINT) {
             parameter("page", page)
             parameter("size", size)

@@ -45,8 +45,6 @@ class ServiceViewModel (
                 )
 
             } catch (e: Exception) {
-                // En caso de error, mostramos el mensaje y actualizamos el estado
-                println("❌ [API Service] Error al cargar servicios: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,  // Finalizamos el estado de carga
                     error = e.message,  // Asignamos el mensaje de error
@@ -64,7 +62,6 @@ class ServiceViewModel (
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val newService = apiservice.createService(dto)
-                println("✅ [CREATE] Servicio creado: ${newService.name}")
                 loadService() // recarga
                 _state.value = _state.value.copy(
                     notification = NotificationState(
@@ -75,7 +72,6 @@ class ServiceViewModel (
                     isLoading = false
                 )
             } catch (e: Exception) {
-                println("❌ [CREATE] Error: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     notification = NotificationState(
@@ -93,7 +89,6 @@ class ServiceViewModel (
             _state.value = _state.value.copy(isLoading = true)
             try {
                 val updated = apiservice.updateService(id, service)
-                println("✅ [UPDATE] Servicio actualizado: ${updated.name}")
                 loadService()
                 _state.value = _state.value.copy(
                     notification = NotificationState(
@@ -104,7 +99,6 @@ class ServiceViewModel (
                     isLoading = false
                 )
             } catch (e: Exception) {
-                println("❌ [UPDATE] Error: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     notification = NotificationState(
@@ -122,7 +116,6 @@ class ServiceViewModel (
             _state.value = _state.value.copy(isLoading = true)
             try {
                 apiservice.deleteService(id)
-                println("🗑️ [DELETE] Servicio eliminado ID=$id")
                 loadService()
                 _state.value = _state.value.copy(
                     notification = NotificationState(
@@ -133,7 +126,6 @@ class ServiceViewModel (
                     isLoading = false
                 )
             } catch (e: Exception) {
-                println("❌ [DELETE] Error: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     notification = NotificationState(

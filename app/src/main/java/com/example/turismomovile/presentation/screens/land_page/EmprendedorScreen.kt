@@ -44,7 +44,7 @@ fun EmprendedoresScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
     navController: NavController,
-    viewModel: LangPageViewModel = koinInject(),
+    viewModel: LangPageViewModel,
     themeViewModel: ThemeViewModel = koinInject()
 ) {
     // Estados para el LazyColumn y scroll
@@ -93,6 +93,8 @@ fun EmprendedoresScreen(
     val currentSection by viewModel.currentSection
     var selectedEmprendedor by remember { mutableStateOf<Emprendedor?>(null) }
     val stateEmprendedor by viewModel.stateEmprendedor.collectAsState()
+    val sss by viewModel.stateEmprendedor.collectAsState()
+
     // Paginación
     val currentPage = stateEmprendedor.currentPage
     val totalPages = stateEmprendedor.totalPages
@@ -201,6 +203,7 @@ fun EmprendedoresScreen(
                         EmprendedoresListContent(
                             stateEmprendedor = stateEmprendedor,
                             lazyListState = lazyListState,
+                            viewModel = viewModel,
                             onEmprendedorClick = { emprendedor ->
                                 selectedEmprendedor = emprendedor
                             }
@@ -364,6 +367,7 @@ fun EmprendedoresScreen(
 private fun EmprendedoresListContent(
     stateEmprendedor: EmprendedorState,
     lazyListState: LazyListState,
+    viewModel: LangPageViewModel,
     onEmprendedorClick: (Emprendedor) -> Unit
 ) {
     LazyColumn(
@@ -382,7 +386,7 @@ private fun EmprendedoresListContent(
         }
 
         item {
-            EmprendedoresFilterSection()
+            EmprendedoresFilterSection(viewModel)
         }
 
         items(stateEmprendedor.items) { emprendedor ->
@@ -399,7 +403,7 @@ private fun EmprendedoresListContent(
 
 @Composable
 private fun EmprendedoresFilterSection(
-    viewModel: LangPageViewModel = koinInject()
+    viewModel: LangPageViewModel
 ) {
     val selectedFilter by viewModel.selectedCategory.collectAsState()
     val categories by viewModel.categories

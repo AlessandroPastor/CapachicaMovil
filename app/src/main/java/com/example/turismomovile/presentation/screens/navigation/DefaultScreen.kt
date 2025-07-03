@@ -215,45 +215,6 @@ fun DefaultScreen(
                     )
                 }
             }
-
-            Spacer(modifier = Modifier.height(dimens.spacing_32.dp))
-
-            Button(
-                onClick = {
-                    scope.launch {
-                        val tk = sessionManager.getAuthToken()
-                        token = tk
-                        val valid = sessionManager.isTokenValid()
-                        if (valid && !tk.isNullOrEmpty()) {
-                            navController.navigate(Routes.HOME) {
-                                popUpTo(Routes.HOME) { inclusive = true }
-                            }
-                        } else {
-                            onLogout()
-                            navController.navigate(Routes.LOGIN) {
-                                popUpTo(Routes.HOME) { inclusive = true }
-                            }
-                        }
-                    }
-                    },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 48.dp)
-                    .height(dimens.buttonHeight.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Home,
-                    contentDescription = "Volver al inicio",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Volver al inicio")
-            }
         }
     }
 }

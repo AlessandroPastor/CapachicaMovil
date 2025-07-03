@@ -29,7 +29,6 @@ import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.LocalAppDimens
-
 import org.koin.compose.koinInject
 
 
@@ -42,18 +41,8 @@ fun RoleScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val notificationState = rememberNotificationState()
     var searchQuery by remember { mutableStateOf("") }
-
-
-    val parentModules by viewModel.parentModules.collectAsStateWithLifecycle()
     val selectedModules by viewModel.selectedModules.collectAsStateWithLifecycle()
-    var expanded by remember { mutableStateOf(false) }
-    var showAssignDialog by remember { mutableStateOf(false) }
-    var selectedRole by remember { mutableStateOf<Role?>(null) }
     var selectedParentModuleId by remember { mutableStateOf("") }
-    var showAssignModulesDialog by remember { mutableStateOf(false) }
-
-    var selectedModuleId by remember { mutableStateOf(selectedParentModuleId) }
-    val scrollState = rememberScrollState()
     val updatedModules = remember { mutableStateListOf<ModuleSelectedDTO>() }
 
 
@@ -368,9 +357,3 @@ private fun RoleDialog(
         }
     }
 }
-
-
-
-
-
-

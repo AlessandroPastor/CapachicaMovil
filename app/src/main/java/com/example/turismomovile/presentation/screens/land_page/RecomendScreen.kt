@@ -20,7 +20,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.turismomovile.R
-
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.draw.clip
@@ -64,7 +62,7 @@ fun RecommendationsScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
     navController: NavController,
-    viewModel: LangPageViewModel = koinInject(),
+    viewModel: LangPageViewModel,
     themeViewModel: ThemeViewModel = koinInject()
 ) {
     // Estados para el LazyColumn y scroll

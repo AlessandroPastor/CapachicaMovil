@@ -41,18 +41,9 @@ class RoleViewModel(
             try {
                 repository.getRoles(page = page, name = name)
                     .onSuccess { response ->
-
-                        // 🔍 Depuración: IDs de roles cargados
-                        println("✅ CARGA EXITOSA DE ROLES:")
-                        println("   Página: ${response.currentPage?.plus(1)} / ${response.totalPages}")
-                        println("   Total elementos: ${response.content}")
-                        println("   Total elementos: ${response.totalElements}")
-                        println("   Roles:")
                         response.content.forEach { role ->
                             println("     ➡️ ID: ${role.id}, Nombre: ${role.name}")
                         }
-                        println("--------------------------------------------------")
-
                         _state.value = _state.value.copy(
                             items = response.content,
                             currentPage = response.currentPage,
@@ -63,7 +54,6 @@ class RoleViewModel(
                         )
                     }
                     .onFailure { error ->
-                        println("❌ Error getRoles: ${error.message}")
                         _state.value = _state.value.copy(
                             isLoading = false,
                             error = error.message,
@@ -75,7 +65,6 @@ class RoleViewModel(
                         )
                     }
             } catch (e: Exception) {
-                println("❌ Excepción inesperada: ${e.message}")
                 _state.value = _state.value.copy(
                     isLoading = false,
                     error = e.message,
@@ -111,21 +100,15 @@ class RoleViewModel(
 
     fun loadModulesSelected(roleId: String, parentModuleId: String) {
         viewModelScope.launch {
-            println("🔹 Cargando módulos seleccionados para roleId: $roleId y parentModuleId: $parentModuleId")
-
             _selectedModules.value = emptyList() // 🔹 Limpia la lista para evitar el retraso en la UI
-
             moduleRepository.getModulesSelected(roleId, parentModuleId)
                 .onSuccess { modules ->
-                    println("✅ Módulos cargados correctamente: ${modules.size} módulos")
                     modules.forEach {
-                        println("   - id: ${it.id}, título: ${it.title}, seleccionado: ${it.selected}")
                     }
 
                     _selectedModules.value = modules // 🔹 Esto actualiza la UI inmediatamente
                 }
                 .onFailure { error ->
-                    println("❌ Error al cargar módulos seleccionados: ${error.message}")
                     error.printStackTrace()
                     _state.value = _state.value.copy(
                         notification = NotificationState(

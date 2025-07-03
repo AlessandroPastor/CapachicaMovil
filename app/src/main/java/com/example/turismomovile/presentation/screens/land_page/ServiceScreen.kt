@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,16 +34,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChairAlt
 import androidx.compose.material.icons.filled.Contacts
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.MiscellaneousServices
 import androidx.compose.material.icons.filled.RoomService
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -53,7 +47,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -110,7 +103,7 @@ fun ServiceScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
     navController: NavController,
-    viewModel: LangPageViewModel = koinInject(),
+    viewModel: LangPageViewModel,
     themeViewModel: ThemeViewModel = koinInject()
 ) {
     // Estados para el LazyColumn y scroll
@@ -401,7 +394,7 @@ fun ServiceContent(
                     showingCount = services.size
                 )
 
-                ServicesFilterSection()
+                ServicesFilterSection(viewModel)
 
                 ServiceCarousel(
                     services = services,
@@ -621,7 +614,7 @@ private fun ServiceHeaderMinimal(serviceCount: Int, showingCount: Int) {
 
 @Composable
 private fun ServicesFilterSection(
-    viewModel: LangPageViewModel = koinInject()
+    viewModel: LangPageViewModel
 ) {
     var selectedService by remember { mutableStateOf("Todos") }
     val services by viewModel.services

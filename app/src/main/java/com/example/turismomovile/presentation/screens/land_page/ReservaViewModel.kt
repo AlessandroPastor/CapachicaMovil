@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// ---- Tu modelo de CartItem para el carrito ---- //
+// ---- Modelo de CartItem para el carrito ---- //
 data class CartItem(
     val producto: Producto,
     val cantidadSeleccionada: Int,

@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
@@ -28,11 +27,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +63,7 @@ import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import org.koin.compose.koinInject
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material.icons.filled.Map
@@ -85,8 +83,6 @@ import com.example.turismomovile.presentation.components.MainTopAppBar
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.NotificationType
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
-import com.example.turismomovile.presentation.components.TourismMessageType
-import com.example.turismomovile.presentation.components.TourismWhatsAppButton
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
 import com.example.turismomovile.presentation.theme.AppTheme
@@ -101,7 +97,7 @@ fun PlacesScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
     navController: NavController,
-    viewModel: LangPageViewModel = koinInject(),
+    viewModel: LangPageViewModel,
     themeViewModel: ThemeViewModel = koinInject()
 ) {
     // Estados
@@ -172,7 +168,7 @@ fun PlacesScreen(
             )
         }
     }
-// Controlar el estado de refresh con feedback
+    // Controlar el estado de refresh con feedback
     LaunchedEffect(stateAso.isLoading, stateAso.isLoading) {
         if (!stateAso.isLoading && !stateAso.isLoading && isRefreshing) {
             isRefreshing = false

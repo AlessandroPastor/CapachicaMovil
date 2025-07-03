@@ -57,21 +57,8 @@ fun ExplorerScreen(
     }
     val visible = remember { mutableStateOf(false) }
     val notificationState = rememberNotificationState()
-    val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle(
-        initialValue = false, // Valor inicial
-        lifecycle = LocalLifecycleOwner.current.lifecycle // Contexto de lifecycle
-    )
     val state by viewModel.state.collectAsStateWithLifecycle()
     val stateAso by viewModel.stateAso.collectAsStateWithLifecycle()
-    val isRefreshing = remember { mutableStateOf(false) }
-    var selectedAsociacion by remember { mutableStateOf<Asociacion?>(null) }
-
-    // Imágenes
-    val sliderImages = listOf(
-        R.drawable.fondo,
-        R.drawable.fondo2,
-        R.drawable.capachica,
-    )
 
     // Efectos
     LaunchedEffect(Unit) { visible.value = true }

@@ -57,13 +57,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -71,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.turismomovile.R
-import com.example.turismomovile.data.remote.dto.configuracion.Asociacion
 import com.example.turismomovile.presentation.components.PullToRefreshComponent
 import com.example.turismomovile.presentation.components.rememberNotificationState
 import com.example.turismomovile.presentation.components.showNotification
@@ -117,7 +113,7 @@ import kotlin.math.absoluteValue
 fun WelcomeScreen(
     onStartClick: () -> Unit,
     onClickExplorer: () -> Unit,
-    viewModel: LangPageViewModel = koinInject(),
+    viewModel: LangPageViewModel,
     themeViewModel: ThemeViewModel = koinInject(),
     navController: NavController
 ) {
@@ -168,34 +164,26 @@ fun WelcomeScreen(
     var searchQuery by remember { mutableStateOf("") }
     var isSearchVisible by remember { mutableStateOf(false) }
     val sliderImages by viewModel.sliderImagesState.collectAsState()
-
-    // Estado para controlar la visibilidad del botón WhatsApp
     val showWhatsAppButton = remember { mutableStateOf(false) }
-
     val isScrolled = remember {
         derivedStateOf {
             lazyListState.firstVisibleItemIndex > 0 || lazyListState.firstVisibleItemScrollOffset > 100
         }
     }
-
-
-    // Efecto para animaciones y notificaciones de bienvenida
     LaunchedEffect(Unit) {
-        // Mostrar notificación de bienvenida después de que cargue el layout
+
         delay(500)
         notificationState.showNotification(
             message = "¡Bienvenido a ${state.items.firstOrNull()?.distrito ?: "Turismo Movile"}!",
             type = NotificationType.SUCCESS,
             duration = 3500
         )
-
         // Activar animaciones de contenido con timing escalonado
         delay(1000)
         visible.value = true
-
         // Mostrar botón WhatsApp después de las animaciones principales
         delay(1500)
-        showWhatsAppButton.value = true // Cambiado a .value
+        showWhatsAppButton.value = true
     }
 
 
