@@ -225,7 +225,7 @@ fun NavigationGraph(
                     scope.launch {
                         sessionManager.clearSession()
                         navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(0) { inclusive = true }
+                            popUpTo(Routes.LAND_PAGE) { inclusive = true }
                         }
                     }
                 }
