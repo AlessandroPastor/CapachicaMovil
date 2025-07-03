@@ -282,7 +282,18 @@ class LangPageViewModel (
     // 2. Cambia la función para cargar emprendedores usando la categoría (y actualiza el filtro)
     fun setCategory(category: String) {
         _selectedCategory.value = category
-        loadEmprendedores(category = if (category == "Todos") null else category)
+        // Reiniciamos la paginación al cambiar de categoría y limpiamos la lista
+        _stateEmprendedor.value = _stateEmprendedor.value.copy(
+            currentPage = 0,
+            items = emptyList(),
+            totalPages = 0,
+            totalElements = 0
+        )
+
+        loadEmprendedores(
+            page = 0,
+            category = if (category == "Todos") null else category
+        )
     }
 
 
@@ -483,7 +494,8 @@ class LangPageViewModel (
         val total = _stateEmprendedor.value.totalPages
         if (current + 1 < total) {
             println("✅ Ejecutando nextPage(): ${current + 1}")
-            loadEmprendedores(current + 1)
+            val selected = _selectedCategory.value.let { if (it == "Todos") null else it }
+            loadEmprendedores(current + 1, category = selected)
         } else {
             println("⛔ No se puede avanzar. currentPage=$current, totalPages=$total")
         }
@@ -493,7 +505,8 @@ class LangPageViewModel (
         val current = _stateEmprendedor.value.currentPage
         if (current > 0) {
             println("✅ Ejecutando previousPage(): ${current - 1}")
-            loadEmprendedores(current - 1)
+            val selected = _selectedCategory.value.let { if (it == "Todos") null else it }
+            loadEmprendedores(current - 1, category = selected)
         } else {
             println("⛔ Ya estás en la primera página")
         }
