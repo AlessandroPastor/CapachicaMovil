@@ -158,9 +158,10 @@ class ReservaViewModel(
                             isVisible = true
                         ),
                         isLoading = false,
-                        isDialogOpen = false,
+                        isDialogOpen = true,
                         selectedItem = null,
-                        lastCreatedReservaId = reservaResponse.reserva_id
+                        lastCreatedReservaId = reservaResponse.reserva_id,
+                        lastCreatedReservaCode = reservaDetail.code
                     )
                 }
             } catch (e: Exception) {
@@ -210,5 +211,10 @@ class ReservaViewModel(
     }
     fun clearNavigationState() {
         _state.update { it.copy(lastCreatedReservaId = null) }
+    }
+
+
+    fun dismissSuccessDialog() {
+        _state.update { it.copy(isDialogOpen = false, lastCreatedReservaCode = null) }
     }
 }

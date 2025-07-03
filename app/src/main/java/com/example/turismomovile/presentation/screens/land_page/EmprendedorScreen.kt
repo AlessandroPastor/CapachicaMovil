@@ -59,13 +59,7 @@ fun EmprendedoresScreen(
     var scrollDirection by remember { mutableStateOf(LangPageViewModel.ScrollDirection.NONE) }
     var showCart by remember { mutableStateOf(false) }
     val reservaState by reservaViewModel.state.collectAsState()
-    // Navegar a pantalla de pago cuando se cree una reserva
-    LaunchedEffect(reservaState.lastCreatedReservaId) {
-        reservaState.lastCreatedReservaId?.let { id ->
-            navController.navigate("${Routes.HomeScreen.Sales.PAYMENTS}/$id")
-            reservaViewModel.clearNavigationState()
-        }
-    }
+
     // Detectar dirección del scroll mejorado
     LaunchedEffect(lazyListState) {
         snapshotFlow {
@@ -121,7 +115,17 @@ fun EmprendedoresScreen(
             duration = 3500 // Duración de la notificación
         )
     }
-
+    // Mostrar notificaciones de las reservas
+    LaunchedEffect(reservaState.notification) {
+        reservaState.notification.takeIf { it.isVisible }?.let { notification ->
+            notificationState.showNotification(
+                message = notification.message,
+                type = notification.type,
+                duration = notification.duration
+            )
+            reservaViewModel.clearNavigationState()
+        }
+    }
     // Manejo de estado de carga
     LaunchedEffect(stateEmprendedor.isLoading) {
         if (!stateEmprendedor.isLoading) {
@@ -362,6 +366,22 @@ fun EmprendedoresScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.NavigateNext, contentDescription = "Siguiente")
                             }
+                        }
+                    }
+                    if (reservaState.isDialogOpen && reservaState.lastCreatedReservaCode != null) {
+                        AppDialog(
+                            title = "Reserva creada",
+                            onDismissRequest = { reservaViewModel.dismissSuccessDialog() },
+                            confirmButton = {
+                                TextButton(onClick = { reservaViewModel.dismissSuccessDialog() }) {
+                                    Text("Aceptar")
+                                }
+                            }
+                        ) {
+                            Text(
+                                "Tu código de reserva es ${reservaState.lastCreatedReservaCode}. " +
+                                        "Busca el código en Home y págalo."
+                            )
                         }
                     }
                 }

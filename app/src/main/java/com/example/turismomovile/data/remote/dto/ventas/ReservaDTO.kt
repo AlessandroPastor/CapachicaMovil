@@ -140,5 +140,6 @@ data class ReservaState(
     // Nuevos estados para el proceso de reserva
     val isReservaInProgress: Boolean = false,
     val reservaSuccess: Boolean = false,
+    val lastCreatedReservaCode: String? = null,
     val reservaError: String? = null
 )

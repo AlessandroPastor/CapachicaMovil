@@ -97,15 +97,15 @@ object BoletaGenerator {
         yPos += 40
 
         // Información de la empresa
-        canvas.drawText("Turismo Móvil E.I.R.L.", MARGIN.toFloat(), yPos.toFloat(), headerPaint)
+        canvas.drawText("Municipalidad de Capachica", MARGIN.toFloat(), yPos.toFloat(), headerPaint)
         yPos += LINE_SPACING
-        canvas.drawText("RUC: 20567894532", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
+        canvas.drawText("RUC: 20192140448", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
         yPos += LINE_SPACING
-        canvas.drawText("Av. Turismo 123 - Lima, Perú", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
+        canvas.drawText("Plaza de Armas, Capachica", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
         yPos += LINE_SPACING
-        canvas.drawText("Teléfono: +51 987 654 321", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
+        canvas.drawText("Teléfono: +051-1234567", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
         yPos += LINE_SPACING
-        canvas.drawText("Email: info@turismomovil.com", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
+        canvas.drawText("Email: municipalidad@capachica.gob.pe", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
         yPos += 30
 
         // Línea separadora
@@ -125,7 +125,7 @@ object BoletaGenerator {
                 yPos += LINE_SPACING
             }
         }
-        reserva.bi?.let {
+        reserva.user?.name?.let {
             canvas.drawText("DNI/RUC: $it", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
             yPos += LINE_SPACING
         }
@@ -160,32 +160,63 @@ object BoletaGenerator {
             canvas.drawText("Servicios contratados:", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
             yPos += LINE_SPACING
 
-            // Cabecera de la tabla
-            canvas.drawText("Descripción", MARGIN.toFloat(), yPos.toFloat(), subHeaderPaint)
-            canvas.drawText("Cantidad", (PAGE_WIDTH - MARGIN - 200).toFloat(), yPos.toFloat(), subHeaderPaint)
-            canvas.drawText("Precio", (PAGE_WIDTH - MARGIN - 100).toFloat(), yPos.toFloat(), subHeaderPaint)
-            canvas.drawText("Total", (PAGE_WIDTH - MARGIN).toFloat(), yPos.toFloat(), subHeaderPaint)
-            yPos += LINE_SPACING
+            // Definimos columnas fijas
+            val colDescX = MARGIN.toFloat()
+            val colCantX = (PAGE_WIDTH - MARGIN - 210).toFloat()
+            val colPrecioX = (PAGE_WIDTH - MARGIN - 120).toFloat()
+            val colTotalX = (PAGE_WIDTH - MARGIN).toFloat()
 
-            // Línea bajo cabecera
-            canvas.drawLine(MARGIN.toFloat(), yPos.toFloat(), (PAGE_WIDTH - MARGIN).toFloat(), yPos.toFloat(), linePaint)
-            yPos += 5
+            // Altura de cada fila
+            val rowHeight = LINE_SPACING + 4
 
-            // Detalles de cada servicio
+            // Cabecera
+            canvas.drawRect(
+                MARGIN.toFloat(), yPos.toFloat(),
+                (PAGE_WIDTH - MARGIN).toFloat(), (yPos + rowHeight).toFloat(),
+                Paint().apply { color = Color.LTGRAY; style = Paint.Style.FILL }
+            )
+
+            canvas.drawText("Descripción", colDescX + 5, (yPos + 15).toFloat(), subHeaderPaint)
+            canvas.drawText("Cantidad", colCantX, (yPos + 15).toFloat(), subHeaderPaint)
+            canvas.drawText("Precio", colPrecioX, (yPos + 15).toFloat(), subHeaderPaint)
+            canvas.drawText("Total", colTotalX, (yPos + 15).toFloat(), subHeaderPaint.apply {
+                textAlign = Paint.Align.RIGHT
+            })
+            yPos += rowHeight
+
+            // Filas de detalles
             for (detail in reserva.reserve_details) {
-                detail.emprendimiento_service?.let {
-                    canvas.drawText(it.toString(), MARGIN.toFloat(), yPos.toFloat(), normalPaint)
-                }
-                canvas.drawText(detail.cantidad.toString(), (PAGE_WIDTH - MARGIN - 200).toFloat(), yPos.toFloat(), normalPaint)
-                canvas.drawText("S/ ${detail.BI ?: "0.00"}", (PAGE_WIDTH - MARGIN - 100).toFloat(), yPos.toFloat(), normalPaint)
-                canvas.drawText("S/ ${detail.total ?: "0.00"}", (PAGE_WIDTH - MARGIN).toFloat(), yPos.toFloat(), normalPaint)
-                yPos += LINE_SPACING
+                // Fondo alterno si deseas (tipo zebra)
+                val rowRect = RectF(
+                    MARGIN.toFloat(), yPos.toFloat(),
+                    (PAGE_WIDTH - MARGIN).toFloat(), (yPos + rowHeight).toFloat()
+                )
+                canvas.drawRect(rowRect, Paint().apply {
+                    color = Color.parseColor("#FAFAFA")
+                    style = Paint.Style.FILL
+                })
+
+                // Contenido
+                val desc = detail.emprendimiento_service?.name ?: "Servicio"
+                canvas.drawText(desc, colDescX + 5, (yPos + 15).toFloat(), normalPaint)
+                canvas.drawText(detail.cantidad.toString(), colCantX, (yPos + 15).toFloat(), normalPaint)
+                canvas.drawText("S/ ${detail.BI ?: "0.00"}", colPrecioX, (yPos + 15).toFloat(), normalPaint)
+                canvas.drawText("S/ ${detail.total ?: "0.00"}", colTotalX, (yPos + 15).toFloat(), normalPaint.apply {
+                    textAlign = Paint.Align.RIGHT
+                })
+
+                // Línea inferior
+                canvas.drawLine(
+                    MARGIN.toFloat(), (yPos + rowHeight).toFloat(),
+                    (PAGE_WIDTH - MARGIN).toFloat(), (yPos + rowHeight).toFloat(),
+                    linePaint
+                )
+                yPos += rowHeight
             }
 
-            // Línea bajo servicios
-            canvas.drawLine(MARGIN.toFloat(), yPos.toFloat(), (PAGE_WIDTH - MARGIN).toFloat(), yPos.toFloat(), linePaint)
             yPos += 10
         }
+
 
         // Detalles del pago
         canvas.drawText("DETALLES DEL PAGO", MARGIN.toFloat(), yPos.toFloat(), subHeaderPaint)
@@ -195,12 +226,20 @@ object BoletaGenerator {
             yPos += LINE_SPACING
         }
         payment.created_at?.let {
-            val formattedDate = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-                .format(Date(it.toLong())) // Ajusta según el formato de tu fecha
+            val formattedDate = try {
+                val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.getDefault())
+                parser.timeZone = TimeZone.getTimeZone("UTC")
+                val formatter = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+                formatter.format(parser.parse(it) ?: it)
+            } catch (e: Exception) {
+                it // Si falla el parseo, mostramos la cadena tal como viene
+            }
             canvas.drawText("Fecha de pago: $formattedDate", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
             yPos += LINE_SPACING
         }
-        canvas.drawText("Método de pago: Visa (Terminación ****1234)", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
+
+
+        canvas.drawText("Método de pago: Visa (****4852)", MARGIN.toFloat(), yPos.toFloat(), normalPaint)
         yPos += LINE_SPACING
 
         // Totales
