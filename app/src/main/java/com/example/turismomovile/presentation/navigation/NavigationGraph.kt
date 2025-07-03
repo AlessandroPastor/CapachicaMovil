@@ -60,24 +60,25 @@ fun NavigationGraph(
         navController.currentBackStackEntryFlow.collectLatest { backStackEntry ->
             scope.launch {
                 val route = backStackEntry.destination.route
-                val token = sessionManager.getUser()?.token
-                if (!token.isNullOrEmpty() && (route == Routes.LOGIN || route == Routes.REGISTER)) {
+                val tokenValid = sessionManager.isTokenValid()
+                if (tokenValid && (route == Routes.LOGIN || route == Routes.REGISTER)) {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
-                if (token.isNullOrEmpty() && route !in publicRoutes) {
+                if (!tokenValid && route !in publicRoutes) {
                     if (route != null) {
                         sessionManager.setPendingRoute(route)
                     }
                     onLogout()
                     navController.navigate(Routes.LOGIN) {
-                                popUpTo(0)
+                        popUpTo(0)
                     }
                 }
             }
         }
     }
+
 
 
     NavHost(
@@ -88,23 +89,24 @@ fun NavigationGraph(
         // En tu NavGraph o donde tengas la navegación
         composable(Routes.SPLASH) {
             SplashScreen(
-                onSplashFinished = { scope.launch {
-                    val token = sessionManager.getUser()?.token
-                    val isFirstTime = !sessionManager.isOnboardingCompleted()
-                    if (!token.isNullOrEmpty()) {
-                        navController.navigate(Routes.HOME) {
-                            popUpTo(Routes.SPLASH) { inclusive = true }
-                        }
-                    } else if (isFirstTime) {
-                        navController.navigate(Routes.ONBOARDING) {
-                            popUpTo(Routes.SPLASH) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Routes.LAND_PAGE) {
-                            popUpTo(Routes.SPLASH) { inclusive = true }
+                onSplashFinished = {
+                    scope.launch {
+                        val tokenValid = sessionManager.isTokenValid()
+                        val isFirstTime = !sessionManager.isOnboardingCompleted()
+                        if (tokenValid) {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        } else if (isFirstTime) {
+                            navController.navigate(Routes.ONBOARDING) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.LAND_PAGE) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
                         }
                     }
-                }
                 }
             )
         }
@@ -176,18 +178,18 @@ fun NavigationGraph(
                 navController = navController,
                 onStartClick = {
                     scope.launch {
-                        val token = sessionManager.getUser()?.token
-                            if (!token.isNullOrEmpty()) {
-                                navController.navigate(Routes.HOME) {
-                                    popUpTo(Routes.LAND_PAGE) { inclusive = true }
-                                }
-                            } else {
-                                navController.navigate(Routes.LOGIN) {
-                                    popUpTo(Routes.LAND_PAGE) { inclusive = false }
-                                }
+                        val tokenValid = sessionManager.isTokenValid()
+                        if (tokenValid) {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.LAND_PAGE) { inclusive = true }
+                            }
+                        } else {
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.LAND_PAGE) { inclusive = false }
                             }
                         }
-                    },
+                    }
+                },
                 onClickExplorer = { navController.navigate(Routes.EXPLORATE) }
             )
         }

@@ -2,12 +2,20 @@ package com.example.turismomovile.data.local
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
+import com.example.turismomovile.data.remote.dto.decodeToken
 import com.example.turismomovile.domain.model.User
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import android.util.Base64
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.longOrNull
 
 class SessionManager(private val dataStore: DataStore<Preferences>) {
 
+    private var cachedToken: String? = null
+    private var cachedExp: Long? = null
     companion object {
         // 🔹 Definición completa y organizada de todas las claves necesarias
         private val KEY_USER_ID = stringPreferencesKey("user_id")
@@ -45,6 +53,8 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs[KEY_ACCESS_TOKEN] = user.token       // token almacenado
             prefs[KEY_IS_LOGGED_IN] = true
         }
+        cachedToken = user.token
+        cachedExp = decodeExpiration(user.token)
     }
 
     // ✅ Obtener un objeto User completo y validado
@@ -99,6 +109,8 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
             prefs.remove(KEY_ACCESS_TOKEN)
             prefs[KEY_IS_LOGGED_IN] = false
         }
+        cachedToken = null
+        cachedExp = null
     }
 
     // ✅ Comprobar si el usuario ha iniciado sesión
@@ -138,16 +150,44 @@ class SessionManager(private val dataStore: DataStore<Preferences>) {
         }
     }
 
-    // ✅ Guardar solo el token (útil en ciertas situaciones)
     suspend fun saveAuthToken(token: String) {
         dataStore.edit { prefs ->
             prefs[KEY_ACCESS_TOKEN] = token
         }
+        cachedToken = token
+        cachedExp = decodeExpiration(token)
     }
 
     // ✅ Obtener solo el token de autenticación
     suspend fun getAuthToken(): String? {
+        cachedToken?.let { return it }
         val prefs = dataStore.data.first()
-        return prefs[KEY_ACCESS_TOKEN]
+        cachedToken = prefs[KEY_ACCESS_TOKEN]
+        cachedExp = cachedToken?.let { decodeExpiration(it) }
+        return cachedToken
+    }
+
+    suspend fun isTokenValid(): Boolean {
+        val token = getAuthToken() ?: return false
+        val exp = cachedExp ?: decodeExpiration(token)
+        exp ?: return true
+        val now = System.currentTimeMillis() / 1000
+        return now < exp
+    }
+    private fun decodeExpiration(token: String): Long? {
+        return try {
+            val parts = token.split(".")
+            if (parts.size != 3) return null
+            val payload = parts[1]
+            val padded = when (payload.length % 4) {
+                2 -> payload + "=="
+                3 -> payload + "="
+                else -> payload
+            }
+            val json = String(Base64.decode(padded, Base64.URL_SAFE))
+            Json.parseToJsonElement(json).jsonObject["exp"]?.jsonPrimitive?.longOrNull
+        } catch (e: Exception) {
+            null
+        }
     }
 }

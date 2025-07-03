@@ -47,7 +47,7 @@ fun DefaultScreen(
     val backStackEntry by navController.currentBackStackEntryAsState()
 
     LaunchedEffect(backStackEntry?.destination?.route) {
-        token = sessionManager.getUser()?.token
+        token = sessionManager.getAuthToken()
     }
     var isRotating by remember { mutableStateOf(false) }
     var showContent by remember { mutableStateOf(false) }
@@ -221,9 +221,10 @@ fun DefaultScreen(
             Button(
                 onClick = {
                     scope.launch {
-                        val tk = sessionManager.getUser()?.token
+                        val tk = sessionManager.getAuthToken()
                         token = tk
-                        if (!tk.isNullOrEmpty()) {
+                        val valid = sessionManager.isTokenValid()
+                        if (valid && !tk.isNullOrEmpty()) {
                             navController.navigate(Routes.HOME) {
                                 popUpTo(Routes.HOME) { inclusive = true }
                             }
@@ -234,7 +235,7 @@ fun DefaultScreen(
                             }
                         }
                     }
-                },
+                    },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = MaterialTheme.colorScheme.onPrimary
