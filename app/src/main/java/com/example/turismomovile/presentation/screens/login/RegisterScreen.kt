@@ -9,7 +9,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
@@ -49,17 +48,13 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.view.ViewCompat.FocusDirection
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.turismomovile.R
 import com.example.turismomovile.data.remote.dto.LoginInput
 import com.example.turismomovile.data.remote.dto.decodeToken
 import com.example.turismomovile.domain.model.User
-import com.example.turismomovile.presentation.components.AppButton
 import com.example.turismomovile.presentation.components.AppTextFieldWithKeyboard
-import com.example.turismomovile.presentation.components.ShowLoadingDialog
 import com.example.turismomovile.presentation.theme.AppTheme
 import com.example.turismomovile.presentation.theme.ThemeViewModel
 import com.example.turismomovile.presentation.components.AppCard

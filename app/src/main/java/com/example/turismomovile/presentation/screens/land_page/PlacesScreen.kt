@@ -1,6 +1,6 @@
-import androidx.compose.animation.animateContentSize
-import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
+package com.example.turismomovile.presentation.screens.land_page
 
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background

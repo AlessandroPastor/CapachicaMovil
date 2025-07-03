@@ -18,8 +18,8 @@ import com.example.turismomovile.presentation.screens.land_page.EmprendedoresScr
 import com.example.turismomovile.presentation.screens.land_page.EventsScreen
 import com.example.turismomovile.presentation.screens.land_page.ExplorerScreen
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
-import PlacesScreen
 import com.example.turismomovile.presentation.screens.configuration.ad.service.ServiceHomeScreen
+import com.example.turismomovile.presentation.screens.land_page.PlacesScreen
 import com.example.turismomovile.presentation.screens.land_page.RecommendationsScreen
 import com.example.turismomovile.presentation.screens.land_page.ServiceScreen
 import com.example.turismomovile.presentation.screens.land_page.WelcomeScreen
