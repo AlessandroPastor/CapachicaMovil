@@ -98,6 +98,9 @@ object ApiConstants {
 
         // PAYMENTS
         const val PAYMENT_POST = "$BASE_URL/payment"
+
+        // SALES
+        const val SALE_POST = "$BASE_URL/sale"
     }
 
 }

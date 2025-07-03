@@ -3,7 +3,13 @@ package com.example.turismomovile.presentation.screens.land_page
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.turismomovile.data.remote.api.ventas.PaymentApiService
+import com.example.turismomovile.data.remote.api.ventas.ReservaApiService
+import com.example.turismomovile.data.remote.api.ventas.SaleApiService
 import com.example.turismomovile.data.remote.dto.ventas.PaymentCreateDTO
+import com.example.turismomovile.data.remote.dto.ventas.PaymentState
+import com.example.turismomovile.data.remote.dto.ventas.ReservaDetalleResponse
+import com.example.turismomovile.data.remote.dto.ventas.ReservaState
+import com.example.turismomovile.data.remote.dto.ventas.SaleCreateDTO
 import com.example.turismomovile.presentation.components.NotificationState
 import com.example.turismomovile.presentation.components.NotificationType
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,31 +17,96 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class PaymentState(
-    val isLoading: Boolean = false,
-    val successMessage: String? = null,
-    val error: String? = null,
-    val notification: NotificationState = NotificationState()
-)
 
 class PaymentViewModel(
-    private val paymentApiService: PaymentApiService
+    private val paymentApiService: PaymentApiService,
+    private val saleApiService: SaleApiService,
+    private val reservaApiService: ReservaApiService,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(PaymentState())
     val state = _state.asStateFlow()
+
+    private val _statereserss = MutableStateFlow(ReservaState())
+    val _statereser = _state.asStateFlow()
+
+    private val _reservaDetails = MutableStateFlow<ReservaDetails?>(null)
+    val reservaDetails = _reservaDetails.asStateFlow()
+
+    init {
+        loadReservas()
+    }
+
+    fun loadReservas(page: Int = 0, searchQuery: String? = null) {
+        viewModelScope.launch {
+            // Mostrar el estado de carga
+            _state.update { it.copy(isLoading = true) }
+
+            // Imprime los parámetros antes de realizar la solicitud
+            println("Cargando reservas: Página $page, Búsqueda: $searchQuery")
+
+            try {
+                // Realiza la llamada a la API
+                val response = reservaApiService.getReservas(page = page, search = searchQuery)
+
+                // Imprime la respuesta recibida
+                println("Respuesta recibida: ${response.content.size} elementos, Página actual: ${response.currentPage}, Total de páginas: ${response.totalPages}")
+
+                // Actualiza el estado con los resultados
+                _statereserss.update {
+                    it.copy(
+                        items = response.content, // O mapea según tu modelo de dominio
+                        currentPage = response.currentPage,
+                        totalPages = response.totalPages,
+                        totalElements = response.totalElements,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            } catch (e: Exception) {
+                // Imprime el error si ocurre una excepción
+                println("Error al cargar reservas: ${e.message}")
+
+                // Actualiza el estado con el error
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        error = e.message,
+                        notification = NotificationState(
+                            message = e.message ?: "Error al cargar reservas",
+                            type = NotificationType.ERROR,
+                            isVisible = true
+                        )
+                    )
+                }
+            }
+        }
+    }
 
     fun createPayment(reservaId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                val response = paymentApiService.createPayment(PaymentCreateDTO(reservaId))
+                // Paso 1: Crear el pago
+                val paymentResponse = paymentApiService.createPayment(PaymentCreateDTO(reservaId))
+
+                if (paymentResponse.payment == null) {
+                    throw Exception(paymentResponse.message ?: "Error al crear pago")
+                }
+
+                // Paso 2: Crear la venta asociada
+                val saleResponse = saleApiService.createSale(
+                    SaleCreateDTO(
+                        reserva_id = reservaId,
+                        payment_id = paymentResponse.payment.id!!
+                    )
+                )
+
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        successMessage = response.message,
+                        successMessage = "Pago y venta registrados correctamente",
                         notification = NotificationState(
-                            message = response.message ?: "Pago realizado con éxito",
+                            message = "Transacción completada. Código: ${paymentResponse.payment.code}",
                             type = NotificationType.SUCCESS,
                             isVisible = true
                         )
@@ -45,9 +116,8 @@ class PaymentViewModel(
                 _state.update {
                     it.copy(
                         isLoading = false,
-                        error = e.message,
                         notification = NotificationState(
-                            message = e.message ?: "Error al realizar pago",
+                            message = "Error en transacción: ${e.message}",
                             type = NotificationType.ERROR,
                             isVisible = true
                         )
@@ -61,3 +131,15 @@ class PaymentViewModel(
         _state.update { it.copy(successMessage = null) }
     }
 }
+
+// Modelo para los detalles de reserva
+data class ReservaDetails(
+    val id: String,
+    val code: String,
+    val fecha: String,
+    val estado: String,
+    val detalles: List<ReservaDetalleResponse>,
+    val total: Double,
+    val igv: Double,
+    val totalConIgv: Double
+)
