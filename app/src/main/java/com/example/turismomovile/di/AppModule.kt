@@ -150,6 +150,6 @@ val appModule = module {
     viewModel {ProfileViewModel(get())}
     viewModel { ReservaViewModel(get(), get()) }
     viewModel { RegisterViewModel(get()) }
-    viewModel { PaymentViewModel(get(), get()) }
+    viewModel { PaymentViewModel(get(), get(), get()) }
 
 }

@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.example.turismomovile.data.remote.dto.ventas.ReservaUsuarioDTO
 
 
 class PaymentViewModel(
@@ -26,11 +27,11 @@ class PaymentViewModel(
     private val _state = MutableStateFlow(PaymentState())
     val state = _state.asStateFlow()
 
-    private val _statereserss = MutableStateFlow(ReservaState())
-    val _statereser = _state.asStateFlow()
+    private val _reservasState = MutableStateFlow(ReservaState())
+    val reservasState = _reservasState.asStateFlow()
 
-    private val _reservaDetails = MutableStateFlow<ReservaDetails?>(null)
-    val reservaDetails = _reservaDetails.asStateFlow()
+    private val _reserva = MutableStateFlow<ReservaUsuarioDTO?>(null)
+    val reserva = _reserva.asStateFlow()
 
     init {
         loadReservas()
@@ -52,7 +53,7 @@ class PaymentViewModel(
                 println("Respuesta recibida: ${response.content.size} elementos, Página actual: ${response.currentPage}, Total de páginas: ${response.totalPages}")
 
                 // Actualiza el estado con los resultados
-                _statereserss.update {
+                _reservasState.update {
                     it.copy(
                         items = response.content, // O mapea según tu modelo de dominio
                         currentPage = response.currentPage,
@@ -81,7 +82,27 @@ class PaymentViewModel(
             }
         }
     }
-
+    fun loadReserva(reservaId: String) {
+        viewModelScope.launch {
+            _state.update { it.copy(isLoading = true) }
+            try {
+                val response = reservaApiService.getReservaById(reservaId)
+                _reserva.value = response
+                _state.update { it.copy(isLoading = false) }
+            } catch (e: Exception) {
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        notification = NotificationState(
+                            message = e.message ?: "Error al obtener reserva",
+                            type = NotificationType.ERROR,
+                            isVisible = true
+                        )
+                    )
+                }
+            }
+        }
+    }
     fun createPayment(reservaId: String) {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
@@ -132,14 +153,3 @@ class PaymentViewModel(
     }
 }
 
-// Modelo para los detalles de reserva
-data class ReservaDetails(
-    val id: String,
-    val code: String,
-    val fecha: String,
-    val estado: String,
-    val detalles: List<ReservaDetalleResponse>,
-    val total: Double,
-    val igv: Double,
-    val totalConIgv: Double
-)

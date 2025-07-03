@@ -27,6 +27,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.turismomovile.R
 import com.example.turismomovile.data.local.SessionManager
+import com.example.turismomovile.data.remote.dto.ventas.ReservaUsuarioDTO
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.presentation.components.NotificationHost
 import com.example.turismomovile.presentation.components.rememberNotificationState
@@ -54,6 +55,8 @@ fun PaymentScreen(
     var cardExpiry by remember { mutableStateOf("") }
     var cardCvv by remember { mutableStateOf("") }
     var cardHolder by remember { mutableStateOf("") }
+    val reserva by viewModel.reserva.collectAsStateWithLifecycle()
+
     val animatedProgress by animateFloatAsState(
         targetValue = when (paymentStep) {
             1 -> 0.33f
@@ -66,6 +69,7 @@ fun PaymentScreen(
 
     LaunchedEffect(Unit) {
         user = withContext(Dispatchers.IO) { sessionManager.getUser() }
+        viewModel.loadReserva(reservaId)
     }
 
     LaunchedEffect(state.notification) {
@@ -122,7 +126,7 @@ fun PaymentScreen(
 
                 when (paymentStep) {
                     1 -> PaymentDetailsStep(
-                        reservaId = reservaId,
+                        reserva = reserva,
                         user = user,
                         onContinue = { paymentStep = 2 }
                     )
@@ -136,7 +140,8 @@ fun PaymentScreen(
                         onCardCvvChange = { cardCvv = it },
                         onCardHolderChange = { cardHolder = it },
                         onPayClick = { viewModel.createPayment(reservaId) },
-                        isLoading = state.isLoading
+                        isLoading = state.isLoading,
+                        total = reserva?.total
                     )
                     3 -> PaymentConfirmationStep()
                 }
@@ -147,7 +152,7 @@ fun PaymentScreen(
 
 @Composable
 private fun PaymentDetailsStep(
-    reservaId: String,
+    reserva: ReservaUsuarioDTO?,
     user: User?,
     onContinue: () -> Unit
 ) {
@@ -179,8 +184,10 @@ private fun PaymentDetailsStep(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("N° Reserva:", style = MaterialTheme.typography.bodyMedium)
-                    Text(reservaId, style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold))
+                    Text(
+                        reserva?.code ?: reserva?.id ?: "",
+                        style = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
+                    )
                 }
 
                 Divider()
@@ -206,29 +213,35 @@ private fun PaymentDetailsStep(
 
                 Divider()
 
-                // Datos de ejemplo del tour
+                val firstDetail = reserva?.reserve_details?.firstOrNull()
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Tour:", style = MaterialTheme.typography.bodyMedium)
-                    Text("Aventura en Machu Picchu", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        firstDetail?.emprendimiento_service?.name ?: "-",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Fecha:", style = MaterialTheme.typography.bodyMedium)
-                    Text("15 Nov 2023", style = MaterialTheme.typography.bodyLarge)
+                    Text(
+                        reserva?.created_at?.take(10) ?: "-",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("Personas:", style = MaterialTheme.typography.bodyMedium)
-                    Text("2 Adultos", style = MaterialTheme.typography.bodyLarge)
+                    val personas = reserva?.reserve_details?.sumOf { it.cantidad?.toIntOrNull() ?: 0 } ?: 0
+
+                    Text("Cantidad:", style = MaterialTheme.typography.bodyMedium)
+                    Text("$personas", style = MaterialTheme.typography.bodyLarge)
                 }
 
                 Divider()
@@ -238,11 +251,12 @@ private fun PaymentDetailsStep(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Text("Total a pagar:", style = MaterialTheme.typography.bodyMedium)
-                    Text("$350.00",
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        ))
+                        Text(
+                            "${reserva?.total ?: ""}",
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary
+                    )
+                    )
                 }
             }
         }
@@ -274,7 +288,8 @@ private fun PaymentMethodStep(
     onCardCvvChange: (String) -> Unit,
     onCardHolderChange: (String) -> Unit,
     onPayClick: () -> Unit,
-    isLoading: Boolean
+    isLoading: Boolean,
+    total: String?
 ) {
     Column(
         modifier = Modifier.padding(16.dp),
@@ -453,7 +468,7 @@ private fun PaymentMethodStep(
                     strokeWidth = 2.dp
                 )
             } else {
-                Text("Pagar \$350.00", style = MaterialTheme.typography.bodyLarge)
+                Text("Pagar \$${total ?: ""}", style = MaterialTheme.typography.bodyLarge)
             }
         }
 
