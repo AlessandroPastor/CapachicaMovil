@@ -61,7 +61,7 @@ import com.example.turismomovile.presentation.components.AppCard
 import com.example.turismomovile.presentation.components.FloatingBubblesBackground
 import com.example.turismomovile.presentation.components.ShowRegisterLoadingDialog
 import com.example.turismomovile.presentation.theme.AppColors
-import io.dev.kmpventas.presentation.navigation.Routes
+import com.example.turismomovile.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 import org.koin.androidx.compose.koinViewModel

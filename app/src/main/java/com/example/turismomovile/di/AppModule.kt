@@ -1,6 +1,5 @@
 package com.example.turismomovile.di
 
-
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.data.local.SettingsFactory
 import com.example.turismomovile.data.remote.api.ApiConstants
@@ -65,8 +64,6 @@ val appModule = module {
 
     single { SettingsFactory(get()).createSettings() } // DataStore<Preferences>
     single { SessionManager(get()) }
-
-
 
     // =====================================
     // HTTP Client

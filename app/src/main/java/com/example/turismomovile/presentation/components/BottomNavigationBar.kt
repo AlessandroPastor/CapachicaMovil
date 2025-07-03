@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.turismomovile.presentation.screens.land_page.LangPageViewModel
-import io.dev.kmpventas.presentation.navigation.Routes
+import com.example.turismomovile.presentation.navigation.Routes
 
 @Composable
 fun BottomNavigationBar(

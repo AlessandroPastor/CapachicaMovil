@@ -7,7 +7,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.presentation.screens.configuration.ad.asociaciones.AsociacionesScreen
-import io.dev.kmpventas.presentation.navigation.Routes
 import com.example.turismomovile.presentation.screens.configuration.ad.modules.ModuleScreen
 import com.example.turismomovile.presentation.screens.configuration.ad.modulos_padres.ParentModuleScreen
 import com.example.turismomovile.presentation.screens.configuration.ad.municipalidad.MunicipalidadScreen

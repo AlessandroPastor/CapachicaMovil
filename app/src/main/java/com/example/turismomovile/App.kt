@@ -8,7 +8,7 @@ import com.example.turismomovile.data.local.SessionManager
 import com.example.turismomovile.presentation.navigation.NavigationGraph
 import com.example.turismomovile.presentation.screens.viewmodel.ProvideHomeViewModel
 import com.example.turismomovile.presentation.theme.ThemeViewModel
-import io.dev.kmpventas.presentation.navigation.Routes
+import com.example.turismomovile.presentation.navigation.Routes
 import com.example.turismomovile.presentation.theme.AppTheme
 import org.koin.compose.KoinContext
 import org.koin.compose.koinInject

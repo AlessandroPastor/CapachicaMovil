@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.Alignment
 import com.example.turismomovile.presentation.components.AppDrawer
-import io.dev.kmpventas.presentation.navigation.Routes
+import com.example.turismomovile.presentation.navigation.Routes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

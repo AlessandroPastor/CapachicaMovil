@@ -167,6 +167,7 @@ fun ServiceScreen(
 
     // Efecto para cargar inicialmente
     LaunchedEffect(Unit) {
+        viewModel.onSectionSelected(LangPageViewModel.Sections.SERVICES)
         viewModel.loadService()
         delay(500)
         notificationState.showNotification(

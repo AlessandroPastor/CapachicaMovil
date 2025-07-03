@@ -1,7 +1,5 @@
 package com.example.turismomovile.presentation.components
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -34,13 +32,10 @@ import com.example.turismomovile.data.remote.dto.MenuItem
 import com.example.turismomovile.domain.model.User
 import com.example.turismomovile.domain.model.hasProfileImage
 import com.example.turismomovile.presentation.screens.dashboard.HomeViewModel
-import io.dev.kmpventas.presentation.navigation.Routes
+import com.example.turismomovile.presentation.navigation.Routes
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 // COMPONENTE PRINCIPAL DEL DRAWER REFACTORIZADO
 @Composable

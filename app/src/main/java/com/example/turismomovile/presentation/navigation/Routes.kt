@@ -1,4 +1,4 @@
-package io.dev.kmpventas.presentation.navigation
+package com.example.turismomovile.presentation.navigation
 
 object Routes {
     // Rutas base
