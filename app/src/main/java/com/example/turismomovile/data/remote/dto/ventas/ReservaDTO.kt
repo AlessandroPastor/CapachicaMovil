@@ -107,11 +107,13 @@ data class ReservaDetalleCreateDTO(
     val cantidad: Int,
     val lugar: String? = null
 )
+
 @Serializable
 data class ReservaDetalleResponse(
     val message: String,
     val reserva: ReservaResponse
 )
+
 @Serializable
 data class ReservaResponse(
     val user_id: Int,
@@ -124,6 +126,7 @@ data class ReservaResponse(
     val created_at: String,
     val reserve_details: List<ReservaDetalleDResponse>
 )
+
 @Serializable
 data class ReservaDetalleDResponse(
     val id: String,

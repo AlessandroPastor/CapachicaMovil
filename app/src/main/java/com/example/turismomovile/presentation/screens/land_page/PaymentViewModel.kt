@@ -39,6 +39,7 @@ class PaymentViewModel(
 
     fun loadReservas(page: Int = 0, searchQuery: String? = null) {
         viewModelScope.launch {
+
             // Mostrar el estado de carga
             _state.update { it.copy(isLoading = true) }
 
