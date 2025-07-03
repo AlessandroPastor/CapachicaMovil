@@ -8,6 +8,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -522,6 +526,7 @@ private fun PaymentConfirmationStep() {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        // Icono de confirmación principal
         Box(
             modifier = Modifier
                 .size(120.dp)
@@ -530,7 +535,7 @@ private fun PaymentConfirmationStep() {
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                imageVector = Icons.Default.CheckCircle,
+                imageVector = Icons.Outlined.CheckCircle,
                 contentDescription = null,
                 modifier = Modifier.size(60.dp),
                 tint = MaterialTheme.colorScheme.primary
@@ -555,12 +560,53 @@ private fun PaymentConfirmationStep() {
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        Image(
-            painter = painterResource(R.drawable.cf),
-            contentDescription = "Confirmación",
-            modifier = Modifier.size(180.dp),
-            contentScale = ContentScale.Fit
-        )
+        // Sección de iconos de confirmación (reemplazando la imagen estática)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Outlined.Email,
+                    contentDescription = "Email enviado",
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Email",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Outlined.Receipt,
+                    contentDescription = "Recibo generado",
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Recibo",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Outlined.CalendarMonth,
+                    contentDescription = "Reserva confirmada",
+                    modifier = Modifier.size(48.dp),
+                    tint = MaterialTheme.colorScheme.secondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Reserva",
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
     }
 }
 
