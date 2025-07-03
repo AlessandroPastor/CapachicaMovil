@@ -39,8 +39,6 @@ fun BaseScreenLayout(
     val isDarkMode by themeViewModel.isDarkMode.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
-
-    // 🔹 Usamos el isLoading del ViewModel
     val isLoading by remember { derivedStateOf { uiState.isLoading } }
 
     LaunchedEffect(Unit) {
@@ -49,7 +47,6 @@ fun BaseScreenLayout(
         }
     }
 
-    /** 🔹 Detectamos cambios en la ruta y cerramos el drawer automáticamente */
     LaunchedEffect(navController.currentDestination?.route) {
         coroutineScope.launch {
             drawerState.close()

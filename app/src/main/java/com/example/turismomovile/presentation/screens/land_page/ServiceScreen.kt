@@ -315,7 +315,6 @@ fun ServiceScreen(
                             ) {
                                 ServiceContent(
                                     services = stateService.items,
-                                    categories = viewModel.categories,
                                     selectedCategory = selectedCategory,
                                     onCategorySelected = { category ->
                                         selectedCategory = if (selectedCategory == category) null else category
@@ -360,7 +359,6 @@ fun ServiceScreen(
 @Composable
 fun ServiceContent(
     services: List<Service>,
-    categories: State<List<String>>,
     selectedCategory: String?,
     onCategorySelected: (String) -> Unit,
     viewModel: LangPageViewModel,
@@ -369,7 +367,7 @@ fun ServiceContent(
     error: String?,
     modifier: Modifier = Modifier
 ) {
-    var searchQuery by remember { mutableStateOf("") }
+    val searchQuery by remember { mutableStateOf("") }
     val stateService by viewModel.stateService.collectAsState()
 
     Column(
@@ -390,77 +388,17 @@ fun ServiceContent(
             services.isEmpty() -> EmptyState(onExploreClick = onExploreClick)
             else -> {
                 Spacer(modifier = Modifier.height(8.dp))
-                ServiceHeaderPremium(
+                ServiceHeader(
                     serviceCount = stateService.totalElements,
                     showingCount = services.size
                 )
-
                 ServicesFilterSection(viewModel)
-
                 ServiceCarousel(
                     services = services,
                     viewModel = viewModel,
                     title = selectedCategory?.let { "Servicios en $it" } ?: "Todos los servicios"
                 )
-
                 FooterSection()
-            }
-        }
-    }
-}
-
-@Composable
-private fun ServiceHeader(serviceCount: Int, showingCount: Int) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
-        ),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-                Text(
-                    text = "Servicios Disponibles",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "Mostrando $showingCount de $serviceCount servicios",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
-                )
-            }
-
-            // Contenedor para el ícono con fondo circular
-            Box(
-                modifier = Modifier
-                    .size(48.dp)
-                    .background(
-                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
-                        shape = CircleShape
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    imageVector = Icons.Default.RoomService, // Mejor ícono para servicios turísticos
-                    contentDescription = "Servicios disponibles",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
-                )
             }
         }
     }
@@ -468,7 +406,7 @@ private fun ServiceHeader(serviceCount: Int, showingCount: Int) {
 
 // Versión alternativa con gradiente y más estilo
 @Composable
-private fun ServiceHeaderPremium(serviceCount: Int, showingCount: Int) {
+private fun ServiceHeader(serviceCount: Int, showingCount: Int) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -570,48 +508,6 @@ private fun ServiceHeaderPremium(serviceCount: Int, showingCount: Int) {
         }
     }
 }
-
-// Versión minimalista
-@Composable
-private fun ServiceHeaderMinimal(serviceCount: Int, showingCount: Int) {
-    Surface(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(
-                    text = "Servicios Disponibles",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Text(
-                    text = "$showingCount de $serviceCount servicios",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                )
-            }
-
-            Icon(
-                imageVector = Icons.Default.MiscellaneousServices,
-                contentDescription = "Servicios",
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(24.dp)
-            )
-        }
-    }
-}
-
 
 @Composable
 private fun ServicesFilterSection(

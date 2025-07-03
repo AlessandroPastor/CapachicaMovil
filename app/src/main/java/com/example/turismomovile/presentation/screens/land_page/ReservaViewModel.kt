@@ -2,6 +2,7 @@ package com.example.turismomovile.presentation.screens.land_page
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.turismomovile.data.remote.api.ventas.PaymentApiService
 import com.example.turismomovile.data.remote.api.ventas.ReservaApiService
 import com.example.turismomovile.data.remote.dto.configuracion.Producto
 import com.example.turismomovile.data.remote.dto.ventas.*
@@ -20,7 +21,9 @@ data class CartItem(
 )
 
 class ReservaViewModel(
-    private val reservaApiService: ReservaApiService
+    private val reservaApiService: ReservaApiService,
+    private val paymentApiService: PaymentApiService
+
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(ReservaState())
@@ -140,7 +143,8 @@ class ReservaViewModel(
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }
             try {
-                reservaApiService.createReserva(dto)
+                val reservaResponse = reservaApiService.createReserva(dto)
+                paymentApiService.createPayment(PaymentCreateDTO(reservaResponse.reservaId))
                 limpiarCarrito() // Limpia el carrito al reservar
                 loadReservas()
                 _state.update {

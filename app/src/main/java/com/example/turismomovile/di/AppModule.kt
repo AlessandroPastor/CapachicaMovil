@@ -14,6 +14,7 @@ import com.example.turismomovile.data.remote.api.configuracion.MunicipalidadDesc
 import com.example.turismomovile.data.remote.api.configuracion.ParentModuleApiService
 import com.example.turismomovile.data.remote.api.configuracion.RoleApiService
 import com.example.turismomovile.data.remote.api.configuracion.ServiceApiService
+import com.example.turismomovile.data.remote.api.ventas.PaymentApiService
 import com.example.turismomovile.data.remote.api.ventas.ReservaApiService
 import com.example.turismomovile.data.repository.AuthRepositoryImpl
 import com.example.turismomovile.data.repository.configuration.AsociacionesRepositoryImpl
@@ -108,6 +109,7 @@ val appModule = module {
     single { ImgAsociacionesApiService(get(),get()) }
     single { EmprendedorApiService (get(),get())}
     single { ReservaApiService (get(),get())}
+    single { PaymentApiService(get(), get()) }
 
 
     // =====================================
@@ -143,7 +145,7 @@ val appModule = module {
     viewModel { AsociacionesViewModel(get(), get(), get()) }
     viewModel {ServiceViewModel(get())}
     viewModel {ProfileViewModel(get())}
-    viewModel {ReservaViewModel(get())}
+    viewModel { ReservaViewModel(get(), get()) }
     viewModel { RegisterViewModel(get()) }
 
 }

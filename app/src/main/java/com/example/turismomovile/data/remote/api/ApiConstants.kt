@@ -95,6 +95,9 @@ object ApiConstants {
         const val RESERVA_POST = "$BASE_URL/reservas"
         const val RESERVA_PUT = "$BASE_URL/reservas/{id}"
         const val RESERVA_DELETE = "$BASE_URL/reservas/{id}"
+
+        // PAYMENTS
+        const val PAYMENT_POST = "$BASE_URL/payment"
     }
 
 }

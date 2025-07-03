@@ -52,13 +52,13 @@ class LangPageViewModel (
     
     private val _stateService = MutableStateFlow(ServiceState())
     val stateService = _stateService.asStateFlow()
-    
+    // PARA LOS ESTDOS DE IAMGEN
     private val _sliderImagesState = MutableStateFlow<List<SliderMuni>>(emptyList())
     val sliderImagesState = _sliderImagesState.asStateFlow()
 
+    // PARA ESTADOS DEL SCROLL
     private val _categories = mutableStateOf<List<String>>(emptyList())
     val categories: State<List<String>> get() = _categories
-
     val services: State<List<String>> get() = _categories
 
 

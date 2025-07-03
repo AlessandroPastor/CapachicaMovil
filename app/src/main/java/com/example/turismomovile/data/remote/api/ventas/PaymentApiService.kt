@@ -1,0 +1,27 @@
+package com.example.turismomovile.data.remote.api.ventas
+
+import com.example.turismomovile.data.local.SessionManager
+import com.example.turismomovile.data.remote.api.ApiConstants
+import com.example.turismomovile.data.remote.api.base.BaseApiService
+import com.example.turismomovile.data.remote.dto.ventas.PaymentCreateDTO
+import com.example.turismomovile.data.remote.dto.ventas.PaymentResponse
+import io.ktor.client.HttpClient
+import io.ktor.client.call.body
+import io.ktor.client.request.*
+import io.ktor.http.ContentType
+import io.ktor.http.contentType
+
+class PaymentApiService(
+    client: HttpClient,
+    sessionManager: SessionManager
+) : BaseApiService(client, sessionManager) {
+
+    suspend fun createPayment(payment: PaymentCreateDTO): PaymentResponse {
+        val response = client.post(ApiConstants.Configuration.PAYMENT_POST) {
+            addAuthHeader()
+            contentType(ContentType.Application.Json)
+            setBody(payment)
+        }
+        return response.body()
+    }
+}
