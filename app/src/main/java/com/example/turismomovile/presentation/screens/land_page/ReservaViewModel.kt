@@ -144,6 +144,7 @@ class ReservaViewModel(
             _state.update { it.copy(isLoading = true) }
             try {
                 val reservaResponse = reservaApiService.createReserva(dto)
+                val reservaDetail = reservaApiService.getReservaById(reservaResponse.reserva_id)
                 val paymentResponse = paymentApiService.createPayment(
                     PaymentCreateDTO(reservaResponse.reserva_id)
                 )
@@ -152,7 +153,7 @@ class ReservaViewModel(
                 _state.update {
                     it.copy(
                         notification = NotificationState(
-                            message = paymentResponse.message ?: "Reserva y pago creados exitosamente",
+                            message = "Reserva creada con código ${reservaDetail.code}. Continúa con el proceso de pago.",
                             type = NotificationType.SUCCESS,
                             isVisible = true
                         ),
