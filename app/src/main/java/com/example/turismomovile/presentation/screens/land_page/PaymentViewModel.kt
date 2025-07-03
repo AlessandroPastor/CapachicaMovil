@@ -130,8 +130,7 @@ class PaymentViewModel(
                             message = "Transacción completada. Código: ${paymentResponse.payment.code}",
                             type = NotificationType.SUCCESS,
                             isVisible = true
-                        ),
-                        payment = paymentResponse.payment
+                        )
                     )
                 }
             } catch (e: Exception) {

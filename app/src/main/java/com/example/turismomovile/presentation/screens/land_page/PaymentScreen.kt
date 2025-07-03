@@ -13,7 +13,7 @@ import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Email
-import androidx.compose.material.icons.outlined.Receipt
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +22,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -152,7 +151,7 @@ fun PaymentScreen(
                                 isLoading = state.isLoading,
                                 total = reserva?.total
                             )
-                            3 -> PaymentConfirmationStep(state.payment)
+                            3 -> PaymentConfirmationStep(reserva, state.payment)
                         }
                     }
                 }
@@ -640,7 +639,12 @@ private fun PaymentMethodStep(
 }
 
 @Composable
-private fun PaymentConfirmationStep(payment: Payments?) {
+private fun PaymentConfirmationStep(
+    reserva: ReservaUsuarioDTO?,
+    payment: Payments?
+) {
+    val context = LocalContext.current
+    LaunchedEffect(payment) { payment?.let { BoletaGenerator.generateBoleta(context, reserva, it) } }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -677,19 +681,6 @@ private fun PaymentConfirmationStep(payment: Payments?) {
                 style = MaterialTheme.typography.bodyLarge,
                 textAlign = TextAlign.Center
         )
-        payment?.let {
-            Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Código: ${it.code}",
-                style = MaterialTheme.typography.bodyMedium
-            )
-            it.total?.let { total ->
-                Text(
-                    text = "Total: S/ $total",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
         Spacer(modifier = Modifier.height(32.dp))
     }
 }
