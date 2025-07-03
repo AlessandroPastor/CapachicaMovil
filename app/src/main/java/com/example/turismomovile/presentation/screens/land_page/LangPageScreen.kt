@@ -160,7 +160,7 @@ fun WelcomeScreen(
         initialValue = false,
         lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
     )
-    val currentSection by remember { mutableStateOf(LangPageViewModel.Sections.HOME) }
+    val currentSection by viewModel.currentSection
     val coroutineScope = rememberCoroutineScope()
     val municipalidadDescriptionState by viewModel.municipalidadDescriptionState.collectAsState()
     val state by viewModel.state.collectAsStateWithLifecycle()
