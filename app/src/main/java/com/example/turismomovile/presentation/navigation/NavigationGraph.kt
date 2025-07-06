@@ -67,7 +67,7 @@ fun NavigationGraph(
                 val route = backStackEntry.destination.route
                 val tokenValid = sessionManager.isTokenValid()
                 if (tokenValid && (route == Routes.LOGIN || route == Routes.REGISTER)) {
-                    navController.navigate(Routes.HOME) {
+                    navController.navigate(Routes.LAND_PAGE) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
                     }
                 }
@@ -99,7 +99,7 @@ fun NavigationGraph(
                         val tokenValid = sessionManager.isTokenValid()
                         val isFirstTime = !sessionManager.isOnboardingCompleted()
                         if (tokenValid) {
-                            navController.navigate(Routes.HOME) {
+                            navController.navigate(Routes.LAND_PAGE) {
                                 popUpTo(Routes.SPLASH) { inclusive = true }
                             }
                         } else if (isFirstTime) {
@@ -334,7 +334,7 @@ private suspend fun navigateAfterAuth(
             popUpTo(popUpRoute) { inclusive = true }
         }
     } else {
-        navController.navigate(Routes.HOME) {
+        navController.navigate(Routes.LAND_PAGE) {
             popUpTo(popUpRoute) { inclusive = true }
         }
     }
