@@ -1,7 +1,6 @@
 package com.example.turismomovile.data.remote.api.base
 
 import com.example.turismomovile.data.local.SessionManager
-import com.example.turismomovile.data.remote.dto.LoginResponse
 import io.ktor.client.HttpClient
 import io.ktor.client.request.*
 import io.ktor.http.*
@@ -10,27 +9,28 @@ open class BaseApiService(
     protected val client: HttpClient,
     protected open val sessionManager: SessionManager
 ) {
-    var authToken: String? = null
+    private var cachedToken: String? = null
 
     // No suspend, solo añade el header con token ya cargado
     protected suspend fun HttpRequestBuilder.addAuthHeader() {
-        if (authToken == null) {
-            loadAuthTokenFromStorage()          // obtiene el token de SessionManager
+        val storedToken = sessionManager.getAuthToken()
+        if (storedToken != cachedToken) {
+            cachedToken = storedToken
         }
-        authToken?.let {
+        cachedToken?.let {
             header("Authorization", "Bearer $it")
         } ?: throw IllegalStateException("No auth token available. Please login first.")
     }
 
     fun updateAuthToken(token: String) {  // Cambia el nombre
-        this.authToken = token
+        this.cachedToken  = token
     }
     fun clearAuthToken() {
-        this.authToken = null
+        this.cachedToken  = null
     }
 
 
     open suspend fun loadAuthTokenFromStorage() {
-        authToken = sessionManager.getAuthToken() ?: sessionManager.getUser()?.token
+        cachedToken  = sessionManager.getAuthToken() ?: sessionManager.getUser()?.token
     }
 }
