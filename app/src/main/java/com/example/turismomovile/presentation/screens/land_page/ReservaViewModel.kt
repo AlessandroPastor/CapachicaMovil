@@ -146,10 +146,6 @@ class ReservaViewModel(
                 val reservaResponse = reservaApiService.createReserva(dto)
                 val reservaId = reservaResponse.reserva.id
                 val reservaDetail = reservaApiService.getReservaById(reservaId)
-
-                val paymentResponse = paymentApiService.createPayment(
-                    PaymentCreateDTO(reservaId)
-                )
                 limpiarCarrito() // Limpia el carrito al reservar
                 loadReservas()
                 _state.update {
